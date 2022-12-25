@@ -7,34 +7,56 @@ std::ostream &operator<<(std::ostream &os, const ChessPiece &piece) {
         os << ' ';
         break;
     case PieceColor::WHITE:
-        os << 'W';
+        switch (piece.type) {
+        case PieceType::NONE:
+            os << ' ';
+            break;
+        case PieceType::KING:
+            os << "♚";
+            break;
+        case PieceType::QUEEN:
+            os << "♛";
+            break;
+        case PieceType::ROOK:
+            os << "♜";
+            break;
+        case PieceType::BISHOP:
+            os << "♝";
+            break;
+        case PieceType::KNIGHT:
+            os << "♞";
+            break;
+        case PieceType::PAWN:
+            os << "♟";
+            break;
+        }
         break;
     case PieceColor::BLACK:
-        os << 'B';
+        switch (piece.type) {
+        case PieceType::NONE:
+            os << ' ';
+            break;
+        case PieceType::KING:
+            os << "♔";
+            break;
+        case PieceType::QUEEN:
+            os << "♕";
+            break;
+        case PieceType::ROOK:
+            os << "♖";
+            break;
+        case PieceType::BISHOP:
+            os << "♗";
+            break;
+        case PieceType::KNIGHT:
+            os << "♘";
+            break;
+        case PieceType::PAWN:
+            os << "♙";
+            break;
+        }
         break;
     }
-    switch (piece.type) {
-    case PieceType::NONE:
-        os << ' ';
-        break;
-    case PieceType::KING:
-        os << 'K';
-        break;
-    case PieceType::QUEEN:
-        os << 'Q';
-        break;
-    case PieceType::ROOK:
-        os << 'R';
-        break;
-    case PieceType::BISHOP:
-        os << 'B';
-        break;
-    case PieceType::KNIGHT:
-        os << 'N';
-        break;
-    case PieceType::PAWN:
-        os << 'P';
-        break;
-    }
+
     return os;
 }
