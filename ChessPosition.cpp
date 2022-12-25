@@ -1,13 +1,41 @@
 #include "ChessPosition.hpp"
 
 #include <cassert> // for assert
+#include <cmath>   // for std::abs
 
 
 void ChessPosition::make_move(const ChessMove &move) {
 
+    // get and validate moving piece
+    assert(in_bounds(move.src_file, move.src_rank));
+    assert(in_bounds(move.dst_file, move.dst_rank));
     ChessPiece piece = board[move.src_file][move.src_rank];
     assert(piece.color != PieceColor::NONE);
     assert(piece.color == to_move);
+
+    // validate move
+    switch (piece.type) {
+        case PieceType::NONE:
+            __builtin_unreachable();
+        case PieceType::KING:
+            assert(move.distance() == 1 || move.distance() == 2);
+            break;
+        case PieceType::QUEEN:
+            assert(move.is_orthogonal() || move.is_diagonal());
+            break;
+        case PieceType::ROOK:
+            assert(move.is_orthogonal());
+            break;
+        case PieceType::BISHOP:
+            assert(move.is_diagonal());
+            break;
+        case PieceType::KNIGHT:
+            assert(move.distance() == 2);
+            break;
+        case PieceType::PAWN:
+            assert(move.distance() == 1 || move.distance() == 2);
+            break;
+    }
 
     // check for en passant capture
     const bool is_en_passant_capture =
@@ -67,8 +95,13 @@ void ChessPosition::make_move(const ChessMove &move) {
     // TODO: handle castling
 
     // update player to move
-    to_move =
-        (to_move == PieceColor::WHITE) ? PieceColor::BLACK : PieceColor::WHITE;
+    if (to_move == PieceColor::WHITE) {
+        to_move = PieceColor::BLACK;
+    } else if (to_move == PieceColor::BLACK) {
+        to_move = PieceColor::WHITE;
+    } else {
+        __builtin_unreachable();
+    }
 }
 
 

@@ -11,32 +11,11 @@ AccessModifierOffset: -4
 PointerAlignment: Right
 ReferenceAlignment: Right
 
+IndentCaseLabels: true
+IndentCaseBlocks: true
 AlignAfterOpenBracket: BlockIndent
 AlignArrayOfStructures: Left
-AlignConsecutiveAssignments:
-  Enabled:         false
-  AcrossEmptyLines: false
-  AcrossComments:  false
-  AlignCompound:   false
-  PadOperators:    true
-AlignConsecutiveBitFields:
-  Enabled:         false
-  AcrossEmptyLines: false
-  AcrossComments:  false
-  AlignCompound:   false
-  PadOperators:    false
-AlignConsecutiveDeclarations:
-  Enabled:         false
-  AcrossEmptyLines: false
-  AcrossComments:  false
-  AlignCompound:   false
-  PadOperators:    false
-AlignConsecutiveMacros:
-  Enabled:         false
-  AcrossEmptyLines: false
-  AcrossComments:  false
-  AlignCompound:   false
-  PadOperators:    false
+
 AlignEscapedNewlines: Right
 AlignOperands:   Align
 AlignTrailingComments: true
@@ -82,7 +61,6 @@ BreakInheritanceList: BeforeColon
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializersBeforeComma: false
 BreakConstructorInitializers: BeforeColon
-BreakAfterJavaFieldAnnotations: false
 BreakStringLiterals: true
 QualifierAlignment: Leave
 CompactNamespaces: false
@@ -100,8 +78,6 @@ FixNamespaceComments: true
 IncludeBlocks:   Preserve
 IncludeIsMainSourceRegex: ''
 IndentAccessModifiers: false
-IndentCaseLabels: false
-IndentCaseBlocks: false
 IndentGotoLabels: true
 IndentPPDirectives: None
 IndentExternBlock: AfterExternBlock
@@ -132,7 +108,6 @@ RequiresClausePosition: OwnLine
 SeparateDefinitionBlocks: Leave
 ShortNamespaceLines: 1
 SortIncludes: CaseSensitive
-SortJavaStaticImport: Before
 SortUsingDeclarations: true
 SpaceAfterCStyleCast: false
 SpaceAfterLogicalNot: false

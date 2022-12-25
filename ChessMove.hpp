@@ -1,9 +1,11 @@
 #ifndef SUCKER_CHESS_CHESS_MOVE_HPP
 #define SUCKER_CHESS_CHESS_MOVE_HPP
 
-#include <cassert> // for assert
-#include <cstdint> // for std::int8_t
-#include <ostream> // for std::ostream
+#include <algorithm> // for std::max
+#include <cassert>   // for assert
+#include <cmath>     // for std::abs
+#include <cstdint>   // for std::int8_t
+#include <ostream>   // for std::ostream
 
 #include "ChessPiece.hpp"
 
@@ -41,6 +43,20 @@ struct ChessMove {
           promotion_type(pt) {
         assert(in_bounds(sf, sr));
         assert(in_bounds(df, dr));
+    }
+
+    [[nodiscard]] constexpr bool is_orthogonal() const noexcept {
+        return src_file == dst_file || src_rank == dst_rank;
+    }
+
+    [[nodiscard]] constexpr bool is_diagonal() const noexcept {
+        return std::abs(src_file - dst_file) == std::abs(src_rank - dst_rank);
+    }
+
+    [[nodiscard]] constexpr coord_t distance() const noexcept {
+        return static_cast<coord_t>(std::max(
+            std::abs(src_file - dst_file), std::abs(src_rank - dst_rank)
+        ));
     }
 
 }; // struct ChessMove
