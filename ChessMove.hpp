@@ -30,8 +30,11 @@ struct ChessMove {
     PieceType promotion_type;
 
     explicit constexpr ChessMove(coord_t sf, coord_t sr, coord_t df, coord_t dr)
-        : src_file(sf), src_rank(sr), dst_file(df), dst_rank(dr),
-          promotion_type(PieceType::NONE) {
+        : src_file(sf)
+        , src_rank(sr)
+        , dst_file(df)
+        , dst_rank(dr)
+        , promotion_type(PieceType::NONE) {
         assert(in_bounds(sf, sr));
         assert(in_bounds(df, dr));
     }
@@ -39,12 +42,17 @@ struct ChessMove {
     explicit constexpr ChessMove(
         coord_t sf, coord_t sr, coord_t df, coord_t dr, PieceType pt
     )
-        : src_file(sf), src_rank(sr), dst_file(df), dst_rank(dr),
-          promotion_type(pt) {
+        : src_file(sf)
+        , src_rank(sr)
+        , dst_file(df)
+        , dst_rank(dr)
+        , promotion_type(pt) {
         assert(in_bounds(sf, sr));
         assert(in_bounds(df, dr));
         assert(pt != PieceType::KING && pt != PieceType::PAWN);
     }
+
+    constexpr auto operator<=>(const ChessMove &) const noexcept = default;
 
     [[nodiscard]] constexpr bool is_orthogonal() const noexcept {
         return src_file == dst_file || src_rank == dst_rank;

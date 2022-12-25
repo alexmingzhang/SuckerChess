@@ -115,9 +115,7 @@ std::ostream &operator<<(std::ostream &os, const ChessPosition &pos) {
             os << ' ' << pos.board[file][rank] << " │";
         }
         os << "\n";
-
-        if (rank != 0)
-            os << "  ├───┼───┼───┼───┼───┼───┼───┼───┤\n";
+        if (rank > 0) { os << "  ├───┼───┼───┼───┼───┼───┼───┼───┤\n"; }
     }
     os << "  └───┴───┴───┴───┴───┴───┴───┴───┘\n";
     return os;

@@ -43,10 +43,12 @@ public:
           black_can_short_castle(true), black_can_long_castle(true) {}
 
     constexpr ChessPiece &operator()(coord_t file, coord_t rank) {
+        assert(in_bounds(file, rank));
         return board[file][rank];
     }
 
     constexpr const ChessPiece &operator()(coord_t file, coord_t rank) const {
+        assert(in_bounds(file, rank));
         return board[file][rank];
     }
 
@@ -61,8 +63,9 @@ public:
 
     [[nodiscard]] constexpr bool
     is_legal_cap(coord_t file, coord_t rank) const {
-        return in_bounds(file, rank) && board[file][rank].color != to_move &&
-               board[file][rank].color != PieceColor::NONE;
+        if (!in_bounds(file, rank)) { return false; }
+        const ChessPiece piece = board[file][rank];
+        return piece.color != to_move && piece.color != PieceColor::NONE;
     }
 
     void push_leaper_move(
@@ -94,7 +97,7 @@ public:
 
     void push_pawn_moves(
         std::vector<ChessMove> &moves, coord_t src_file, coord_t src_rank
-    ) {
+    ) const {
 
         const coord_t direction = (to_move == PieceColor::WHITE) ? +1 : -1;
         const coord_t en_passant_rank =
@@ -123,9 +126,7 @@ public:
         };
 
         // non-capturing
-        if (is_empty(dst_file, dst_rank)) {
-            push_move_with_promotes();
-        }
+        if (is_empty(dst_file, dst_rank)) { push_move_with_promotes(); }
 
         // non-capturing double move
         dst_rank = src_rank + direction * 2;
@@ -139,9 +140,7 @@ public:
         // capture to src_file - 1
         dst_rank = src_rank + direction;
         dst_file = src_file - 1;
-        if (is_legal_cap(dst_file, dst_rank)) {
-            push_move_with_promotes();
-        }
+        if (is_legal_cap(dst_file, dst_rank)) { push_move_with_promotes(); }
 
         // en-passant
         if (in_bounds(dst_file, dst_rank) &&
@@ -151,14 +150,74 @@ public:
 
         // capture to src_file + 1
         dst_file = src_file + 1;
-        if (is_legal_cap(dst_file, dst_rank)) {
-            push_move_with_promotes();
-        }
+        if (is_legal_cap(dst_file, dst_rank)) { push_move_with_promotes(); }
 
         // en-passant
         if (in_bounds(dst_file, dst_rank) &&
             (dst_file == en_passant_file && dst_rank == en_passant_rank)) {
             moves.emplace_back(src_file, src_rank, dst_file, dst_rank);
+        }
+    }
+
+    void push_castling_moves(
+        std::vector<ChessMove> &moves, coord_t src_file, coord_t src_rank
+    ) {}
+
+    void push_moves(
+        std::vector<ChessMove> &moves, coord_t src_file, coord_t src_rank
+    ) {
+        assert(in_bounds(src_file, src_rank));
+        const ChessPiece piece = board[src_file][src_rank];
+        assert(piece.color == to_move);
+        assert(piece.type != PieceType::NONE);
+        switch (piece.type) {
+            case PieceType::NONE:
+                __builtin_unreachable();
+            case PieceType::KING:
+                push_leaper_move(moves, src_file, src_rank, -1, -1);
+                push_leaper_move(moves, src_file, src_rank, -1, 0);
+                push_leaper_move(moves, src_file, src_rank, -1, +1);
+                push_leaper_move(moves, src_file, src_rank, 0, -1);
+                push_leaper_move(moves, src_file, src_rank, 0, +1);
+                push_leaper_move(moves, src_file, src_rank, +1, -1);
+                push_leaper_move(moves, src_file, src_rank, +1, 0);
+                push_leaper_move(moves, src_file, src_rank, +1, +1);
+                break;
+            case PieceType::QUEEN:
+                push_slider_moves(moves, src_file, src_rank, -1, -1);
+                push_slider_moves(moves, src_file, src_rank, -1, 0);
+                push_slider_moves(moves, src_file, src_rank, -1, +1);
+                push_slider_moves(moves, src_file, src_rank, 0, -1);
+                push_slider_moves(moves, src_file, src_rank, 0, +1);
+                push_slider_moves(moves, src_file, src_rank, +1, -1);
+                push_slider_moves(moves, src_file, src_rank, +1, 0);
+                push_slider_moves(moves, src_file, src_rank, +1, +1);
+                break;
+            case PieceType::ROOK:
+                push_slider_moves(moves, src_file, src_rank, -1, 0);
+                push_slider_moves(moves, src_file, src_rank, 0, -1);
+                push_slider_moves(moves, src_file, src_rank, 0, +1);
+                push_slider_moves(moves, src_file, src_rank, +1, 0);
+                break;
+            case PieceType::BISHOP:
+                push_slider_moves(moves, src_file, src_rank, -1, -1);
+                push_slider_moves(moves, src_file, src_rank, -1, +1);
+                push_slider_moves(moves, src_file, src_rank, +1, -1);
+                push_slider_moves(moves, src_file, src_rank, +1, +1);
+                break;
+            case PieceType::KNIGHT:
+                push_leaper_move(moves, src_file, src_rank, -2, -1);
+                push_leaper_move(moves, src_file, src_rank, -2, +1);
+                push_leaper_move(moves, src_file, src_rank, -1, -2);
+                push_leaper_move(moves, src_file, src_rank, -1, +2);
+                push_leaper_move(moves, src_file, src_rank, +1, -2);
+                push_leaper_move(moves, src_file, src_rank, +1, +2);
+                push_leaper_move(moves, src_file, src_rank, +2, -1);
+                push_leaper_move(moves, src_file, src_rank, +2, +1);
+                break;
+            case PieceType::PAWN:
+                push_pawn_moves(moves, src_file, src_rank);
+                break;
         }
     }
 
@@ -168,111 +227,7 @@ public:
             for (coord_t src_rank = 0; src_rank < NUM_RANKS; ++src_rank) {
                 const ChessPiece &piece = board[src_file][src_rank];
                 if (piece.color == to_move) {
-                    switch (piece.type) {
-                        case PieceType::NONE:
-                            __builtin_unreachable();
-                        case PieceType::KING:
-                            push_leaper_move(
-                                result, src_file, src_rank, -1, -1
-                            );
-                            push_leaper_move(result, src_file, src_rank, -1, 0);
-                            push_leaper_move(
-                                result, src_file, src_rank, -1, +1
-                            );
-                            push_leaper_move(result, src_file, src_rank, 0, -1);
-                            push_leaper_move(result, src_file, src_rank, 0, +1);
-                            push_leaper_move(
-                                result, src_file, src_rank, +1, -1
-                            );
-                            push_leaper_move(result, src_file, src_rank, +1, 0);
-                            push_leaper_move(
-                                result, src_file, src_rank, +1, +1
-                            );
-                            break;
-                        case PieceType::QUEEN:
-                            push_slider_moves(
-                                result, src_file, src_rank, -1, -1
-                            );
-                            push_slider_moves(
-                                result, src_file, src_rank, -1, 0
-                            );
-                            push_slider_moves(
-                                result, src_file, src_rank, -1, +1
-                            );
-                            push_slider_moves(
-                                result, src_file, src_rank, 0, -1
-                            );
-                            push_slider_moves(
-                                result, src_file, src_rank, 0, +1
-                            );
-                            push_slider_moves(
-                                result, src_file, src_rank, +1, -1
-                            );
-                            push_slider_moves(
-                                result, src_file, src_rank, +1, 0
-                            );
-                            push_slider_moves(
-                                result, src_file, src_rank, +1, +1
-                            );
-                            break;
-                        case PieceType::ROOK:
-                            push_slider_moves(
-                                result, src_file, src_rank, -1, 0
-                            );
-                            push_slider_moves(
-                                result, src_file, src_rank, 0, -1
-                            );
-                            push_slider_moves(
-                                result, src_file, src_rank, 0, +1
-                            );
-                            push_slider_moves(
-                                result, src_file, src_rank, +1, 0
-                            );
-                            break;
-                        case PieceType::BISHOP:
-                            push_slider_moves(
-                                result, src_file, src_rank, -1, -1
-                            );
-                            push_slider_moves(
-                                result, src_file, src_rank, -1, +1
-                            );
-                            push_slider_moves(
-                                result, src_file, src_rank, +1, -1
-                            );
-                            push_slider_moves(
-                                result, src_file, src_rank, +1, +1
-                            );
-                            break;
-                        case PieceType::KNIGHT:
-                            push_leaper_move(
-                                result, src_file, src_rank, -2, -1
-                            );
-                            push_leaper_move(
-                                result, src_file, src_rank, -2, +1
-                            );
-                            push_leaper_move(
-                                result, src_file, src_rank, -1, -2
-                            );
-                            push_leaper_move(
-                                result, src_file, src_rank, -1, +2
-                            );
-                            push_leaper_move(
-                                result, src_file, src_rank, +1, -2
-                            );
-                            push_leaper_move(
-                                result, src_file, src_rank, +1, +2
-                            );
-                            push_leaper_move(
-                                result, src_file, src_rank, +2, -1
-                            );
-                            push_leaper_move(
-                                result, src_file, src_rank, +2, +1
-                            );
-                            break;
-                        case PieceType::PAWN:
-                            push_pawn_moves(result, src_file, src_rank);
-                            break;
-                    }
+                    push_moves(result, src_file, src_rank);
                 }
             }
         }

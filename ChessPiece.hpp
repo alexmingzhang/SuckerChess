@@ -29,10 +29,12 @@ struct ChessPiece {
     PieceType type;
 
     constexpr ChessPiece() noexcept
-        : color(PieceColor::NONE), type(PieceType::NONE) {}
+        : color(PieceColor::NONE)
+        , type(PieceType::NONE) {}
 
     constexpr ChessPiece(PieceColor color, PieceType type) noexcept
-        : color(color), type(type) {}
+        : color(color)
+        , type(type) {}
 
     constexpr bool operator==(const ChessPiece &) const noexcept = default;
 
