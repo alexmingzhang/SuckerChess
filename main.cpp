@@ -208,9 +208,8 @@ public:
                 const ChessPiece &piece = board[src_file][src_rank];
                 if (piece.color == to_move) {
                     switch (piece.type) {
-                    case PieceType::PAWN:
-                        push_pawn_moves(result, src_file, src_rank);
-                        break;
+                    case PieceType::NONE:
+                        __builtin_unreachable();
                     case PieceType::KING:
                         push_leaper_move(result, src_file, src_rank, -1, -1);
                         push_leaper_move(result, src_file, src_rank, -1, 0);
@@ -252,6 +251,9 @@ public:
                         push_leaper_move(result, src_file, src_rank, +1, +2);
                         push_leaper_move(result, src_file, src_rank, +2, -1);
                         push_leaper_move(result, src_file, src_rank, +2, +1);
+                        break;
+                    case PieceType::PAWN:
+                        push_pawn_moves(result, src_file, src_rank);
                         break;
                     }
                 }
