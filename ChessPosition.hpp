@@ -172,7 +172,6 @@ public:
             moves.push_back(
                 {src_file, src_rank, dst_file, dst_rank, PieceType::NONE}
             );
-            board[dst_file][dst_rank - direction] = EMPTY_SQUARE;
         }
 
         // capture to src_file + 1
@@ -187,7 +186,6 @@ public:
             moves.push_back(
                 {src_file, src_rank, dst_file, dst_rank, PieceType::NONE}
             );
-            board[dst_file][dst_rank - direction] = EMPTY_SQUARE;
         }
     }
 
@@ -253,26 +251,7 @@ public:
         return result;
     }
 
-    void make_move(ChessMove &move) {
-        // TODO: add promotion stuff
-
-        ChessPiece piece = board[move.src_file][move.src_rank];
-
-        if (piece.type == PieceType::PAWN) {
-            if (move.dst_rank - move.src_rank == 2) {
-                en_passant_file = move.dst_file;
-            } else if (move.dst_rank - move.src_rank == -2) {
-                en_passant_file = move.dst_file;
-            }
-        }
-
-        board[move.dst_file][move.dst_rank] =
-            board[move.src_file][move.src_rank];
-        board[move.src_file][move.src_rank] = EMPTY_SQUARE;
-
-        to_move = (to_move == PieceColor::WHITE) ? PieceColor::BLACK
-                                                 : PieceColor::WHITE;
-    }
+    void make_move(const ChessMove &move);
 
     friend std::ostream &operator<<(std::ostream &os, const ChessPosition &b);
 
