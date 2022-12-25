@@ -32,8 +32,7 @@ class ChessPosition {
     bool white_can_long_castle;
     bool black_can_short_castle;
     bool black_can_long_castle;
-    coord_t en_passant_file = -1;
-    coord_t en_passant_rank = -1;
+    coord_t en_passant_file;
 
 public:
 
@@ -125,7 +124,11 @@ public:
     void push_pawn_moves(
         std::vector<ChessMove> &moves, coord_t src_file, coord_t src_rank
     ) {
+
         const coord_t direction = (to_move == PieceColor::WHITE) ? +1 : -1;
+        const coord_t en_passant_rank =
+            (to_move == PieceColor::WHITE) ? NUM_RANKS - 3 : 2;
+
         coord_t dst_file = src_file;
         coord_t dst_rank = src_rank + direction;
 
@@ -266,10 +269,8 @@ public:
         if (piece.type == PieceType::PAWN) {
             if (move.dst_rank - move.src_rank == 2) {
                 en_passant_file = move.dst_file;
-                en_passant_rank = move.dst_rank - 1;
             } else if (move.dst_rank - move.src_rank == -2) {
                 en_passant_file = move.dst_file;
-                en_passant_rank = move.dst_rank + 1;
             }
         }
 
