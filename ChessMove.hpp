@@ -43,6 +43,7 @@ struct ChessMove {
           promotion_type(pt) {
         assert(in_bounds(sf, sr));
         assert(in_bounds(df, dr));
+        assert(pt != PieceType::KING && pt != PieceType::PAWN);
     }
 
     [[nodiscard]] constexpr bool is_orthogonal() const noexcept {

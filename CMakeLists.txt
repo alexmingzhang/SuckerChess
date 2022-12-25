@@ -6,4 +6,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_compile_options(-Wall -Wextra -pedantic)
 
-add_executable(SuckerChess main.cpp ChessPiece.hpp ChessPiece.cpp ChessMove.cpp ChessMove.hpp ChessPosition.cpp ChessPosition.hpp)
+add_executable(SuckerChess main.cpp
+        ChessPiece.hpp ChessPiece.cpp
+        ChessMove.cpp ChessMove.hpp
+        ChessPosition.cpp ChessPosition.hpp)

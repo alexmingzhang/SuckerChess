@@ -34,7 +34,7 @@ struct ChessPiece {
     constexpr ChessPiece(PieceColor color, PieceType type) noexcept
         : color(color), type(type) {}
 
-    constexpr auto operator<=>(const ChessPiece &) const noexcept = default;
+    constexpr bool operator==(const ChessPiece &) const noexcept = default;
 
 }; // struct ChessPiece
 

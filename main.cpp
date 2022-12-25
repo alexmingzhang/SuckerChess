@@ -8,7 +8,6 @@
 
 int main() {
     constexpr ChessPosition START_POSITION;
-    constexpr auto x = START_POSITION(0, 0);
     ChessPosition pos;
 
     while (1) {
