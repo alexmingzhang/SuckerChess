@@ -23,6 +23,7 @@ struct ChessMove {
 
 }; // struct ChessMove
 
+//wassup
 
 class ChessPosition {
 
@@ -311,7 +312,7 @@ int main() {
         
         ChessMove move = moves[move_index];
         pos.make_move(move);
-        
+
         std::cout << LETTERS[move.src_file] << (int)move.src_rank + 1 << " to " << LETTERS[move.dst_file] << (int)move.dst_rank + 1 << std::endl;
     }
     return 0;
