@@ -13,6 +13,9 @@ constexpr coord_t NUM_FILES = 8;
 constexpr coord_t NUM_RANKS = 8;
 
 
+// hello world
+
+
 struct ChessMove {
 
     coord_t src_file;
@@ -309,7 +312,7 @@ int main() {
         std::cout << "> ";
         std::size_t move_index;
         std::cin >> move_index;
-        
+
         ChessMove move = moves[move_index];
         pos.make_move(move);
 
