@@ -1,7 +1,6 @@
 #include "ChessPosition.hpp"
 
 #include <cassert> // for assert
-#include <cmath>   // for std::abs
 
 
 void ChessPosition::make_move(const ChessMove &move) {
@@ -18,7 +17,8 @@ void ChessPosition::make_move(const ChessMove &move) {
 
     // record en passant file
     if (piece.type == PieceType::PAWN &&
-        std::abs(move.src_rank - move.dst_rank) == 2) {
+        (move.src_rank - move.dst_rank == 2 ||
+         move.src_rank - move.dst_rank == -2)) {
         assert(move.src_file == move.dst_file);
         en_passant_file = move.src_file;
     } else {

@@ -9,16 +9,6 @@
 #include "ChessPiece.hpp"
 
 
-constexpr coord_t NUM_FILES = 8;
-constexpr coord_t NUM_RANKS = 8;
-
-
-constexpr bool in_bounds(coord_t file, coord_t rank) {
-    return (file >= 0) && (file < NUM_FILES) && (rank >= 0) &&
-           (rank < NUM_RANKS);
-}
-
-
 class ChessPosition {
 
     std::array<std::array<ChessPiece, NUM_RANKS>, NUM_FILES> board;
@@ -64,16 +54,13 @@ public:
         return in_bounds(file, rank) && board[file][rank] == EMPTY_SQUARE;
     }
 
-    [[nodiscard]] bool is_legal_dst_can_cap(coord_t file, coord_t rank) const {
+    [[nodiscard]] constexpr bool
+    is_legal_dst(coord_t file, coord_t rank) const {
         return in_bounds(file, rank) && board[file][rank].color != to_move;
     }
 
-    [[nodiscard]] bool is_legal_dst_no_cap(coord_t file, coord_t rank) const {
-        return in_bounds(file, rank) &&
-               board[file][rank].color == PieceColor::NONE;
-    }
-
-    [[nodiscard]] bool is_legal_dst_must_cap(coord_t file, coord_t rank) const {
+    [[nodiscard]] constexpr bool
+    is_legal_cap(coord_t file, coord_t rank) const {
         return in_bounds(file, rank) && board[file][rank].color != to_move &&
                board[file][rank].color != PieceColor::NONE;
     }
@@ -84,10 +71,8 @@ public:
     ) const {
         const auto dst_file = static_cast<coord_t>(src_file + file_offset);
         const auto dst_rank = static_cast<coord_t>(src_rank + rank_offset);
-        if (is_legal_dst_can_cap(dst_file, dst_rank)) {
-            moves.push_back(
-                {src_file, src_rank, dst_file, dst_rank, PieceType::NONE}
-            );
+        if (is_legal_dst(dst_file, dst_rank)) {
+            moves.emplace_back(src_file, src_rank, dst_file, dst_rank);
         }
     }
 
@@ -98,16 +83,12 @@ public:
         auto dst_file = static_cast<coord_t>(src_file + file_offset);
         auto dst_rank = static_cast<coord_t>(src_rank + rank_offset);
         while (is_empty(dst_file, dst_rank)) {
-            moves.push_back(
-                {src_file, src_rank, dst_file, dst_rank, PieceType::NONE}
-            );
+            moves.emplace_back(src_file, src_rank, dst_file, dst_rank);
             dst_file = static_cast<coord_t>(dst_file + file_offset);
             dst_rank = static_cast<coord_t>(dst_rank + rank_offset);
         }
-        if (is_legal_dst_can_cap(dst_file, dst_rank)) {
-            moves.push_back(
-                {src_file, src_rank, dst_file, dst_rank, PieceType::NONE}
-            );
+        if (is_legal_dst(dst_file, dst_rank)) {
+            moves.emplace_back(src_file, src_rank, dst_file, dst_rank);
         }
     }
 
@@ -124,27 +105,25 @@ public:
 
         auto push_move_with_promotes = [&] {
             if (dst_rank == 0 || dst_rank == NUM_RANKS - 1) {
-                moves.push_back(
-                    {src_file, src_rank, dst_file, dst_rank, PieceType::KNIGHT}
+                moves.emplace_back(
+                    src_file, src_rank, dst_file, dst_rank, PieceType::QUEEN
                 );
-                moves.push_back(
-                    {src_file, src_rank, dst_file, dst_rank, PieceType::BISHOP}
+                moves.emplace_back(
+                    src_file, src_rank, dst_file, dst_rank, PieceType::ROOK
                 );
-                moves.push_back(
-                    {src_file, src_rank, dst_file, dst_rank, PieceType::ROOK}
+                moves.emplace_back(
+                    src_file, src_rank, dst_file, dst_rank, PieceType::BISHOP
                 );
-                moves.push_back(
-                    {src_file, src_rank, dst_file, dst_rank, PieceType::QUEEN}
+                moves.emplace_back(
+                    src_file, src_rank, dst_file, dst_rank, PieceType::KNIGHT
                 );
             } else {
-                moves.push_back(
-                    {src_file, src_rank, dst_file, dst_rank, PieceType::NONE}
-                );
+                moves.emplace_back(src_file, src_rank, dst_file, dst_rank);
             }
         };
 
         // non-capturing
-        if (is_legal_dst_no_cap(dst_file, dst_rank)) {
+        if (is_empty(dst_file, dst_rank)) {
             push_move_with_promotes();
         }
 
@@ -152,40 +131,34 @@ public:
         dst_rank = src_rank + direction * 2;
         if (((to_move == PieceColor::WHITE && src_rank == 1) ||
              (to_move == PieceColor::BLACK && src_rank == NUM_RANKS - 2)) &&
-            is_legal_dst_no_cap(dst_file, dst_rank - direction) &&
-            is_legal_dst_no_cap(dst_file, dst_rank)) {
-            moves.push_back(
-                {src_file, src_rank, dst_file, dst_rank, PieceType::NONE}
-            );
+            is_empty(dst_file, dst_rank - direction) &&
+            is_empty(dst_file, dst_rank)) {
+            moves.emplace_back(src_file, src_rank, dst_file, dst_rank);
         }
 
         // capture to src_file - 1
         dst_rank = src_rank + direction;
         dst_file = src_file - 1;
-        if (is_legal_dst_must_cap(dst_file, dst_rank)) {
+        if (is_legal_cap(dst_file, dst_rank)) {
             push_move_with_promotes();
         }
 
         // en-passant
-        if (is_legal_dst_no_cap(dst_file, dst_rank) &&
+        if (in_bounds(dst_file, dst_rank) &&
             (dst_file == en_passant_file && dst_rank == en_passant_rank)) {
-            moves.push_back(
-                {src_file, src_rank, dst_file, dst_rank, PieceType::NONE}
-            );
+            moves.emplace_back(src_file, src_rank, dst_file, dst_rank);
         }
 
         // capture to src_file + 1
         dst_file = src_file + 1;
-        if (is_legal_dst_must_cap(dst_file, dst_rank)) {
+        if (is_legal_cap(dst_file, dst_rank)) {
             push_move_with_promotes();
         }
 
         // en-passant
-        if (is_legal_dst_no_cap(dst_file, dst_rank) &&
+        if (in_bounds(dst_file, dst_rank) &&
             (dst_file == en_passant_file && dst_rank == en_passant_rank)) {
-            moves.push_back(
-                {src_file, src_rank, dst_file, dst_rank, PieceType::NONE}
-            );
+            moves.emplace_back(src_file, src_rank, dst_file, dst_rank);
         }
     }
 
