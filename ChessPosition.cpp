@@ -106,16 +106,19 @@ void ChessPosition::make_move(const ChessMove &move) {
 
 
 std::ostream &operator<<(std::ostream &os, const ChessPosition &pos) {
-    os << "   a b c d e f g h\n";
-    os << "  ┌─┬─┬─┬─┬─┬─┬─┬─┐\n";
+    os << "    a   b   c   d   e   f   g   h\n";
+    os << "  ┌───┬───┬───┬───┬───┬───┬───┬───┐\n";
     for (coord_t rank = NUM_RANKS - 1; rank >= 0; --rank) {
         // ensure printing as int, not char
         os << static_cast<int>(rank + 1) << " │";
         for (coord_t file = 0; file < NUM_FILES; ++file) {
-            os << pos.board[file][rank] << "│";
+            os << ' ' << pos.board[file][rank] << " │";
         }
         os << "\n";
+
+        if (rank != 0)
+            os << "  ├───┼───┼───┼───┼───┼───┼───┼───┤\n";
     }
-    os << "  └─┴─┴─┴─┴─┴─┴─┴─┘\n";
+    os << "  └───┴───┴───┴───┴───┴───┴───┴───┘\n";
     return os;
 }
