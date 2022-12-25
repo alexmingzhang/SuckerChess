@@ -13,9 +13,6 @@ constexpr coord_t NUM_FILES = 8;
 constexpr coord_t NUM_RANKS = 8;
 
 
-// hello world
-
-
 struct ChessMove {
 
     coord_t src_file;
@@ -26,7 +23,6 @@ struct ChessMove {
 
 }; // struct ChessMove
 
-//wassup
 
 class ChessPosition {
 
@@ -84,11 +80,13 @@ public:
     }
 
     [[nodiscard]] bool is_legal_dst_no_cap(coord_t file, coord_t rank) const {
-        return in_bounds(file, rank) && board[file][rank].color == PieceColor::NONE;
+        return in_bounds(file, rank) &&
+               board[file][rank].color == PieceColor::NONE;
     }
 
     [[nodiscard]] bool is_legal_dst_must_cap(coord_t file, coord_t rank) const {
-        return in_bounds(file, rank) && board[file][rank].color != to_move && board[file][rank].color != PieceColor::NONE;
+        return in_bounds(file, rank) && board[file][rank].color != to_move &&
+               board[file][rank].color != PieceColor::NONE;
     }
 
     void push_leaper_move(
@@ -159,10 +157,10 @@ public:
 
         // non-capturing double move
         dst_rank = src_rank + direction * 2;
-        if (
-            ((to_move == PieceColor::WHITE && src_rank == 1) || (to_move == PieceColor::BLACK && src_rank == NUM_RANKS - 2))
-            && is_legal_dst_no_cap(dst_file, dst_rank - direction) && is_legal_dst_no_cap(dst_file, dst_rank)
-        ) {
+        if (((to_move == PieceColor::WHITE && src_rank == 1) ||
+             (to_move == PieceColor::BLACK && src_rank == NUM_RANKS - 2)) &&
+            is_legal_dst_no_cap(dst_file, dst_rank - direction) &&
+            is_legal_dst_no_cap(dst_file, dst_rank)) {
             moves.push_back(
                 {src_file, src_rank, dst_file, dst_rank, PieceType::NONE}
             );
@@ -176,7 +174,8 @@ public:
         }
 
         // en-passant
-        if (is_legal_dst_no_cap(dst_file, dst_rank) && (dst_file == en_passant_file && dst_rank == en_passant_rank)) {
+        if (is_legal_dst_no_cap(dst_file, dst_rank) &&
+            (dst_file == en_passant_file && dst_rank == en_passant_rank)) {
             moves.push_back(
                 {src_file, src_rank, dst_file, dst_rank, PieceType::NONE}
             );
@@ -190,13 +189,13 @@ public:
         }
 
         // en-passant
-        if (is_legal_dst_no_cap(dst_file, dst_rank) && (dst_file == en_passant_file && dst_rank == en_passant_rank)) {
+        if (is_legal_dst_no_cap(dst_file, dst_rank) &&
+            (dst_file == en_passant_file && dst_rank == en_passant_rank)) {
             moves.push_back(
                 {src_file, src_rank, dst_file, dst_rank, PieceType::NONE}
             );
             board[dst_file][dst_rank - direction] = EMPTY_SQUARE;
         }
-
     }
 
     std::vector<ChessMove> get_moves() {
@@ -271,14 +270,15 @@ public:
             } else if (move.dst_rank - move.src_rank == -2) {
                 en_passant_file = move.dst_file;
                 en_passant_rank = move.dst_rank + 1;
-
             }
         }
 
-        board[move.dst_file][move.dst_rank] = board[move.src_file][move.src_rank];
+        board[move.dst_file][move.dst_rank] =
+            board[move.src_file][move.src_rank];
         board[move.src_file][move.src_rank] = EMPTY_SQUARE;
 
-        to_move = (to_move == PieceColor::WHITE) ? PieceColor::BLACK : PieceColor::WHITE;
+        to_move = (to_move == PieceColor::WHITE) ? PieceColor::BLACK
+                                                 : PieceColor::WHITE;
     }
 
     friend std::ostream &operator<<(std::ostream &os, const ChessPosition &b) {
@@ -300,13 +300,16 @@ int main() {
     constexpr char LETTERS[8] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'};
     ChessPosition pos;
 
-    while(1) {
+    while (1) {
         std::cout << pos << std::endl;
 
         std::vector<ChessMove> moves = pos.get_moves();
         for (std::size_t i = 0; i < moves.size(); ++i) {
             const ChessMove &move = moves[i];
-            std::cout << i << ": " << LETTERS[move.src_file] << (int)move.src_rank + 1 << " to " << LETTERS[move.dst_file] << (int)move.dst_rank + 1 << std::endl;
+            std::cout << i << ": " << LETTERS[move.src_file]
+                      << (int)move.src_rank + 1 << " to "
+                      << LETTERS[move.dst_file] << (int)move.dst_rank + 1
+                      << std::endl;
         }
 
         std::cout << "> ";
@@ -316,7 +319,9 @@ int main() {
         ChessMove move = moves[move_index];
         pos.make_move(move);
 
-        std::cout << LETTERS[move.src_file] << (int)move.src_rank + 1 << " to " << LETTERS[move.dst_file] << (int)move.dst_rank + 1 << std::endl;
+        std::cout << LETTERS[move.src_file] << (int)move.src_rank + 1 << " to "
+                  << LETTERS[move.dst_file] << (int)move.dst_rank + 1
+                  << std::endl;
     }
     return 0;
 }
