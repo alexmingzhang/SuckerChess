@@ -15,23 +15,16 @@ void ChessPosition::make_move(const ChessMove &move) {
 
     // validate move
     switch (piece.type) {
-        case PieceType::NONE:
-            __builtin_unreachable();
+        case PieceType::NONE: __builtin_unreachable();
         case PieceType::KING:
             assert(move.distance() == 1 || move.distance() == 2);
             break;
         case PieceType::QUEEN:
             assert(move.is_orthogonal() || move.is_diagonal());
             break;
-        case PieceType::ROOK:
-            assert(move.is_orthogonal());
-            break;
-        case PieceType::BISHOP:
-            assert(move.is_diagonal());
-            break;
-        case PieceType::KNIGHT:
-            assert(move.distance() == 2);
-            break;
+        case PieceType::ROOK: assert(move.is_orthogonal()); break;
+        case PieceType::BISHOP: assert(move.is_diagonal()); break;
+        case PieceType::KNIGHT: assert(move.distance() == 2); break;
         case PieceType::PAWN:
             assert(move.distance() == 1 || move.distance() == 2);
             break;
@@ -92,7 +85,21 @@ void ChessPosition::make_move(const ChessMove &move) {
         board[move.dst_file][move.src_rank] = EMPTY_SQUARE;
     }
 
-    // TODO: handle castling
+    // handle castling
+    if (piece.type == PieceType::KING && move.distance() != 1) {
+        assert(move.distance() == 2);
+        assert(move.src_file == 4);
+        assert(move.src_rank == move.dst_rank);
+        if (move.dst_file == 6) { // short castle
+            board[5][move.src_rank] = board[7][move.src_rank];
+            board[7][move.src_rank] = EMPTY_SQUARE;
+        } else if (move.dst_file == 2) { // long castle
+            board[3][move.src_rank] = board[0][move.src_rank];
+            board[0][move.src_rank] = EMPTY_SQUARE;
+        } else {
+            __builtin_unreachable();
+        }
+    }
 
     // update player to move
     if (to_move == PieceColor::WHITE) {
@@ -109,8 +116,7 @@ std::ostream &operator<<(std::ostream &os, const ChessPosition &pos) {
     os << "    a   b   c   d   e   f   g   h\n";
     os << "  ┌───┬───┬───┬───┬───┬───┬───┬───┐\n";
     for (coord_t rank = NUM_RANKS - 1; rank >= 0; --rank) {
-        // ensure printing as int, not char
-        os << static_cast<int>(rank + 1) << " │";
+        os << rank + 1 << " │";
         for (coord_t file = 0; file < NUM_FILES; ++file) {
             os << ' ' << pos.board[file][rank] << " │";
         }

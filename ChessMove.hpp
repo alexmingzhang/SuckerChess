@@ -63,9 +63,9 @@ struct ChessMove {
     }
 
     [[nodiscard]] constexpr coord_t distance() const noexcept {
-        return static_cast<coord_t>(std::max(
+        return std::max(
             std::abs(src_file - dst_file), std::abs(src_rank - dst_rank)
-        ));
+        );
     }
 
 }; // struct ChessMove
