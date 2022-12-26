@@ -290,7 +290,7 @@ public: // ======================================================= CHECK TESTING
     }
 
     [[nodiscard]] bool stalemated() const {
-        return in_check() && get_legal_moves().empty();
+        return !in_check() && get_legal_moves().empty();
     }
 
 public: // ============================================================ PRINTING
