@@ -273,7 +273,13 @@ void ChessPosition::make_move(const ChessMove &move) {
         move.src_rank == 0) {
         white_can_short_castle = false;
     }
+    if (move.dst_file == NUM_FILES - 1 && move.dst_rank == 0) {
+        white_can_short_castle = false;
+    }
     if (piece == WHITE_ROOK && move.src_file == 0 && move.src_rank == 0) {
+        white_can_long_castle = false;
+    }
+    if (move.dst_file == 0 && move.dst_rank == 0) {
         white_can_long_castle = false;
     }
     if (piece == BLACK_KING) {
@@ -284,8 +290,14 @@ void ChessPosition::make_move(const ChessMove &move) {
         move.src_rank == NUM_RANKS - 1) {
         black_can_short_castle = false;
     }
+    if (move.dst_file == NUM_FILES - 1 && move.dst_rank == NUM_RANKS - 1) {
+        black_can_short_castle = false;
+    }
     if (piece == BLACK_ROOK && move.src_file == 0 &&
         move.src_rank == NUM_RANKS - 1) {
+        black_can_long_castle = false;
+    }
+    if (move.dst_file == 0 && move.dst_rank == NUM_RANKS - 1) {
         black_can_long_castle = false;
     }
 
@@ -300,6 +312,9 @@ void ChessPosition::make_move(const ChessMove &move) {
 
     // handle en passant capture
     if (is_en_passant_capture) {
+        assert(
+            contains_enemy_piece(move.dst_file, move.src_rank, PieceType::PAWN)
+        );
         board[move.dst_file][move.src_rank] = EMPTY_SQUARE;
     }
 
