@@ -28,7 +28,7 @@ int main() {
         }
 
         if (pos_changed) {
-            std::cout << pos << std::endl;
+            std::cout << pos;
             if (pos.get_color_to_move() == PieceColor::WHITE) {
                 std::cout << "White to move." << std::endl;
             } else if (pos.get_color_to_move() == PieceColor::BLACK) {

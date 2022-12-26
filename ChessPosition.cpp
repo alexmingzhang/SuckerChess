@@ -379,13 +379,9 @@ std::string ChessPosition::get_move_name(
                     other.dst_rank == move.dst_rank) {
                     const bool file_match = other.src_file == move.src_file;
                     const bool rank_match = other.src_rank == move.src_rank;
-                    if (file_match && !rank_match) {
-                        ambiguous_file = true;
-                    } else if (!file_match && rank_match) {
-                        ambiguous_rank = true;
-                    } else if (!file_match && !rank_match) {
-                        ambiguous_diag = true;
-                    }
+                    ambiguous_file |= file_match && !rank_match;
+                    ambiguous_rank |= !file_match && rank_match;
+                    ambiguous_diag |= !file_match && !rank_match;
                 }
             }
             if (ambiguous_rank || ambiguous_file || ambiguous_diag) {
