@@ -32,7 +32,7 @@ bool ChessGame::drawn() const {
 
 
 PieceColor
-ChessGame::run(ChessPlayer *white, ChessPlayer *black, bool verbose) {
+ChessGame::run(ChessPlayer &white, ChessPlayer &black, bool verbose) {
     while (true) {
         if (verbose) {
             std::cout << current_pos << std::endl;
@@ -54,10 +54,10 @@ ChessGame::run(ChessPlayer *white, ChessPlayer *black, bool verbose) {
             }
         }
         if (drawn()) { return PieceColor::NONE; }
-        ChessPlayer *const current_player =
+        ChessPlayer &current_player =
             current_pos.get_color_to_move() == PieceColor::WHITE ? white
                                                                  : black;
-        make_move(current_player->pick_move(
+        make_move(current_player.pick_move(
             current_pos, current_pos.get_legal_moves(), pos_history,
             move_history
         ));

@@ -30,7 +30,7 @@ public:
 
     [[nodiscard]] bool drawn() const;
 
-    PieceColor run(ChessPlayer *white, ChessPlayer *black, bool verbose = true);
+    PieceColor run(ChessPlayer &white, ChessPlayer &black, bool verbose = true);
 
 }; // class ChessGame
 

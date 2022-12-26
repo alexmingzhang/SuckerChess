@@ -11,7 +11,10 @@ int main() {
 
     ChessGame game;
 
-    game.run(new ConsolePlayer(), new RandomPlayer());
+    ConsolePlayer white;
+    RandomPlayer black;
+
+    game.run(white, black);
 
     //    while (true) {
     //

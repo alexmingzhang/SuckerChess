@@ -401,6 +401,19 @@ std::string ChessPosition::get_move_name(
         result << static_cast<char>('1' + move.dst_rank);
     }
 
+    if (move.promotion_type != PieceType::NONE) {
+        result << '=';
+        switch (move.promotion_type) {
+            case PieceType::NONE: __builtin_unreachable();
+            case PieceType::KING: __builtin_unreachable();
+            case PieceType::QUEEN: result << 'Q'; break;
+            case PieceType::ROOK: result << 'R'; break;
+            case PieceType::BISHOP: result << 'B'; break;
+            case PieceType::KNIGHT: result << 'N'; break;
+            case PieceType::PAWN: __builtin_unreachable();
+        }
+    }
+
     ChessPosition copy = *this;
     copy.make_move(move);
     if (copy.checkmated()) {
@@ -597,7 +610,6 @@ std::string ChessPosition::get_fen() const {
     } else {
         fen << '-';
     }
-    fen << ' ';
 
     return fen.str();
 }

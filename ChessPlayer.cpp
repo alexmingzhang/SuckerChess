@@ -26,6 +26,8 @@ ChessMove ConsolePlayer::pick_move(
             std::cout << "Legal moves:";
             for (const std::string &name : names) { std::cout << ' ' << name; }
             std::cout << std::endl;
+        } else if (command == "fen") {
+            std::cout << current_pos.get_fen() << std::endl;
         } else {
             for (std::size_t i = 0; i < legal_moves.size(); ++i) {
                 if (command == names[i]) { return legal_moves[i]; }
