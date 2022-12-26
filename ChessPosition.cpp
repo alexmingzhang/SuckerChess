@@ -427,6 +427,7 @@ std::ostream &operator<<(std::ostream &os, const ChessPosition &pos) {
     return os;
 }
 
+
 void ChessPosition::load_fen(const std::string &fen_string) {
     std::istringstream fen(fen_string);
 
@@ -501,6 +502,7 @@ void ChessPosition::load_fen(const std::string &fen_string) {
         }
     }
 }
+
 
 std::string ChessPosition::get_fen() const {
     std::ostringstream fen;

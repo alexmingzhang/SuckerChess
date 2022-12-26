@@ -42,7 +42,7 @@ std::mt19937 properly_seeded_random_engine();
 class RandomPlayer : public ChessPlayer {
 
     std::mt19937 rng;
-    
+
 public:
 
     RandomPlayer()

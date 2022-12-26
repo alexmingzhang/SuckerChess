@@ -308,7 +308,7 @@ public: // ============================================================ PRINTING
 
     friend std::ostream &operator<<(std::ostream &os, const ChessPosition &b);
 
-public: // ===============================================================   FEN
+public: // ================================================================= FEN
 
     void load_fen(const std::string &);
 
