@@ -3,7 +3,7 @@
 #include <cassert> // for assert
 #include <cctype>  // for std::toupper
 #include <cmath>   // for std::abs
-#include <sstream> // for std::ostringstream
+#include <sstream> // for std::istringstream, std::ostringstream
 
 
 void ChessPosition::push_leaper_move(

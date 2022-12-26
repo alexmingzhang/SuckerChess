@@ -1,7 +1,6 @@
 #include <cstddef>
 #include <iostream>
 #include <string>
-#include <vector>
 
 #include "ChessGame.hpp"
 #include "ChessPlayer.hpp"

@@ -3,7 +3,6 @@
 
 #include <array>   // for std::array
 #include <ostream> // for std::ostream
-#include <sstream> // for std::istringstream
 #include <string>  // for std::string
 #include <vector>  // for std::vector
 
