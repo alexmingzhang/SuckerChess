@@ -68,12 +68,31 @@ public:
         return piece.color != to_move && piece.color != PieceColor::NONE;
     }
 
+    [[nodiscard]] constexpr bool
+    contains_piece(coord_t file, coord_t rank, PieceType type) const {
+        return in_bounds(file, rank) && board[file][rank].type == type;
+    }
+
+    [[nodiscard]] constexpr bool
+    is_attacked_by_knight(coord_t file, coord_t rank) const {
+        return contains_piece(file - 2, rank - 1, PieceType::KNIGHT) ||
+               contains_piece(file - 2, rank + 1, PieceType::KNIGHT) ||
+               contains_piece(file - 1, rank - 2, PieceType::KNIGHT) ||
+               contains_piece(file - 1, rank + 2, PieceType::KNIGHT) ||
+               contains_piece(file + 1, rank - 2, PieceType::KNIGHT) ||
+               contains_piece(file + 1, rank + 2, PieceType::KNIGHT) ||
+               contains_piece(file + 2, rank - 1, PieceType::KNIGHT) ||
+               contains_piece(file + 2, rank + 1, PieceType::KNIGHT);
+    }
+
+    [[nodiscard]] bool is_attacked(coord_t file, coord_t rank) const {}
+
     void push_leaper_move(
         std::vector<ChessMove> &moves, coord_t src_file, coord_t src_rank,
         coord_t file_offset, coord_t rank_offset
     ) const {
-        const auto dst_file = static_cast<coord_t>(src_file + file_offset);
-        const auto dst_rank = static_cast<coord_t>(src_rank + rank_offset);
+        const coord_t dst_file = src_file + file_offset;
+        const coord_t dst_rank = src_rank + rank_offset;
         if (is_legal_dst(dst_file, dst_rank)) {
             moves.emplace_back(src_file, src_rank, dst_file, dst_rank);
         }
@@ -83,12 +102,12 @@ public:
         std::vector<ChessMove> &moves, coord_t src_file, coord_t src_rank,
         coord_t file_offset, coord_t rank_offset
     ) const {
-        auto dst_file = static_cast<coord_t>(src_file + file_offset);
-        auto dst_rank = static_cast<coord_t>(src_rank + rank_offset);
+        coord_t dst_file = src_file + file_offset;
+        coord_t dst_rank = src_rank + rank_offset;
         while (is_empty(dst_file, dst_rank)) {
             moves.emplace_back(src_file, src_rank, dst_file, dst_rank);
-            dst_file = static_cast<coord_t>(dst_file + file_offset);
-            dst_rank = static_cast<coord_t>(dst_rank + rank_offset);
+            dst_file += file_offset;
+            dst_rank += rank_offset;
         }
         if (is_legal_dst(dst_file, dst_rank)) {
             moves.emplace_back(src_file, src_rank, dst_file, dst_rank);
@@ -171,8 +190,7 @@ public:
         assert(piece.color == to_move);
         assert(piece.type != PieceType::NONE);
         switch (piece.type) {
-            case PieceType::NONE:
-                __builtin_unreachable();
+            case PieceType::NONE: __builtin_unreachable();
             case PieceType::KING:
                 push_leaper_move(moves, src_file, src_rank, -1, -1);
                 push_leaper_move(moves, src_file, src_rank, -1, 0);

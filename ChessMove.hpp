@@ -10,7 +10,7 @@
 #include "ChessPiece.hpp"
 
 
-using coord_t = std::int8_t;
+using coord_t = int;
 constexpr coord_t NUM_FILES = 8;
 constexpr coord_t NUM_RANKS = 8;
 
@@ -23,10 +23,10 @@ constexpr bool in_bounds(coord_t file, coord_t rank) {
 
 struct ChessMove {
 
-    coord_t src_file;
-    coord_t src_rank;
-    coord_t dst_file;
-    coord_t dst_rank;
+    coord_t src_file : 4;
+    coord_t src_rank : 4;
+    coord_t dst_file : 4;
+    coord_t dst_rank : 4;
     PieceType promotion_type;
 
     explicit constexpr ChessMove(coord_t sf, coord_t sr, coord_t df, coord_t dr)
