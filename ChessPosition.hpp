@@ -3,6 +3,7 @@
 
 #include <array>   // for std::array
 #include <ostream> // for std::ostream
+#include <sstream> // for std::istringstream
 #include <string>  // for std::string
 #include <vector>  // for std::vector
 
@@ -42,6 +43,8 @@ public: // ======================================================== CONSTRUCTORS
           to_move(PieceColor::WHITE), en_passant_file(NUM_FILES),
           white_can_short_castle(true), white_can_long_castle(true),
           black_can_short_castle(true), black_can_long_castle(true) {}
+
+    explicit ChessPosition(std::string fen) { load_fen(fen); }
 
 public: // =========================================================== ACCESSORS
 
@@ -225,7 +228,7 @@ public: // ====================================================== ATTACK TESTING
     [[nodiscard]] constexpr bool in_check() const {
         for (coord_t file = 0; file < NUM_FILES; ++file) {
             for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
-                const ChessPiece &piece = board[file][rank];
+                const ChessPiece piece = board[file][rank];
                 if (piece.type == PieceType::KING && piece.color == to_move) {
                     return is_attacked(file, rank);
                 }
@@ -300,6 +303,12 @@ public: // ============================================================ PRINTING
     ) const;
 
     friend std::ostream &operator<<(std::ostream &os, const ChessPosition &b);
+
+public: // ===============================================================   FEN
+
+    void load_fen(const std::string &);
+
+    std::string get_fen() const;
 
 }; // class ChessPosition
 

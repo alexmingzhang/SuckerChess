@@ -9,6 +9,7 @@
 
 int main() {
     ChessPosition pos;
+
     bool pos_changed = true;
 
     while (true) {
@@ -50,6 +51,9 @@ int main() {
             std::cout << "Legal moves:";
             for (const std::string &name : names) { std::cout << ' ' << name; }
             std::cout << std::endl;
+            pos_changed = false;
+        } else if (command == "fen") {
+            std::cout << pos.get_fen() << std::endl;
             pos_changed = false;
         } else {
             bool found = false;
