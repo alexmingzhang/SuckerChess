@@ -2,7 +2,9 @@
 
 #include <algorithm> // for std::find, std::find_if
 #include <cctype>    // for std::isspace
-#include <iostream>  // for std::cin, std::cout
+#include <cstddef>   // for std::size_t
+#include <iostream>  // for std::cin, std::cout, std::endl
+#include <sstream>   // for std::istringstream
 #include <string>    // for std::getline, std::string
 
 
