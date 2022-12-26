@@ -9,4 +9,6 @@ add_compile_options(-Wall -Wextra -pedantic)
 add_executable(SuckerChess main.cpp
         ChessPiece.hpp ChessPiece.cpp
         ChessMove.cpp ChessMove.hpp
-        ChessPosition.cpp ChessPosition.hpp)
+        ChessPosition.cpp ChessPosition.hpp
+        ChessPlayer.cpp ChessPlayer.hpp
+        ChessGame.cpp ChessGame.hpp)

@@ -64,6 +64,10 @@ public: // ====================================================== INDEX OPERATOR
         return board[file][rank];
     }
 
+public: // ========================================================== COMPARISON
+
+    constexpr bool operator==(const ChessPosition &) const noexcept = default;
+
 public: // ====================================================== SQUARE TESTING
 
     [[nodiscard]] constexpr bool
