@@ -3,6 +3,7 @@
 
 #include <array>   // for std::array
 #include <ostream> // for std::ostream
+#include <string>  // for std::string
 #include <vector>  // for std::vector
 
 #include "ChessMove.hpp"
@@ -19,7 +20,7 @@ class ChessPosition {
     bool black_can_short_castle;
     bool black_can_long_castle;
 
-public: // ========================================================= CONSTRUCTOR
+public: // ======================================================== CONSTRUCTORS
 
     explicit constexpr ChessPosition() noexcept
         : board{{{WHITE_ROOK, WHITE_PAWN, EMPTY_SQUARE, EMPTY_SQUARE,
@@ -42,6 +43,12 @@ public: // ========================================================= CONSTRUCTOR
           white_can_short_castle(true), white_can_long_castle(true),
           black_can_short_castle(true), black_can_long_castle(true) {}
 
+public: // =========================================================== ACCESSORS
+
+    [[nodiscard]] constexpr PieceColor get_color_to_move() const noexcept {
+        return to_move;
+    }
+
 public: // ====================================================== INDEX OPERATOR
 
     constexpr ChessPiece &operator()(coord_t file, coord_t rank) {
@@ -56,28 +63,30 @@ public: // ====================================================== INDEX OPERATOR
 
 public: // ====================================================== SQUARE TESTING
 
-    [[nodiscard]] constexpr bool is_empty(coord_t file, coord_t rank) const {
+    [[nodiscard]] constexpr bool
+    is_empty(coord_t file, coord_t rank) const noexcept {
         return in_bounds(file, rank) && board[file][rank] == EMPTY_SQUARE;
     }
 
     [[nodiscard]] constexpr bool
-    is_legal_dst(coord_t file, coord_t rank) const {
+    is_legal_dst(coord_t file, coord_t rank) const noexcept {
         return in_bounds(file, rank) && board[file][rank].color != to_move;
     }
 
     [[nodiscard]] constexpr bool
-    is_legal_cap(coord_t file, coord_t rank) const {
+    is_legal_cap(coord_t file, coord_t rank) const noexcept {
         if (!in_bounds(file, rank)) { return false; }
         const ChessPiece piece = board[file][rank];
         return piece.color != to_move && piece.color != PieceColor::NONE;
     }
 
-    [[nodiscard]] constexpr bool
-    contains_enemy_piece(coord_t file, coord_t rank, PieceType type) const {
+    [[nodiscard]] constexpr bool contains_enemy_piece(
+        coord_t file, coord_t rank, PieceType type
+    ) const noexcept {
         if (!in_bounds(file, rank)) { return false; }
         const ChessPiece piece = board[file][rank];
         return piece.color != to_move && piece.color != PieceColor::NONE &&
-               board[file][rank].type == type;
+               piece.type == type;
     }
 
 public: // =========================================================== UTILITIES
@@ -88,6 +97,7 @@ public: // =========================================================== UTILITIES
             case PieceColor::WHITE: return +1;
             case PieceColor::BLACK: return -1;
         }
+        __builtin_unreachable();
     }
 
     [[nodiscard]] constexpr coord_t promotion_rank() const {
@@ -96,6 +106,7 @@ public: // =========================================================== UTILITIES
             case PieceColor::WHITE: return NUM_RANKS - 1;
             case PieceColor::BLACK: return 0;
         }
+        __builtin_unreachable();
     }
 
     [[nodiscard]] constexpr coord_t en_passant_rank() const {
@@ -104,6 +115,7 @@ public: // =========================================================== UTILITIES
             case PieceColor::WHITE: return NUM_RANKS - 3;
             case PieceColor::BLACK: return 2;
         }
+        __builtin_unreachable();
     }
 
 public: // ====================================================== ATTACK TESTING
@@ -154,6 +166,7 @@ public: // ====================================================== ATTACK TESTING
         if (d.type == PieceType::QUEEN || d.type == PieceType::ROOK) {
             return true;
         }
+        return false;
     }
 
     [[nodiscard]] constexpr bool
@@ -174,6 +187,7 @@ public: // ====================================================== ATTACK TESTING
         if (d.type == PieceType::QUEEN || d.type == PieceType::BISHOP) {
             return true;
         }
+        return false;
     }
 
     [[nodiscard]] constexpr bool
@@ -208,222 +222,82 @@ public: // ====================================================== ATTACK TESTING
                is_attacked_by_pawn(file, rank);
     }
 
+    [[nodiscard]] constexpr bool in_check() const {
+        for (coord_t file = 0; file < NUM_FILES; ++file) {
+            for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
+                const ChessPiece &piece = board[file][rank];
+                if (piece.type == PieceType::KING && piece.color == to_move) {
+                    return is_attacked(file, rank);
+                }
+            }
+        }
+        return false;
+    }
+
 public: // ===================================================== MOVE GENERATION
 
     void push_leaper_move(
         std::vector<ChessMove> &moves, coord_t src_file, coord_t src_rank,
         coord_t file_offset, coord_t rank_offset
-    ) const {
-        const coord_t dst_file = src_file + file_offset;
-        const coord_t dst_rank = src_rank + rank_offset;
-        if (is_legal_dst(dst_file, dst_rank)) {
-            moves.emplace_back(src_file, src_rank, dst_file, dst_rank);
-        }
-    }
+    ) const;
 
     void push_slider_moves(
         std::vector<ChessMove> &moves, coord_t src_file, coord_t src_rank,
         coord_t file_offset, coord_t rank_offset
-    ) const {
-        coord_t dst_file = src_file + file_offset;
-        coord_t dst_rank = src_rank + rank_offset;
-        while (is_empty(dst_file, dst_rank)) {
-            moves.emplace_back(src_file, src_rank, dst_file, dst_rank);
-            dst_file += file_offset;
-            dst_rank += rank_offset;
-        }
-        if (is_legal_dst(dst_file, dst_rank)) {
-            moves.emplace_back(src_file, src_rank, dst_file, dst_rank);
-        }
-    }
+    ) const;
 
     void push_promotion_moves(
         std::vector<ChessMove> &moves, coord_t src_file, coord_t src_rank,
         coord_t dst_file, coord_t dst_rank
-    ) const {
-        if (dst_rank == promotion_rank()) {
-            moves.emplace_back(
-                src_file, src_rank, dst_file, dst_rank, PieceType::QUEEN
-            );
-            moves.emplace_back(
-                src_file, src_rank, dst_file, dst_rank, PieceType::ROOK
-            );
-            moves.emplace_back(
-                src_file, src_rank, dst_file, dst_rank, PieceType::BISHOP
-            );
-            moves.emplace_back(
-                src_file, src_rank, dst_file, dst_rank, PieceType::KNIGHT
-            );
-        } else {
-            moves.emplace_back(src_file, src_rank, dst_file, dst_rank);
-        }
-    }
+    ) const;
 
     void push_pawn_moves(
         std::vector<ChessMove> &moves, coord_t src_file, coord_t src_rank
-    ) const {
-        const coord_t direction = pawn_direction();
-        coord_t dst_file = src_file;
-        coord_t dst_rank = src_rank + direction;
+    ) const;
 
-        // non-capturing
-        if (is_empty(dst_file, dst_rank)) {
-            push_promotion_moves(moves, src_file, src_rank, dst_file, dst_rank);
-        }
+    void push_castling_moves(std::vector<ChessMove> &moves) const;
 
-        // non-capturing double move
-        dst_rank = src_rank + 2 * direction;
-        if (((to_move == PieceColor::WHITE && src_rank == 1) ||
-             (to_move == PieceColor::BLACK && src_rank == NUM_RANKS - 2)) &&
-            is_empty(dst_file, dst_rank - direction) &&
-            is_empty(dst_file, dst_rank)) {
-            moves.emplace_back(src_file, src_rank, dst_file, dst_rank);
-        }
-
-        // capture to src_file - 1
-        dst_rank = src_rank + direction;
-        dst_file = src_file - 1;
-        if (is_legal_cap(dst_file, dst_rank)) {
-            push_promotion_moves(moves, src_file, src_rank, dst_file, dst_rank);
-        }
-
-        // en-passant
-        if (in_bounds(dst_file, dst_rank) &&
-            (dst_file == en_passant_file && dst_rank == en_passant_rank())) {
-            moves.emplace_back(src_file, src_rank, dst_file, dst_rank);
-        }
-
-        // capture to src_file + 1
-        dst_file = src_file + 1;
-        if (is_legal_cap(dst_file, dst_rank)) {
-            push_promotion_moves(moves, src_file, src_rank, dst_file, dst_rank);
-        }
-
-        // en-passant
-        if (in_bounds(dst_file, dst_rank) &&
-            (dst_file == en_passant_file && dst_rank == en_passant_rank())) {
-            moves.emplace_back(src_file, src_rank, dst_file, dst_rank);
-        }
-    }
-
-    void push_castling_moves(std::vector<ChessMove> &moves) const {
-        if (to_move == PieceColor::WHITE) {
-            if (white_can_short_castle) {
-                assert(board[4][0] == WHITE_KING);
-                assert(board[7][0] == WHITE_ROOK);
-                if (board[5][0] == EMPTY_SQUARE &&
-                    board[6][0] == EMPTY_SQUARE && !is_attacked(4, 0) &&
-                    !is_attacked(5, 0) && !is_attacked(6, 0)) {
-                    moves.emplace_back(4, 0, 6, 0);
-                }
-            }
-            if (white_can_long_castle) {
-                assert(board[0][0] == WHITE_ROOK);
-                assert(board[4][0] == WHITE_KING);
-                if (board[1][0] == EMPTY_SQUARE &&
-                    board[2][0] == EMPTY_SQUARE &&
-                    board[3][0] == EMPTY_SQUARE && !is_attacked(2, 0) &&
-                    !is_attacked(3, 0) && !is_attacked(4, 0)) {
-                    moves.emplace_back(4, 0, 2, 0);
-                }
-            }
-        } else if (to_move == PieceColor::BLACK) {
-            if (black_can_short_castle) {
-                assert(board[4][7] == BLACK_KING);
-                assert(board[7][7] == BLACK_ROOK);
-                if (board[5][7] == EMPTY_SQUARE &&
-                    board[6][7] == EMPTY_SQUARE && !is_attacked(4, 7) &&
-                    !is_attacked(5, 7) && !is_attacked(6, 7)) {
-                    moves.emplace_back(4, 7, 6, 7);
-                }
-            }
-            if (black_can_long_castle) {
-                assert(board[0][7] == BLACK_ROOK);
-                assert(board[4][7] == BLACK_KING);
-                if (board[1][7] == EMPTY_SQUARE &&
-                    board[2][7] == EMPTY_SQUARE &&
-                    board[3][7] == EMPTY_SQUARE && !is_attacked(2, 7) &&
-                    !is_attacked(3, 7) && !is_attacked(4, 7)) {
-                    moves.emplace_back(4, 7, 2, 7);
-                }
-            }
-        } else {
-            __builtin_unreachable();
-        }
-    }
-
-    void push_moves(
+    void push_all_moves(
         std::vector<ChessMove> &moves, coord_t src_file, coord_t src_rank
-    ) {
-        assert(in_bounds(src_file, src_rank));
-        const ChessPiece piece = board[src_file][src_rank];
-        assert(piece.color == to_move);
-        assert(piece.type != PieceType::NONE);
-        switch (piece.type) {
-            case PieceType::NONE: __builtin_unreachable();
-            case PieceType::KING:
-                push_leaper_move(moves, src_file, src_rank, -1, -1);
-                push_leaper_move(moves, src_file, src_rank, -1, 0);
-                push_leaper_move(moves, src_file, src_rank, -1, +1);
-                push_leaper_move(moves, src_file, src_rank, 0, -1);
-                push_leaper_move(moves, src_file, src_rank, 0, +1);
-                push_leaper_move(moves, src_file, src_rank, +1, -1);
-                push_leaper_move(moves, src_file, src_rank, +1, 0);
-                push_leaper_move(moves, src_file, src_rank, +1, +1);
-                push_castling_moves(moves);
-                break;
-            case PieceType::QUEEN:
-                push_slider_moves(moves, src_file, src_rank, -1, -1);
-                push_slider_moves(moves, src_file, src_rank, -1, 0);
-                push_slider_moves(moves, src_file, src_rank, -1, +1);
-                push_slider_moves(moves, src_file, src_rank, 0, -1);
-                push_slider_moves(moves, src_file, src_rank, 0, +1);
-                push_slider_moves(moves, src_file, src_rank, +1, -1);
-                push_slider_moves(moves, src_file, src_rank, +1, 0);
-                push_slider_moves(moves, src_file, src_rank, +1, +1);
-                break;
-            case PieceType::ROOK:
-                push_slider_moves(moves, src_file, src_rank, -1, 0);
-                push_slider_moves(moves, src_file, src_rank, 0, -1);
-                push_slider_moves(moves, src_file, src_rank, 0, +1);
-                push_slider_moves(moves, src_file, src_rank, +1, 0);
-                break;
-            case PieceType::BISHOP:
-                push_slider_moves(moves, src_file, src_rank, -1, -1);
-                push_slider_moves(moves, src_file, src_rank, -1, +1);
-                push_slider_moves(moves, src_file, src_rank, +1, -1);
-                push_slider_moves(moves, src_file, src_rank, +1, +1);
-                break;
-            case PieceType::KNIGHT:
-                push_leaper_move(moves, src_file, src_rank, -2, -1);
-                push_leaper_move(moves, src_file, src_rank, -2, +1);
-                push_leaper_move(moves, src_file, src_rank, -1, -2);
-                push_leaper_move(moves, src_file, src_rank, -1, +2);
-                push_leaper_move(moves, src_file, src_rank, +1, -2);
-                push_leaper_move(moves, src_file, src_rank, +1, +2);
-                push_leaper_move(moves, src_file, src_rank, +2, -1);
-                push_leaper_move(moves, src_file, src_rank, +2, +1);
-                break;
-            case PieceType::PAWN:
-                push_pawn_moves(moves, src_file, src_rank);
-                break;
-        }
+    ) const;
+
+    [[nodiscard]] std::vector<ChessMove> get_all_moves() const;
+
+public: // ====================================================== MOVE EXECUTION
+
+    void make_move(const ChessMove &move);
+
+public: // ======================================================= CHECK TESTING
+
+    [[nodiscard]] bool puts_self_in_check(const ChessMove &move) const {
+        ChessPosition copy = *this;
+        copy.make_move(move);
+        copy.to_move = to_move;
+        return copy.in_check();
     }
 
-    std::vector<ChessMove> get_moves() {
+    [[nodiscard]] std::vector<ChessMove> get_legal_moves() const {
+        const std::vector<ChessMove> all_moves = get_all_moves();
         std::vector<ChessMove> result;
-        for (coord_t src_file = 0; src_file < NUM_FILES; ++src_file) {
-            for (coord_t src_rank = 0; src_rank < NUM_RANKS; ++src_rank) {
-                const ChessPiece &piece = board[src_file][src_rank];
-                if (piece.color == to_move) {
-                    push_moves(result, src_file, src_rank);
-                }
-            }
+        for (const ChessMove &move : all_moves) {
+            if (!puts_self_in_check(move)) { result.push_back(move); }
         }
         return result;
     }
 
-    void make_move(const ChessMove &move);
+    [[nodiscard]] bool checkmated() const {
+        return in_check() && get_legal_moves().empty();
+    }
+
+    [[nodiscard]] bool stalemated() const {
+        return in_check() && get_legal_moves().empty();
+    }
+
+public: // ============================================================ PRINTING
+
+    [[nodiscard]] std::string get_move_name(
+        const std::vector<ChessMove> &legal_moves, const ChessMove &move
+    ) const;
 
     friend std::ostream &operator<<(std::ostream &os, const ChessPosition &b);
 

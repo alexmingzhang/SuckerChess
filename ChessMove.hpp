@@ -15,7 +15,7 @@ constexpr coord_t NUM_FILES = 8;
 constexpr coord_t NUM_RANKS = 8;
 
 
-constexpr bool in_bounds(coord_t file, coord_t rank) {
+constexpr bool in_bounds(coord_t file, coord_t rank) noexcept {
     return (file >= 0) && (file < NUM_FILES) && (rank >= 0) &&
            (rank < NUM_RANKS);
 }
