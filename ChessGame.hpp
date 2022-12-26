@@ -11,13 +11,13 @@
 
 class ChessGame {
 
+public:
+
     ChessPosition current_pos;
     std::vector<ChessPosition> pos_history;
     std::vector<ChessMove> move_history;
     int half_move_clock;
     int full_move_count;
-
-public:
 
     explicit constexpr ChessGame() noexcept
         : current_pos()
@@ -30,7 +30,9 @@ public:
 
     [[nodiscard]] bool drawn() const;
 
-    PieceColor run(ChessPlayer &white, ChessPlayer &black, bool verbose = true);
+    ChessMove get_console_move(const std::vector<ChessMove> &legal_moves);
+
+    PieceColor run(ChessPlayer *white, ChessPlayer *black, bool verbose = true);
 
 }; // class ChessGame
 

@@ -74,4 +74,7 @@ struct ChessMove {
 std::ostream &operator<<(std::ostream &os, const ChessMove &move);
 
 
+constexpr ChessMove NULL_MOVE(0, 0, 0, 0);
+
+
 #endif // SUCKER_CHESS_CHESS_MOVE_HPP

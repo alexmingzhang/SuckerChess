@@ -3,40 +3,8 @@
 #include <algorithm>  // for std::generate
 #include <cstddef>    // for std::size_t
 #include <functional> // for std::ref
-#include <iostream>   // for std::cin, std::cout
 #include <iterator>   // for std::begin, std::end
 #include <random>     // for std::random_device, std::seed_seq
-#include <string>     // for std::string
-
-
-ChessMove ConsolePlayer::pick_move(
-    const ChessPosition &current_pos, const std::vector<ChessMove> &legal_moves,
-    const std::vector<ChessPosition> &pos_history,
-    const std::vector<ChessMove> &move_history
-) {
-    std::vector<std::string> names;
-    for (const ChessMove &move : legal_moves) {
-        names.push_back(current_pos.get_move_name(legal_moves, move));
-    }
-    while (true) {
-        std::string command;
-        std::cout << "> ";
-        std::cin >> command;
-        if (command == "ls") {
-            std::cout << "Legal moves:";
-            for (const std::string &name : names) { std::cout << ' ' << name; }
-            std::cout << std::endl;
-        } else if (command == "fen") {
-            std::cout << current_pos.get_fen() << std::endl;
-        } else {
-            for (std::size_t i = 0; i < legal_moves.size(); ++i) {
-                if (command == names[i]) { return legal_moves[i]; }
-            }
-            std::cout << "ERROR: " << command
-                      << " is not a legal move in this position." << std::endl;
-        }
-    }
-}
 
 
 std::mt19937 properly_seeded_random_engine() {

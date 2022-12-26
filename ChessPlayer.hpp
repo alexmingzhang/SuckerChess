@@ -22,20 +22,6 @@ public:
 }; // class ChessPlayer
 
 
-class ConsolePlayer : public ChessPlayer {
-
-public:
-
-    ChessMove pick_move(
-        const ChessPosition &current_pos,
-        const std::vector<ChessMove> &legal_moves,
-        const std::vector<ChessPosition> &pos_history,
-        const std::vector<ChessMove> &move_history
-    ) override;
-
-}; // class ConsolePlayer
-
-
 std::mt19937 properly_seeded_random_engine();
 
 

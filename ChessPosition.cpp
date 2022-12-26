@@ -404,7 +404,7 @@ std::string ChessPosition::get_move_name(
     if (move.promotion_type != PieceType::NONE) {
         result << '=';
         switch (move.promotion_type) {
-            case PieceType::NONE: __builtin_unreachable();
+            case PieceType::NONE: [[fallthrough]];
             case PieceType::KING: __builtin_unreachable();
             case PieceType::QUEEN: result << 'Q'; break;
             case PieceType::ROOK: result << 'R'; break;
@@ -483,7 +483,8 @@ void ChessPosition::load_fen(const std::string &fen_string) {
     { // Determine active color
         char active_color;
         fen >> active_color;
-        to_move = active_color == 'w' ? PieceColor::WHITE : PieceColor::BLACK;
+        to_move = std::tolower(active_color) == 'w' ? PieceColor::WHITE
+                                                    : PieceColor::BLACK;
     }
 
     { // Determine castling rights
@@ -500,6 +501,7 @@ void ChessPosition::load_fen(const std::string &fen_string) {
                 case 'Q': white_can_long_castle = true; break;
                 case 'k': black_can_short_castle = true; break;
                 case 'q': black_can_long_castle = true; break;
+                default: break;
             }
         }
     }
