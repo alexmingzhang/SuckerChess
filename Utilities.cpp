@@ -13,9 +13,17 @@ std::mt19937 properly_seeded_random_engine() {
     std::random_device seed_source;
     std::random_device::result_type
         seed_data[(SEED_SIZE - 1) / sizeof(seed_source()) + 1];
+#ifdef SUCKER_CHESS_USE_DETERMINISTIC_SEED
+    static std::random_device::result_type seed_value = 0;
+    std::generate(std::begin(seed_data), std::end(seed_data), []() {
+        return seed_value;
+    });
+    ++seed_value;
+#else
     std::generate(
         std::begin(seed_data), std::end(seed_data), std::ref(seed_source)
     );
+#endif
     std::seed_seq seed(std::begin(seed_data), std::end(seed_data));
     return std::mt19937(seed);
 }
