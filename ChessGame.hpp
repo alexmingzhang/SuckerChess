@@ -39,8 +39,10 @@ public:
     std::string get_PGN() const;
 
     std::string get_full_PGN(
-        const std::string &event_name, int num_round,
-        const std::string &white_name, const std::string &black_name
+        const std::string &event_name,
+        int num_round,
+        const std::string &white_name,
+        const std::string &black_name
     ) const;
 
 private:

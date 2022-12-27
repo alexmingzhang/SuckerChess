@@ -19,6 +19,8 @@ IndentCaseBlocks: true
 AlignAfterOpenBracket: BlockIndent
 AlignArrayOfStructures: Left
 
+BinPackArguments: false
+BinPackParameters: false
 BreakConstructorInitializers: BeforeComma
 
 AllowShortEnumsOnASingleLine: true
@@ -37,8 +39,6 @@ AlwaysBreakAfterDefinitionReturnType: None
 AlwaysBreakAfterReturnType: None
 AlwaysBreakBeforeMultilineStrings: false
 AlwaysBreakTemplateDeclarations: MultiLine
-BinPackArguments: true
-BinPackParameters: true
 BraceWrapping:
   AfterCaseLabel: false
   AfterClass: false

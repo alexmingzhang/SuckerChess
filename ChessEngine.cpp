@@ -17,7 +17,8 @@ ChessMove RandomEngine::
 
 
 ChessMove CCCP_Engine::pick_move(
-    const ChessPosition &current_pos, const std::vector<ChessMove> &legal_moves,
+    const ChessPosition &current_pos,
+    const std::vector<ChessMove> &legal_moves,
     const std::vector<ChessPosition> &pos_history,
     const std::vector<ChessMove> &
 
@@ -78,8 +79,10 @@ ChessMove CCCP_Engine::pick_move(
 }
 
 ChessMove ReducerEngine::pick_move(
-    const ChessPosition &current_pos, const std::vector<ChessMove> &legal_moves,
-    const std::vector<ChessPosition> &, const std::vector<ChessMove> &
+    const ChessPosition &current_pos,
+    const std::vector<ChessMove> &legal_moves,
+    const std::vector<ChessPosition> &,
+    const std::vector<ChessMove> &
 
 ) {
     std::vector<ChessMove> best_moves;

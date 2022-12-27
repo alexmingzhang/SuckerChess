@@ -159,8 +159,9 @@ ChessGame::run(ChessEngine *white, ChessEngine *black, bool verbose) {
                 ) != legal_moves.end()
             );
             print(
-                verbose, "Chosen move: " +
-                             current_pos.get_move_name(legal_moves, chosen_move)
+                verbose,
+                "Chosen move: " +
+                    current_pos.get_move_name(legal_moves, chosen_move)
             );
             make_move(chosen_move);
         }
@@ -218,7 +219,9 @@ std::string ChessGame::get_PGN() const {
 }
 
 std::string ChessGame::get_full_PGN(
-    const std::string &event_name, int num_round, const std::string &white_name,
+    const std::string &event_name,
+    int num_round,
+    const std::string &white_name,
     const std::string &black_name
 ) const {
     std::ostringstream PGN;
