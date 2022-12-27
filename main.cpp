@@ -15,7 +15,7 @@ int main() {
     for (int i = 0; i < 10000; ++i) {
         ChessGame game;
         const PieceColor winner =
-            game.run(new RandomEngine(), new CCCP_Engine(), false);
+            game.run(new RandomEngine(), new CCCP_Engine(), true);
 
         switch (winner) {
             case PieceColor::NONE: ++num_draws; break;

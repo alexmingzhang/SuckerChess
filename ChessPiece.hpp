@@ -26,20 +26,45 @@ enum class PieceType : std::uint8_t {
 
 class ChessPiece {
 
+#ifdef SUCKER_CHESS_USE_COMPRESSED_CHESS_PIECE
     std::uint8_t data;
+#else
+    PieceColor m_color;
+    PieceType m_type;
+#endif
 
 public: // ======================================================== CONSTRUCTORS
+
+#ifdef SUCKER_CHESS_USE_COMPRESSED_CHESS_PIECE
 
     constexpr ChessPiece() noexcept
         : data(0) {}
 
     constexpr ChessPiece(PieceColor color, PieceType type) noexcept
-        : data(
+        : data(static_cast<std::uint8_t>(
               (static_cast<std::uint8_t>(color) << 4) |
               static_cast<std::uint8_t>(type)
-          ) {}
+          )) {
+        assert((color == PieceColor::NONE) == (type == PieceType::NONE));
+    }
+
+#else
+
+    constexpr ChessPiece() noexcept
+        : m_color(PieceColor::NONE)
+        , m_type(PieceType::NONE) {}
+
+    constexpr ChessPiece(PieceColor color, PieceType type) noexcept
+        : m_color(color)
+        , m_type(type) {
+        assert((color == PieceColor::NONE) == (type == PieceType::NONE));
+    }
+
+#endif
 
 public: // =========================================================== ACCESSORS
+
+#ifdef SUCKER_CHESS_USE_COMPRESSED_CHESS_PIECE
 
     [[nodiscard]] constexpr PieceColor get_color() const noexcept {
         const std::uint8_t value = data >> 4;
@@ -53,32 +78,52 @@ public: // =========================================================== ACCESSORS
         return static_cast<PieceType>(value);
     }
 
-    [[nodiscard]] constexpr ChessPiece promote(PieceType type) const noexcept {
-        assert(type != PieceType::KING);
-        assert(type != PieceType::PAWN);
-        if (type == PieceType::NONE) { return *this; }
-        return {get_color(), type};
+#else
+
+    [[nodiscard]] constexpr PieceColor get_color() const noexcept {
+        return m_color;
     }
+
+    [[nodiscard]] constexpr PieceType get_type() const noexcept {
+        return m_type;
+    }
+
+#endif
 
 public: // ========================================================== COMPARISON
 
     constexpr bool operator<=>(const ChessPiece &) const noexcept = default;
 
+public: // =========================================================== PROMOTION
+
+    [[nodiscard]] constexpr ChessPiece promote(PieceType promotion_type
+    ) const noexcept {
+        assert(promotion_type != PieceType::KING);
+        assert(promotion_type != PieceType::PAWN);
+        if (promotion_type == PieceType::NONE) { return *this; }
+        return {get_color(), promotion_type};
+    }
+
 public: // ========================================================== EVALUATION
 
-    [[nodiscard]] constexpr int get_material_value() const {
-        int value;
+    [[nodiscard]] constexpr int unsigned_material_value() const noexcept {
         switch (get_type()) {
             case PieceType::NONE: return 0;
             case PieceType::KING: return 0;
-            case PieceType::QUEEN: value = 9; break;
-            case PieceType::ROOK: value = 5; break;
-            case PieceType::BISHOP: value = 3; break;
-            case PieceType::KNIGHT: value = 3; break;
-            case PieceType::PAWN: value = 1; break;
+            case PieceType::QUEEN: return 9;
+            case PieceType::ROOK: return 5;
+            case PieceType::BISHOP: return 3;
+            case PieceType::KNIGHT: return 3;
+            case PieceType::PAWN: return 1;
         }
-        if (get_color() == PieceColor::BLACK) { value *= -1; }
-        return value;
+    }
+
+    [[nodiscard]] constexpr int material_value() const noexcept {
+        switch (get_color()) {
+            case PieceColor::NONE: return 0;
+            case PieceColor::WHITE: return +unsigned_material_value();
+            case PieceColor::BLACK: return -unsigned_material_value();
+        }
     }
 
 }; // class ChessPiece

@@ -188,7 +188,7 @@ std::vector<ChessMove> ChessPosition::get_all_moves() const {
     std::vector<ChessMove> result;
     for (coord_t src_file = 0; src_file < NUM_FILES; ++src_file) {
         for (coord_t src_rank = 0; src_rank < NUM_RANKS; ++src_rank) {
-            const ChessPiece &piece = board[src_file][src_rank];
+            const ChessPiece &piece = (*this)(src_file, src_rank);
             if (piece.get_color() == to_move) {
                 push_all_moves(result, {src_file, src_rank});
             }
@@ -285,6 +285,32 @@ void ChessPosition::make_move(const ChessMove &move) {
         black_can_long_castle = false;
     }
 
+    // handle castling
+    if (piece.get_type() == KING && move.distance() != 1) {
+        assert(move.distance() == 2);
+        assert(move.get_src_file() == 4);
+        assert(move.get_src_rank() == move.get_dst_rank());
+        const coord_t rank = move.get_src_rank();
+        if (move.get_dst_file() == 6) { // short castle
+            assert((*this)(5, rank) == EMPTY_SQUARE);
+            assert((*this)(6, rank) == EMPTY_SQUARE);
+            assert((*this)(7, rank).get_color() == to_move);
+            assert((*this)(7, rank).get_type() == ROOK);
+            (*this)(5, rank) = (*this)(7, rank);
+            (*this)(7, rank) = EMPTY_SQUARE;
+        } else if (move.get_dst_file() == 2) { // long castle
+            assert((*this)(0, rank).get_color() == to_move);
+            assert((*this)(0, rank).get_type() == ROOK);
+            assert((*this)(1, rank) == EMPTY_SQUARE);
+            assert((*this)(2, rank) == EMPTY_SQUARE);
+            assert((*this)(3, rank) == EMPTY_SQUARE);
+            (*this)(3, rank) = (*this)(0, rank);
+            (*this)(0, rank) = EMPTY_SQUARE;
+        } else {
+            __builtin_unreachable();
+        }
+    }
+
     // perform move
     (*this)[move.get_dst()] = piece.promote(move.get_promotion_type());
     (*this)[move.get_src()] = EMPTY_SQUARE;
@@ -293,33 +319,7 @@ void ChessPosition::make_move(const ChessMove &move) {
     if (is_en_passant_capture) {
         assert(has_enemy_piece({move.get_dst_file(), move.get_src_rank()}, PAWN)
         );
-        board[move.get_dst_file()][move.get_src_rank()] = EMPTY_SQUARE;
-    }
-
-    // handle castling
-    if (piece.get_type() == KING && move.distance() != 1) {
-        assert(move.distance() == 2);
-        assert(move.get_src_file() == 4);
-        assert(move.get_src_rank() == move.get_dst_rank());
-        const coord_t rank = move.get_src_rank();
-        if (move.get_dst_file() == 6) { // short castle
-            assert(board[5][rank] == EMPTY_SQUARE);
-            assert(board[6][rank] == EMPTY_SQUARE);
-            assert(board[7][rank].get_color() == to_move);
-            assert(board[7][rank].get_type() == ROOK);
-            board[5][rank] = board[7][rank];
-            board[7][rank] = EMPTY_SQUARE;
-        } else if (move.get_dst_file() == 2) { // long castle
-            assert(board[0][rank].get_color() == to_move);
-            assert(board[0][rank].get_type() == ROOK);
-            assert(board[1][rank] == EMPTY_SQUARE);
-            assert(board[2][rank] == EMPTY_SQUARE);
-            assert(board[3][rank] == EMPTY_SQUARE);
-            board[3][rank] = board[0][rank];
-            board[0][rank] = EMPTY_SQUARE;
-        } else {
-            __builtin_unreachable();
-        }
+        (*this)(move.get_dst_file(), move.get_src_rank()) = EMPTY_SQUARE;
     }
 
     // update player to move
@@ -434,7 +434,7 @@ std::ostream &operator<<(std::ostream &os, const ChessPosition &pos) {
     for (coord_t rank = NUM_RANKS - 1; rank >= 0; --rank) {
         os << rank + 1 << " │";
         for (coord_t file = 0; file < NUM_FILES; ++file) {
-            os << ' ' << pos.board[file][rank] << " │";
+            os << ' ' << pos(file, rank) << " │";
         }
         os << "\n";
         if (rank > 0) { os << "  ├───┼───┼───┼───┼───┼───┼───┼───┤\n"; }
@@ -456,7 +456,7 @@ void ChessPosition::load_fen(const std::string &fen_string) {
         for (const char c : piece_placement) {
             if (c >= '1' && c <= '8') {
                 for (coord_t j = 0; j < c - '0'; ++j) {
-                    board[file + j][rank] = EMPTY_SQUARE;
+                    (*this)(file + j, rank) = EMPTY_SQUARE;
                 }
 
                 file += c - '0';
@@ -465,18 +465,18 @@ void ChessPosition::load_fen(const std::string &fen_string) {
                 rank--;
             } else {
                 switch (c) {
-                    case 'K': board[file++][rank] = WHITE_KING; break;
-                    case 'Q': board[file++][rank] = WHITE_QUEEN; break;
-                    case 'R': board[file++][rank] = WHITE_ROOK; break;
-                    case 'B': board[file++][rank] = WHITE_BISHOP; break;
-                    case 'N': board[file++][rank] = WHITE_KNIGHT; break;
-                    case 'P': board[file++][rank] = WHITE_PAWN; break;
-                    case 'k': board[file++][rank] = BLACK_KING; break;
-                    case 'q': board[file++][rank] = BLACK_QUEEN; break;
-                    case 'r': board[file++][rank] = BLACK_ROOK; break;
-                    case 'b': board[file++][rank] = BLACK_BISHOP; break;
-                    case 'n': board[file++][rank] = BLACK_KNIGHT; break;
-                    case 'p': board[file++][rank] = BLACK_PAWN; break;
+                    case 'K': (*this)(file++, rank) = WHITE_KING; break;
+                    case 'Q': (*this)(file++, rank) = WHITE_QUEEN; break;
+                    case 'R': (*this)(file++, rank) = WHITE_ROOK; break;
+                    case 'B': (*this)(file++, rank) = WHITE_BISHOP; break;
+                    case 'N': (*this)(file++, rank) = WHITE_KNIGHT; break;
+                    case 'P': (*this)(file++, rank) = WHITE_PAWN; break;
+                    case 'k': (*this)(file++, rank) = BLACK_KING; break;
+                    case 'q': (*this)(file++, rank) = BLACK_QUEEN; break;
+                    case 'r': (*this)(file++, rank) = BLACK_ROOK; break;
+                    case 'b': (*this)(file++, rank) = BLACK_BISHOP; break;
+                    case 'n': (*this)(file++, rank) = BLACK_KNIGHT; break;
+                    case 'p': (*this)(file++, rank) = BLACK_PAWN; break;
                     default: break;
                 }
             }
@@ -543,7 +543,7 @@ std::string ChessPosition::get_fen() const {
 
         for (coord_t rank = NUM_RANKS - 1; rank >= 0; --rank) {
             for (coord_t file = 0; file < NUM_FILES; ++file) {
-                const ChessPiece piece = board[file][rank];
+                const ChessPiece piece = (*this)(file, rank);
                 switch (piece.get_type()) {
                     case PieceType::KING:
                         append_spaces();
@@ -570,7 +570,6 @@ std::string ChessPosition::get_fen() const {
                         append_char('p', piece.get_color());
                         break;
                     case PieceType::NONE: space_counter++; break;
-                    default: break;
                 }
             }
 
@@ -624,7 +623,7 @@ int ChessPosition::get_material_advantage() const {
 
     for (coord_t file = 0; file < NUM_FILES; ++file) {
         for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
-            material_advantage += board[file][rank].get_material_value();
+            material_advantage += (*this)(file, rank).material_value();
         }
     }
 

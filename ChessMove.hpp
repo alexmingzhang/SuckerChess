@@ -4,7 +4,7 @@
 #include <algorithm> // for std::max
 #include <cassert>   // for assert
 #include <cmath>     // for std::abs
-#include <cstdint>   // for std::int8_t
+#include <cstdint>   // for std::uint16_t
 #include <ostream>   // for std::ostream
 
 #include "ChessPiece.hpp"

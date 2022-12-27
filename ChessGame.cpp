@@ -42,7 +42,7 @@ template <typename T> void print(bool verbose, const T &obj) {
 }
 
 
-void trim(std::string &str) {
+inline void trim(std::string &str) {
     const auto first_char = std::find_if(str.begin(), str.end(), [](char ch) {
         return !std::isspace(ch);
     });
@@ -171,7 +171,7 @@ std::string ChessGame::get_PGN() const {
     std::ostringstream PGN;
 
     { // Get date
-        std::time_t time = std::time(0);
+        std::time_t time = std::time(nullptr);
         std::tm *now = std::localtime(&time);
         PGN << "[Date \"" << (now->tm_year + 1900) << '.' << (now->tm_mon + 1)
             << '.' << now->tm_mday << "\"]\n";

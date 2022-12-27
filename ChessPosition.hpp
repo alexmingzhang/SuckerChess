@@ -2,6 +2,7 @@
 #define SUCKER_CHESS_CHESS_POSITION_HPP
 
 #include <array>   // for std::array
+#include <cstddef> // for std::size_t
 #include <ostream> // for std::ostream
 #include <string>  // for std::string
 #include <vector>  // for std::vector
@@ -64,12 +65,23 @@ public: // ====================================================== INDEX OPERATOR
 
     constexpr const ChessPiece &operator[](ChessSquare square) const noexcept {
         assert(square.in_bounds());
-        return board[square.file][square.rank];
+        return board[static_cast<std::size_t>(square.file)]
+                    [static_cast<std::size_t>(square.rank)];
     }
 
-    constexpr ChessPiece operator[](ChessSquare square) noexcept {
+    constexpr ChessPiece &operator[](ChessSquare square) noexcept {
         assert(square.in_bounds());
-        return board[square.file][square.rank];
+        return board[static_cast<std::size_t>(square.file)]
+                    [static_cast<std::size_t>(square.rank)];
+    }
+
+    constexpr const ChessPiece &
+    operator()(coord_t file, coord_t rank) const noexcept {
+        return (*this)[{file, rank}];
+    }
+
+    constexpr ChessPiece &operator()(coord_t file, coord_t rank) noexcept {
+        return (*this)[{file, rank}];
     }
 
 public: // ========================================================== COMPARISON
@@ -228,7 +240,7 @@ public: // ====================================================== ATTACK TESTING
     [[nodiscard]] constexpr bool in_check() const {
         for (coord_t file = 0; file < NUM_FILES; ++file) {
             for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
-                const ChessPiece piece = board[file][rank];
+                const ChessPiece piece = (*this)(file, rank);
                 if (piece.get_type() == PieceType::KING &&
                     piece.get_color() == to_move) {
                     return is_attacked({file, rank});

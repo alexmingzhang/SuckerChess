@@ -6,11 +6,14 @@
 
 #include "ChessMove.hpp"
 #include "ChessPosition.hpp"
+#include "Utilities.hpp"
 
 
 class ChessEngine {
 
 public:
+
+    virtual ~ChessEngine() noexcept = default;
 
     virtual ChessMove pick_move(
         const ChessPosition &current_pos,
@@ -21,9 +24,8 @@ public:
 
 }; // class ChessEngine
 
-// ===============================================================  RANDOM MOVES
 
-std::mt19937 properly_seeded_random_engine();
+// ===============================================================  RANDOM MOVES
 
 
 class RandomEngine : public ChessEngine {
@@ -44,7 +46,9 @@ public:
 
 }; // class RandomEngine
 
+
 // ====================================== CHECKMATE, CHECK, CAPTURE, PUSH (CCCP)
+
 
 class CCCP_Engine : public ChessEngine {
 
@@ -62,5 +66,6 @@ public:
         const std::vector<ChessMove> &move_history
     ) override;
 };
+
 
 #endif // SUCKER_CHESS_CHESS_ENGINE_HPP
