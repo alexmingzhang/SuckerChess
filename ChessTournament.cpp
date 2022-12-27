@@ -3,23 +3,26 @@
 // game_history as tuple of game and player pointers, or derive
 // ChessTournamentGame class which adds the necessary data)
 
-
 #include "ChessTournament.hpp"
 
-#include <cmath> // for std::exp10
-#include <iostream>
+#include <cstddef>  // for std::size_t
+#include <iostream> // for std::cout, std::endl
+
 
 void ChessTournament::add_player(ChessPlayer *player) {
     players.push_back(player);
 }
 
+
 const std::vector<ChessPlayer *> &ChessTournament::get_players() const {
     return players;
 }
 
+
 const std::vector<ChessGame> &ChessTournament::get_game_history() const {
     return game_history;
 }
+
 
 // Run every possible distinct matchup
 void ChessTournament::run(unsigned int times) {

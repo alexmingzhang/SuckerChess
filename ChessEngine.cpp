@@ -1,7 +1,9 @@
 #include "ChessEngine.hpp"
 
+#include <cmath>   // for std::abs
 #include <cstddef> // for std::size_t
 #include <limits>  // for std::numeric_limits
+#include <random>  // for std::uniform_int_distribution
 
 
 ChessMove RandomEngine::

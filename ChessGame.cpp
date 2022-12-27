@@ -5,7 +5,7 @@
 #include <cctype>    // for std::isspace
 #include <cstddef>   // for std::size_t
 #include <iostream>  // for std::cin, std::cout, std::endl
-#include <sstream>   // for std::istringstream
+#include <sstream>   // for std::istringstream, std::ostringstream
 #include <string>    // for std::getline, std::string
 
 

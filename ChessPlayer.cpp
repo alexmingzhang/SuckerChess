@@ -1,8 +1,9 @@
 #include "ChessPlayer.hpp"
 
-#include <iomanip>
-#include <iostream> // for std::cout
-#include <sstream>
+#include <cmath> // for std::pow
+#include <iomanip> // for std::left, std::right, std::setw, std::fixed, std::setprecision
+#include <iostream> // for std::cout, std::endl
+#include <sstream>  // for std::ostringstream
 
 const std::string &ChessPlayer::get_name() const { return name; }
 

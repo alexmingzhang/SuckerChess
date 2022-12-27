@@ -1,8 +1,7 @@
 #include "ChessPosition.hpp"
 
 #include <cassert> // for assert
-#include <cctype>  // for std::toupper
-#include <cmath>   // for std::abs
+#include <cctype>  // for std::toupper, std::tolower
 #include <sstream> // for std::istringstream, std::ostringstream
 
 
