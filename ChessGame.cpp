@@ -1,9 +1,9 @@
 #include "ChessGame.hpp"
+#include "Utilities.hpp"
 
 #include <algorithm> // for std::find, std::find_if
 #include <cctype>    // for std::isspace
 #include <cstddef>   // for std::size_t
-#include <ctime>     // for std::time_t
 #include <iostream>  // for std::cin, std::cout, std::endl
 #include <sstream>   // for std::istringstream
 #include <string>    // for std::getline, std::string
@@ -167,44 +167,68 @@ ChessGame::run(ChessEngine *white, ChessEngine *black, bool verbose) {
     }
 }
 
-std::string ChessGame::get_PGN() const {
-    std::ostringstream PGN;
+std::string ChessGame::get_PGN_result() const {
+    std::ostringstream result;
+    result << "[Result \"";
 
-    { // Get date
-        std::time_t time = std::time(nullptr);
-        std::tm *now = std::localtime(&time);
-        PGN << "[Date \"" << (now->tm_year + 1900) << '.' << (now->tm_mon + 1)
-            << '.' << now->tm_mday << "\"]\n";
+    if (drawn()) {
+        result << "1/2-1/2";
+    } else if (winner == PieceColor::WHITE) {
+        result << "1-0";
+    } else if (winner == PieceColor::BLACK) {
+        result << "0-1";
+    } else {
+        result << "*";
     }
 
-    { // Get result
-        PGN << "[Result \"";
+    result << "\"]\n";
 
-        if (drawn()) {
-            PGN << "1/2-1/2";
-        } else if (winner == PieceColor::WHITE) {
-            PGN << "1-0";
-        } else if (winner == PieceColor::BLACK) {
-            PGN << "0-1";
-        } else {
-            PGN << "*";
-        }
 
-        PGN << "\"]\n";
-    }
+    return result.str();
+}
 
-    // Get movetext
+std::string ChessGame::get_PGN_move_text() const {
+    std::ostringstream move_text;
+
     for (std::size_t i = 0; i < move_history.size(); ++i) {
         const std::string name = pos_history[i].get_move_name(
             pos_history[i].get_legal_moves(), move_history[i]
         );
 
         if (i % 2 == 0) {
-            PGN << (i / 2 + 1) << ". " << name;
+            move_text << (i / 2 + 1) << ". " << name;
         } else {
-            PGN << " " << name << " ";
+            move_text << " " << name << " ";
         }
     }
 
+    return move_text.str();
+}
+
+
+std::string ChessGame::get_PGN() const {
+    std::ostringstream PGN;
+
+    PGN << "[Site \"https://github.com/alexmingzhang/SuckerChess/\"]\n";
+    PGN << "[Date \"" << get_YMD_date('.') << "\"]\n";
+    PGN << get_PGN_result();
+    PGN << get_PGN_move_text();
+
     return PGN.str();
+}
+
+std::string ChessGame::get_full_PGN(
+    const std::string &event_name, int num_round, const std::string &white_name,
+    const std::string &black_name
+) const {
+    std::ostringstream PGN;
+
+    PGN << "[Event \"" << event_name << "\"]\n";
+    PGN << "[Site \"https://github.com/alexmingzhang/SuckerChess/\"]\n";
+    PGN << "[Date \"" << get_YMD_date('.') << "\"]\n";
+    PGN << "[Round \"" << num_round << "\"]\n";
+    PGN << "[White \"" << white_name << "\"]\n";
+    PGN << "[Black \"" << black_name << "\"]\n";
+    PGN << get_PGN_result() << "\n";
+    PGN << get_PGN_move_text();
 }
