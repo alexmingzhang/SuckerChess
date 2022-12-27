@@ -3,6 +3,7 @@
 #include <algorithm> // for std::find, std::find_if
 #include <cctype>    // for std::isspace
 #include <cstddef>   // for std::size_t
+#include <ctime>     // for std::time_t
 #include <iostream>  // for std::cin, std::cout, std::endl
 #include <sstream>   // for std::istringstream
 #include <string>    // for std::getline, std::string
@@ -104,15 +105,18 @@ ChessGame::run(ChessPlayer *white, ChessPlayer *black, bool verbose) {
     while (true) {
 
         print(verbose, current_pos);
+        print(verbose, current_pos.get_material_advantage());
 
         if (current_pos.checkmated()) {
             switch (current_pos.get_color_to_move()) {
                 case PieceColor::NONE: __builtin_unreachable();
                 case PieceColor::WHITE:
                     print(verbose, "Black wins! Game over.");
+                    winner = PieceColor::BLACK;
                     return PieceColor::BLACK;
                 case PieceColor::BLACK:
                     print(verbose, "White wins! Game over.");
+                    winner = PieceColor::WHITE;
                     return PieceColor::WHITE;
             }
         }
@@ -162,4 +166,46 @@ ChessGame::run(ChessPlayer *white, ChessPlayer *black, bool verbose) {
             make_move(chosen_move);
         }
     }
+}
+
+std::string ChessGame::get_PGN() const {
+    std::ostringstream PGN;
+
+    { // Get date
+        std::time_t time = std::time(0);
+        std::tm *now = std::localtime(&time);
+        PGN << "[Date \"" << (now->tm_year + 1900) << '.' << (now->tm_mon + 1)
+            << '.' << now->tm_mday << "\"]\n";
+    }
+
+    { // Get result
+        PGN << "[Result \"";
+
+        if (drawn()) {
+            PGN << "1/2-1/2";
+        } else if (winner == PieceColor::WHITE) {
+            PGN << "1-0";
+        } else if (winner == PieceColor::BLACK) {
+            PGN << "0-1";
+        } else {
+            PGN << "*";
+        }
+
+        PGN << "\"]\n";
+    }
+
+    // Get movetext
+    for (std::size_t i = 0; i < move_history.size(); ++i) {
+        const std::string name = pos_history[i].get_move_name(
+            pos_history[i].get_legal_moves(), move_history[i]
+        );
+
+        if (i % 2 == 0) {
+            PGN << (i / 2 + 1) << ". " << name;
+        } else {
+            PGN << " " << name << " ";
+        }
+    }
+
+    return PGN.str();
 }

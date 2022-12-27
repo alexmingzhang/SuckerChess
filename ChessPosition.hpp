@@ -307,11 +307,13 @@ public: // ============================================================ PRINTING
 
     friend std::ostream &operator<<(std::ostream &os, const ChessPosition &b);
 
-public: // ================================================================= FEN
+public: // ================================================================ MISC
 
     void load_fen(const std::string &);
 
     std::string get_fen() const;
+
+    int get_material_advantage() const;
 
 }; // class ChessPosition
 

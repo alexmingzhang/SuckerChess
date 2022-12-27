@@ -38,6 +38,23 @@ struct ChessPiece {
 
     constexpr bool operator==(const ChessPiece &) const noexcept = default;
 
+    constexpr int get_material_value() const {
+        int value;
+
+        switch (type) {
+            case PieceType::NONE: [[fallthrough]];
+            case PieceType::KING: return 0;
+            case PieceType::QUEEN: value = 10;
+            case PieceType::ROOK: value = 5;
+            case PieceType::BISHOP: value = 3;
+            case PieceType::KNIGHT: value = 3;
+            case PieceType::PAWN: value = 1;
+        }
+
+        if (color == PieceColor::BLACK) { value *= -1; }
+        return value;
+    }
+
 }; // struct ChessPiece
 
 

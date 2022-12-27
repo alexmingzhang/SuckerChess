@@ -14,6 +14,7 @@ class ChessGame {
 public:
 
     ChessPosition current_pos;
+    PieceColor winner;
     std::vector<ChessPosition> pos_history;
     std::vector<ChessMove> move_history;
     int half_move_clock;
@@ -21,6 +22,7 @@ public:
 
     explicit ChessGame() noexcept
         : current_pos()
+        , winner(PieceColor::NONE)
         , pos_history()
         , move_history()
         , half_move_clock(0)
@@ -33,6 +35,8 @@ public:
     ChessMove get_console_move(const std::vector<ChessMove> &legal_moves);
 
     PieceColor run(ChessPlayer *white, ChessPlayer *black, bool verbose = true);
+
+    std::string get_PGN() const;
 
 }; // class ChessGame
 

@@ -630,3 +630,15 @@ std::string ChessPosition::get_fen() const {
 
     return fen.str();
 }
+
+int ChessPosition::get_material_advantage() const {
+    int material_advantage = 0;
+
+    for (coord_t file = 0; file < NUM_FILES; ++file) {
+        for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
+            material_advantage += board[file][rank].get_material_value();
+        }
+    }
+
+    return material_advantage;
+}

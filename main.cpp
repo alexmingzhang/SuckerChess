@@ -25,17 +25,8 @@ int main() {
     std::cout << num_white_wins << " : " << num_draws << " : " << num_black_wins
               << std::endl;
 
-    // PGN
-    // for (std::size_t i = 0; i < game.move_history.size(); ++i) {
-    //     const std::string name = game.pos_history[i].get_move_name(
-    //         game.pos_history[i].get_legal_moves(), game.move_history[i]
-    //     );
-    //     if (i % 2 == 0) {
-    //         std::cout << (i / 2 + 1) << ". " << name;
-    //     } else {
-    //         std::cout << " " << name << std::endl;
-    //     }
-    // }
+    std::cout << game.get_PGN() << std::endl;
+
 
     return 0;
 }
