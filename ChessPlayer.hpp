@@ -21,6 +21,7 @@ public:
 
 }; // class ChessPlayer
 
+// =============================================================== RANDOM PLAYER
 
 std::mt19937 properly_seeded_random_engine();
 
@@ -43,5 +44,23 @@ public:
 
 }; // class RandomPlayer
 
+// ====================================== CHECKMATE, CHECK, CAPTURE, PUSH (CCCP)
+
+class CCCP_Player : public ChessPlayer {
+
+    std::mt19937 rng;
+
+public:
+
+    CCCP_Player()
+        : rng(properly_seeded_random_engine()) {}
+
+    ChessMove pick_move(
+        const ChessPosition &current_pos,
+        const std::vector<ChessMove> &legal_moves,
+        const std::vector<ChessPosition> &pos_history,
+        const std::vector<ChessMove> &move_history
+    ) override;
+};
 
 #endif // SUCKER_CHESS_CHESS_PLAYER_HPP

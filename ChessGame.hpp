@@ -19,7 +19,7 @@ public:
     int half_move_clock;
     int full_move_count;
 
-    explicit constexpr ChessGame() noexcept
+    explicit ChessGame() noexcept
         : current_pos()
         , pos_history()
         , move_history()

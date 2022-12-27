@@ -29,6 +29,13 @@ struct ChessMove {
     coord_t dst_rank : 4;
     PieceType promotion_type;
 
+    explicit constexpr ChessMove()
+        : src_file(0)
+        , src_rank(0)
+        , dst_file(0)
+        , dst_rank(0)
+        , promotion_type(PieceType::NONE) {}
+
     explicit constexpr ChessMove(coord_t sf, coord_t sr, coord_t df, coord_t dr)
         : src_file(sf)
         , src_rank(sr)
