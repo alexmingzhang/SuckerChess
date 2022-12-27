@@ -123,7 +123,7 @@ public: // ====================================================== SQUARE TESTING
 
 private: // ========================================================== UTILITIES
 
-    [[nodiscard]] constexpr coord_t pawn_direction() const {
+    [[nodiscard]] constexpr coord_t pawn_direction() const noexcept {
         switch (to_move) {
             case PieceColor::NONE: __builtin_unreachable();
             case PieceColor::WHITE: return +1;
@@ -132,7 +132,7 @@ private: // ========================================================== UTILITIES
         __builtin_unreachable();
     }
 
-    [[nodiscard]] constexpr coord_t pawn_origin_rank() const {
+    [[nodiscard]] constexpr coord_t pawn_origin_rank() const noexcept {
         switch (to_move) {
             case PieceColor::NONE: __builtin_unreachable();
             case PieceColor::WHITE: return 1;
@@ -141,7 +141,7 @@ private: // ========================================================== UTILITIES
         __builtin_unreachable();
     }
 
-    [[nodiscard]] constexpr coord_t promotion_rank() const {
+    [[nodiscard]] constexpr coord_t promotion_rank() const noexcept {
         switch (to_move) {
             case PieceColor::NONE: __builtin_unreachable();
             case PieceColor::WHITE: return NUM_RANKS - 1;
@@ -150,7 +150,7 @@ private: // ========================================================== UTILITIES
         __builtin_unreachable();
     }
 
-    [[nodiscard]] constexpr ChessSquare en_passant_square() const {
+    [[nodiscard]] constexpr ChessSquare en_passant_square() const noexcept {
         switch (to_move) {
             case PieceColor::NONE: __builtin_unreachable();
             case PieceColor::WHITE: return {en_passant_file, NUM_RANKS - 3};
@@ -266,6 +266,7 @@ public: // ===================================================== MOVE VALIDATION
         const ChessPiece target = (*this)[move.get_dst()];
 
         // Pieces cannot capture other pieces of their own color.
+        assert(piece.get_color() != PieceColor::NONE);
         assert(piece.get_color() != target.get_color());
 
         // A capture is a move that either lands on an enemy piece or is
@@ -280,6 +281,7 @@ public: // ===================================================== MOVE VALIDATION
         const ChessPiece target = (*this)[move.get_dst()];
 
         // Pieces cannot capture other pieces of their own color.
+        assert(piece.get_color() != PieceColor::NONE);
         assert(piece.get_color() != target.get_color());
 
         switch (piece.get_type()) {
@@ -320,7 +322,7 @@ public: // ===================================================== MOVE VALIDATION
 
 public: // ====================================================== MOVE EXECUTION
 
-    constexpr void make_move(ChessMove move) {
+    constexpr void make_move(ChessMove move) noexcept {
         assert(is_valid(move));
 
         // get moving piece
