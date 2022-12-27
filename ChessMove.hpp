@@ -63,7 +63,7 @@ class ChessMove final {
 
 public: // ======================================================== CONSTRUCTORS
 
-    explicit constexpr ChessMove(ChessSquare source, ChessSquare destination)
+    constexpr ChessMove(ChessSquare source, ChessSquare destination)
         : src(source)
         , dst(destination)
         , promotion_type(PieceType::NONE) {
@@ -71,7 +71,7 @@ public: // ======================================================== CONSTRUCTORS
         assert(destination.in_bounds());
     }
 
-    explicit constexpr ChessMove(
+    constexpr ChessMove(
         ChessSquare source, ChessSquare destination, PieceType type
     )
         : src(source)

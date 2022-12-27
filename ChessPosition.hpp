@@ -99,12 +99,12 @@ public: // ====================================================== SQUARE TESTING
         return square.in_bounds() && (*this)[square] == EMPTY_SQUARE;
     }
 
-    [[nodiscard]] constexpr bool is_legal_dst(ChessSquare square
+    [[nodiscard]] constexpr bool is_valid_dst(ChessSquare square
     ) const noexcept {
         return square.in_bounds() && (*this)[square].get_color() != to_move;
     }
 
-    [[nodiscard]] constexpr bool is_legal_cap(ChessSquare square
+    [[nodiscard]] constexpr bool is_valid_cap(ChessSquare square
     ) const noexcept {
         if (!square.in_bounds()) { return false; }
         const ChessPiece piece = (*this)[square];
@@ -189,7 +189,7 @@ public: // ===================================================== MOVE VALIDATION
             // toward, and all squares between them must be empty. Moreover,
             // both pieces must have never been moved in the current game.
             if (move.get_dst_file() == 2) {
-                const ChessPiece rook = (*this)(0, rank);
+                [[maybe_unused]] const ChessPiece rook = (*this)(0, rank);
                 assert(rook.get_color() == color);
                 assert(rook.get_type() == PieceType::ROOK);
                 assert(is_empty({1, rank}));
@@ -203,7 +203,8 @@ public: // ===================================================== MOVE VALIDATION
                 }
             } else {
                 assert(move.get_dst_file() == 6);
-                const ChessPiece rook = (*this)(NUM_FILES - 1, rank);
+                [[maybe_unused]] const ChessPiece rook =
+                    (*this)(NUM_FILES - 1, rank);
                 assert(rook.get_color() == color);
                 assert(rook.get_type() == PieceType::ROOK);
                 assert(is_empty({5, rank}));
@@ -496,6 +497,8 @@ public: // ====================================================== ATTACK TESTING
 
 public: // ===================================================== MOVE GENERATION
 
+    void push_if_legal(std::vector<ChessMove> &moves, ChessMove move) const;
+
     void push_leaper_move(
         std::vector<ChessMove> &moves, ChessSquare src, ChessOffset offset
     ) const;
@@ -512,20 +515,11 @@ public: // ===================================================== MOVE GENERATION
 
     void push_castling_moves(std::vector<ChessMove> &moves) const;
 
-    void push_all_moves(std::vector<ChessMove> &moves, ChessSquare src) const;
+    void push_legal_moves(std::vector<ChessMove> &moves, ChessSquare src) const;
 
-    [[nodiscard]] std::vector<ChessMove> get_all_moves() const;
+    [[nodiscard]] std::vector<ChessMove> get_legal_moves() const;
 
 public: // ======================================================= CHECK TESTING
-
-    [[nodiscard]] std::vector<ChessMove> get_legal_moves() const {
-        const std::vector<ChessMove> all_moves = get_all_moves();
-        std::vector<ChessMove> result;
-        for (ChessMove move : all_moves) {
-            if (!puts_self_in_check(move)) { result.push_back(move); }
-        }
-        return result;
-    }
 
     [[nodiscard]] bool checkmated() const {
         return in_check() && get_legal_moves().empty();

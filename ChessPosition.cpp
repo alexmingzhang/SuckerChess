@@ -6,11 +6,18 @@
 #include <sstream> // for std::istringstream, std::ostringstream
 
 
+void ChessPosition::push_if_legal(std::vector<ChessMove> &moves, ChessMove move)
+    const {
+    assert(is_valid(move));
+    if (is_legal(move)) { moves.push_back(move); }
+}
+
+
 void ChessPosition::push_leaper_move(
     std::vector<ChessMove> &moves, ChessSquare src, ChessOffset offset
 ) const {
     const ChessSquare dst = src + offset;
-    if (is_legal_dst(dst)) { moves.emplace_back(src, dst); }
+    if (is_valid_dst(dst)) { push_if_legal(moves, {src, dst}); }
 }
 
 
@@ -19,10 +26,10 @@ void ChessPosition::push_slider_moves(
 ) const {
     ChessSquare dst = src + offset;
     while (is_empty(dst)) {
-        moves.emplace_back(src, dst);
+        push_if_legal(moves, {src, dst});
         dst += offset;
     }
-    if (is_legal_dst(dst)) { moves.emplace_back(src, dst); }
+    if (is_valid_dst(dst)) { push_if_legal(moves, {src, dst}); }
 }
 
 
@@ -31,12 +38,12 @@ void ChessPosition::push_promotion_moves(
 ) const {
     using enum PieceType;
     if (dst.rank == promotion_rank()) {
-        moves.emplace_back(src, dst, QUEEN);
-        moves.emplace_back(src, dst, ROOK);
-        moves.emplace_back(src, dst, BISHOP);
-        moves.emplace_back(src, dst, KNIGHT);
+        push_if_legal(moves, {src, dst, QUEEN});
+        push_if_legal(moves, {src, dst, ROOK});
+        push_if_legal(moves, {src, dst, BISHOP});
+        push_if_legal(moves, {src, dst, KNIGHT});
     } else {
-        moves.emplace_back(src, dst);
+        push_if_legal(moves, {src, dst});
     }
 }
 
@@ -56,20 +63,21 @@ void ChessPosition::push_pawn_moves(
             const ChessSquare dst_double_move =
                 dst_move + ChessOffset{0, direction};
             if (is_empty(dst_double_move)) {
-                moves.emplace_back(src, dst_double_move);
+                // no promotion possible on initial double-step move
+                push_if_legal(moves, {src, dst_double_move});
             }
         }
     }
 
     // capture to src_file - 1
     const ChessSquare dst_capture_l = src + ChessOffset{-1, direction};
-    if (is_legal_cap(dst_capture_l)) {
+    if (is_valid_cap(dst_capture_l)) {
         push_promotion_moves(moves, src, dst_capture_l);
     }
 
     // capture to src_file + 1
     const ChessSquare dst_capture_r = src + ChessOffset{+1, direction};
-    if (is_legal_cap(dst_capture_r)) {
+    if (is_valid_cap(dst_capture_r)) {
         push_promotion_moves(moves, src, dst_capture_r);
     }
 
@@ -77,7 +85,7 @@ void ChessPosition::push_pawn_moves(
     const ChessSquare dst_ep = en_passant_square();
     if (dst_ep.in_bounds() &&
         (dst_capture_l == dst_ep || dst_capture_r == dst_ep)) {
-        moves.emplace_back(src, dst_ep);
+        push_if_legal(moves, {src, dst_ep});
     }
 }
 
@@ -127,7 +135,7 @@ void ChessPosition::push_castling_moves(std::vector<ChessMove> &moves) const {
 }
 
 
-void ChessPosition::push_all_moves(
+void ChessPosition::push_legal_moves(
     std::vector<ChessMove> &moves, ChessSquare src
 ) const {
     assert(src.in_bounds());
@@ -184,13 +192,13 @@ void ChessPosition::push_all_moves(
 }
 
 
-std::vector<ChessMove> ChessPosition::get_all_moves() const {
+std::vector<ChessMove> ChessPosition::get_legal_moves() const {
     std::vector<ChessMove> result;
     for (coord_t src_file = 0; src_file < NUM_FILES; ++src_file) {
         for (coord_t src_rank = 0; src_rank < NUM_RANKS; ++src_rank) {
             const ChessPiece &piece = (*this)(src_file, src_rank);
             if (piece.get_color() == to_move) {
-                push_all_moves(result, {src_file, src_rank});
+                push_legal_moves(result, {src_file, src_rank});
             }
         }
     }
@@ -309,8 +317,8 @@ void ChessPosition::load_fen(const std::string &fen_string) {
 
         coord_t file = 0;
         coord_t rank = NUM_RANKS - 1;
-        bool white_king_found = false;
-        bool black_king_found = false;
+        [[maybe_unused]] bool white_king_found = false;
+        [[maybe_unused]] bool black_king_found = false;
         for (const char c : piece_placement) {
             if (c >= '1' && c <= '8') {
                 for (coord_t j = 0; j < c - '0'; ++j) {

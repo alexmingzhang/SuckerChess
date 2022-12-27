@@ -30,6 +30,7 @@ std::mt19937 properly_seeded_random_engine() {
     return std::mt19937(seed);
 }
 
+
 std::string get_YMD_date(char sep) {
     std::ostringstream date;
     std::time_t time = std::time(nullptr);
