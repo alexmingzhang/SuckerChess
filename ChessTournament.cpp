@@ -24,6 +24,7 @@ const std::vector<ChessGame> &ChessTournament::get_game_history() const {
 // Run every possible distinct matchup
 void ChessTournament::run(unsigned int times) {
     for (unsigned int n = 0; n < times; ++n) {
+        std::cout << "ROUND " << n << std::endl;
         for (std::size_t i = 0; i < players.size(); ++i) {
             ChessPlayer *p1 = players[i];
 

@@ -8,7 +8,6 @@
 #include <random>     // for std::random_device, std::seed_seq
 #include <sstream>    // for std::ostringstream
 
-
 std::mt19937 properly_seeded_random_engine() {
     constexpr std::size_t SEED_SIZE =
         std::mt19937::state_size * sizeof(typename std::mt19937::result_type);

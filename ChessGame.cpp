@@ -37,11 +37,6 @@ bool ChessGame::drawn() const {
 }
 
 
-template <typename T> void print(bool verbose, const T &obj) {
-    if (verbose) { std::cout << obj << std::endl; }
-}
-
-
 inline void trim(std::string &str) {
     const auto first_char = std::find_if(str.begin(), str.end(), [](char ch) {
         return !std::isspace(ch);
