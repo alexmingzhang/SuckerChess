@@ -116,6 +116,7 @@ public: // ========================================================== EVALUATION
             case PieceType::KNIGHT: return 3;
             case PieceType::PAWN: return 1;
         }
+        __builtin_unreachable();
     }
 
     [[nodiscard]] constexpr int material_value() const noexcept {
@@ -124,6 +125,7 @@ public: // ========================================================== EVALUATION
             case PieceColor::WHITE: return +unsigned_material_value();
             case PieceColor::BLACK: return -unsigned_material_value();
         }
+        __builtin_unreachable();
     }
 
 }; // class ChessPiece
