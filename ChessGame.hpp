@@ -3,9 +3,9 @@
 
 #include <vector> // for std::vector
 
+#include "ChessEngine.hpp"
 #include "ChessMove.hpp"
 #include "ChessPiece.hpp"
-#include "ChessPlayer.hpp"
 #include "ChessPosition.hpp"
 
 
@@ -34,7 +34,7 @@ public:
 
     ChessMove get_console_move(const std::vector<ChessMove> &legal_moves);
 
-    PieceColor run(ChessPlayer *white, ChessPlayer *black, bool verbose = true);
+    PieceColor run(ChessEngine *white, ChessEngine *black, bool verbose = true);
 
     std::string get_PGN() const;
 

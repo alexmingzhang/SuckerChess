@@ -1,4 +1,4 @@
-#include "ChessPlayer.hpp"
+#include "ChessEngine.hpp"
 
 
 #include <algorithm>  // for std::generate
@@ -22,7 +22,7 @@ std::mt19937 properly_seeded_random_engine() {
 }
 
 
-ChessMove RandomPlayer::pick_move(
+ChessMove RandomEngine::pick_move(
     const ChessPosition &current_pos, const std::vector<ChessMove> &legal_moves,
     const std::vector<ChessPosition> &pos_history,
     const std::vector<ChessMove> &move_history
@@ -32,7 +32,7 @@ ChessMove RandomPlayer::pick_move(
 }
 
 
-ChessMove CCCP_Player::pick_move(
+ChessMove CCCP_Engine::pick_move(
     const ChessPosition &current_pos, const std::vector<ChessMove> &legal_moves,
     const std::vector<ChessPosition> &pos_history,
     const std::vector<ChessMove> &move_history

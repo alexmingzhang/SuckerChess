@@ -2,8 +2,8 @@
 #include <iostream>
 #include <string>
 
+#include "ChessEngine.hpp"
 #include "ChessGame.hpp"
-#include "ChessPlayer.hpp"
 
 
 int main() {
@@ -14,7 +14,7 @@ int main() {
 
     ChessGame game;
     const PieceColor winner =
-        game.run(new RandomPlayer(), new CCCP_Player(), true);
+        game.run(new RandomEngine(), new CCCP_Engine(), true);
 
     switch (winner) {
         case PieceColor::NONE: ++num_draws; break;

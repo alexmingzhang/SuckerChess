@@ -1,5 +1,5 @@
-#ifndef SUCKER_CHESS_CHESS_PLAYER_HPP
-#define SUCKER_CHESS_CHESS_PLAYER_HPP
+#ifndef SUCKER_CHESS_CHESS_ENGINE_HPP
+#define SUCKER_CHESS_CHESS_ENGINE_HPP
 
 #include <random> // for std::mt19937
 #include <vector> // for std::vector
@@ -8,7 +8,7 @@
 #include "ChessPosition.hpp"
 
 
-class ChessPlayer {
+class ChessEngine {
 
 public:
 
@@ -19,20 +19,20 @@ public:
         const std::vector<ChessMove> &move_history
     ) = 0;
 
-}; // class ChessPlayer
+}; // class ChessEngine
 
-// =============================================================== RANDOM PLAYER
+// ===============================================================  RANDOM MOVES
 
 std::mt19937 properly_seeded_random_engine();
 
 
-class RandomPlayer : public ChessPlayer {
+class RandomEngine : public ChessEngine {
 
     std::mt19937 rng;
 
 public:
 
-    RandomPlayer()
+    RandomEngine()
         : rng(properly_seeded_random_engine()) {}
 
     ChessMove pick_move(
@@ -42,17 +42,17 @@ public:
         const std::vector<ChessMove> &move_history
     ) override;
 
-}; // class RandomPlayer
+}; // class RandomEngine
 
 // ====================================== CHECKMATE, CHECK, CAPTURE, PUSH (CCCP)
 
-class CCCP_Player : public ChessPlayer {
+class CCCP_Engine : public ChessEngine {
 
     std::mt19937 rng;
 
 public:
 
-    CCCP_Player()
+    CCCP_Engine()
         : rng(properly_seeded_random_engine()) {}
 
     ChessMove pick_move(
@@ -63,4 +63,4 @@ public:
     ) override;
 };
 
-#endif // SUCKER_CHESS_CHESS_PLAYER_HPP
+#endif // SUCKER_CHESS_CHESS_ENGINE_HPP

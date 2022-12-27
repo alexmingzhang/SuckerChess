@@ -44,7 +44,7 @@ struct ChessPiece {
         switch (type) {
             case PieceType::NONE: [[fallthrough]];
             case PieceType::KING: return 0;
-            case PieceType::QUEEN: value = 10;
+            case PieceType::QUEEN: value = 9;
             case PieceType::ROOK: value = 5;
             case PieceType::BISHOP: value = 3;
             case PieceType::KNIGHT: value = 3;

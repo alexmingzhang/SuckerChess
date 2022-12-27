@@ -101,7 +101,7 @@ ChessMove ChessGame::get_console_move(const std::vector<ChessMove> &legal_moves
 
 
 PieceColor
-ChessGame::run(ChessPlayer *white, ChessPlayer *black, bool verbose) {
+ChessGame::run(ChessEngine *white, ChessEngine *black, bool verbose) {
     while (true) {
 
         print(verbose, current_pos);
@@ -134,13 +134,13 @@ ChessGame::run(ChessPlayer *white, ChessPlayer *black, bool verbose) {
             }
         }
 
-        ChessPlayer *const current_player =
+        ChessEngine *const current_engine =
             current_pos.get_color_to_move() == PieceColor::WHITE ? white
                                                                  : black;
         const std::vector<ChessMove> legal_moves =
             current_pos.get_legal_moves();
 
-        if (current_player == nullptr) {
+        if (current_engine == nullptr) {
             const ChessMove chosen_move = get_console_move(legal_moves);
             if (chosen_move != NULL_MOVE) {
                 assert(
@@ -151,7 +151,7 @@ ChessGame::run(ChessPlayer *white, ChessPlayer *black, bool verbose) {
                 make_move(chosen_move);
             }
         } else {
-            const ChessMove chosen_move = current_player->pick_move(
+            const ChessMove chosen_move = current_engine->pick_move(
                 current_pos, legal_moves, pos_history, move_history
             );
             assert(
