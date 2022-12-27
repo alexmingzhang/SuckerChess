@@ -34,6 +34,8 @@ public:
 
     const std::string &get_name() const;
 
+    std::string get_name_with_elo(int precision) const;
+
     double get_elo() const;
 
     unsigned int get_num_wins() const;
