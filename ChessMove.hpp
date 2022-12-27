@@ -15,7 +15,7 @@ constexpr coord_t NUM_FILES = 8;
 constexpr coord_t NUM_RANKS = 8;
 
 
-struct ChessSquare {
+struct ChessSquare final {
 
     coord_t file;
     coord_t rank;
@@ -113,6 +113,10 @@ public: // ========================================================== COMPARISON
     constexpr auto operator<=>(const ChessMove &) const noexcept = default;
 
 public: // ======================================================= STATE TESTING
+
+    [[nodiscard]] constexpr bool affects(ChessSquare square) const noexcept {
+        return get_src() == square || get_dst() == square;
+    }
 
     [[nodiscard]] constexpr bool is_orthogonal() const noexcept {
         return get_src_file() == get_dst_file() ||

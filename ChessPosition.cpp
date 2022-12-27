@@ -200,126 +200,52 @@ std::vector<ChessMove> ChessPosition::get_all_moves() const {
 
 void ChessPosition::make_move(const ChessMove &move) {
 
-    using enum PieceType;
+    assert(is_valid(move));
 
-    // get and validate moving piece
-    assert(move.get_src().in_bounds());
-    assert(move.get_dst().in_bounds());
-    ChessPiece piece = (*this)[move.get_src()];
-    assert(piece.get_color() != PieceColor::NONE);
-    assert(piece.get_color() == to_move);
-
-    // validate move
-    switch (piece.get_type()) {
-        case NONE: __builtin_unreachable();
-        case KING:
-            assert(
-                move.distance() == 1 ||
-                (move.distance() == 2 &&
-                 move.get_src_rank() == move.get_dst_rank())
-            );
-            break;
-        case QUEEN: assert(move.is_orthogonal() || move.is_diagonal()); break;
-        case ROOK: assert(move.is_orthogonal()); break;
-        case BISHOP: assert(move.is_diagonal()); break;
-        case KNIGHT:
-            assert(move.distance() == 2);
-            assert(!move.is_orthogonal());
-            assert(!move.is_diagonal());
-            break;
-        case PAWN:
-            assert(move.get_src_rank() != move.get_dst_rank());
-            assert(
-                move.distance() == 1 ||
-                (move.distance() == 2 &&
-                 move.get_src_file() == move.get_dst_file())
-            );
-            break;
-    }
-
-    // check for en passant capture
-    const bool is_en_passant_capture =
-        piece.get_type() == PAWN &&
-        move.get_src_file() != move.get_dst_file() &&
-        (*this)[move.get_dst()] == EMPTY_SQUARE;
-
-    // record en passant file
-    if (piece.get_type() == PAWN &&
-        (move.get_src_rank() - move.get_dst_rank() == 2 ||
-         move.get_src_rank() - move.get_dst_rank() == -2)) {
-        assert(move.get_src_file() == move.get_dst_file());
-        en_passant_file = move.get_src_file();
-    } else {
-        en_passant_file = NUM_FILES;
-    }
+    // get moving piece
+    const ChessPiece piece = (*this)[move.get_src()];
 
     // update castling rights
-    constexpr ChessSquare WHITE_SHORT_ROOK_SQUARE = {NUM_FILES - 1, 0};
-    constexpr ChessSquare WHITE_LONG_ROOK_SQUARE = {0, 0};
-    constexpr ChessSquare BLACK_SHORT_ROOK_SQUARE = {
-        NUM_FILES - 1, NUM_RANKS - 1};
-    constexpr ChessSquare BLACK_LONG_ROOK_SQUARE = {0, NUM_RANKS - 1};
-
     if (piece == WHITE_KING) {
         white_can_short_castle = false;
         white_can_long_castle = false;
     }
-    if (move.get_src() == WHITE_SHORT_ROOK_SQUARE ||
-        move.get_dst() == WHITE_SHORT_ROOK_SQUARE) {
-        white_can_short_castle = false;
-    }
-    if (move.get_src() == WHITE_LONG_ROOK_SQUARE ||
-        move.get_dst() == WHITE_LONG_ROOK_SQUARE) {
-        white_can_long_castle = false;
-    }
+    if (move.affects({NUM_FILES - 1, 0})) { white_can_short_castle = false; }
+    if (move.affects({0, 0})) { white_can_long_castle = false; }
     if (piece == BLACK_KING) {
         black_can_short_castle = false;
         black_can_long_castle = false;
     }
-    if (move.get_src() == BLACK_SHORT_ROOK_SQUARE ||
-        move.get_dst() == BLACK_SHORT_ROOK_SQUARE) {
+    if (move.affects({NUM_FILES - 1, NUM_RANKS - 1})) {
         black_can_short_castle = false;
     }
-    if (move.get_src() == BLACK_LONG_ROOK_SQUARE ||
-        move.get_dst() == BLACK_LONG_ROOK_SQUARE) {
-        black_can_long_castle = false;
-    }
+    if (move.affects({0, NUM_RANKS - 1})) { black_can_long_castle = false; }
 
-    // handle castling
-    if (piece.get_type() == KING && move.distance() != 1) {
-        assert(move.distance() == 2);
-        assert(move.get_src_file() == 4);
-        assert(move.get_src_rank() == move.get_dst_rank());
+    // perform move
+    if (is_en_passant(move)) {
+        (*this)(move.get_dst_file(), move.get_src_rank()) = EMPTY_SQUARE;
+    } else if (piece.get_type() == PieceType::KING && move.distance() != 1) {
         const coord_t rank = move.get_src_rank();
         if (move.get_dst_file() == 6) { // short castle
-            assert((*this)(5, rank) == EMPTY_SQUARE);
-            assert((*this)(6, rank) == EMPTY_SQUARE);
-            assert((*this)(7, rank).get_color() == to_move);
-            assert((*this)(7, rank).get_type() == ROOK);
             (*this)(5, rank) = (*this)(7, rank);
             (*this)(7, rank) = EMPTY_SQUARE;
         } else if (move.get_dst_file() == 2) { // long castle
-            assert((*this)(0, rank).get_color() == to_move);
-            assert((*this)(0, rank).get_type() == ROOK);
-            assert((*this)(1, rank) == EMPTY_SQUARE);
-            assert((*this)(2, rank) == EMPTY_SQUARE);
-            assert((*this)(3, rank) == EMPTY_SQUARE);
             (*this)(3, rank) = (*this)(0, rank);
             (*this)(0, rank) = EMPTY_SQUARE;
         } else {
             __builtin_unreachable();
         }
     }
-
-    // perform move
     (*this)[move.get_dst()] = piece.promote(move.get_promotion_type());
     (*this)[move.get_src()] = EMPTY_SQUARE;
 
-    // handle en passant capture
-    if (is_en_passant_capture) {
-        assert(has_enemy_piece({move.get_dst_file(), move.get_src_rank()}, PAWN)
-        );
-        (*this)(move.get_dst_file(), move.get_src_rank()) = EMPTY_SQUARE;
+    // record en passant file
+    if (piece.get_type() == PieceType::PAWN &&
+        (move.get_src_rank() - move.get_dst_rank() == 2 ||
+         move.get_src_rank() - move.get_dst_rank() == -2)) {
+        en_passant_file = move.get_src_file();
+    } else {
+        en_passant_file = NUM_FILES;
     }
 
     // update player to move
@@ -337,16 +263,9 @@ std::string ChessPosition::get_move_name(
     const std::vector<ChessMove> &legal_moves, const ChessMove &move
 ) const {
 
-    assert(move.get_src().in_bounds());
+    assert(is_valid(move));
+
     const ChessPiece piece = (*this)[move.get_src()];
-    assert(piece.get_color() == to_move);
-    assert(piece.get_type() != PieceType::NONE);
-
-    assert(move.get_dst().in_bounds());
-    const ChessPiece captured = (*this)[move.get_dst()];
-    assert(captured.get_color() != to_move);
-    const bool is_capture = captured != EMPTY_SQUARE;
-
     std::ostringstream result;
 
     if (piece.get_type() == PieceType::KING && move.distance() == 2) {
@@ -366,7 +285,7 @@ std::string ChessPosition::get_move_name(
             case PieceType::BISHOP: result << 'B'; break;
             case PieceType::KNIGHT: result << 'N'; break;
             case PieceType::PAWN:
-                if (is_capture) {
+                if (is_capture(move)) {
                     result << static_cast<char>('a' + move.get_src_file());
                 }
                 break;
@@ -399,9 +318,8 @@ std::string ChessPosition::get_move_name(
                 }
             }
         }
-        if (is_capture) { result << 'x'; }
-        result << static_cast<char>('a' + move.get_dst_file());
-        result << static_cast<char>('1' + move.get_dst_rank());
+        if (is_capture(move)) { result << 'x'; }
+        result << move.get_dst();
     }
 
     if (move.get_promotion_type() != PieceType::NONE) {
