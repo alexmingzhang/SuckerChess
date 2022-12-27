@@ -231,4 +231,6 @@ std::string ChessGame::get_full_PGN(
     PGN << "[Black \"" << black_name << "\"]\n";
     PGN << get_PGN_result() << "\n";
     PGN << get_PGN_move_text();
+
+    return PGN.str();
 }

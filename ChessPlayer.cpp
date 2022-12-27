@@ -42,6 +42,13 @@ ChessGame ChessPlayer::versus(ChessPlayer &other) {
     PieceColor winner = game.run(this->engine, other.engine, false);
 
     switch (winner) {
+        case PieceColor::NONE:
+            std::cout << "Draw." << std::endl;
+            this->num_draws++;
+            other.num_draws++;
+            this->elo += KFACTOR * (0.5 - this_expected_score);
+            other.elo += KFACTOR * (0.5 - other_expected_score);
+            break;
         case PieceColor::WHITE:
             std::cout << this->name << " won!" << std::endl;
             this->num_wins++;
@@ -56,14 +63,6 @@ ChessGame ChessPlayer::versus(ChessPlayer &other) {
             this->elo += KFACTOR * (0.0 - this_expected_score);
             other.elo += KFACTOR * (1.0 - other_expected_score);
             break;
-        case PieceColor::NONE:
-            std::cout << "Draw." << std::endl;
-            this->num_draws++;
-            other.num_draws++;
-            this->elo += KFACTOR * (0.5 - this_expected_score);
-            other.elo += KFACTOR * (0.5 - other_expected_score);
-            break;
-        default: __builtin_unreachable();
     }
 
     return game;

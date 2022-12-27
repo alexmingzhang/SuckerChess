@@ -2,6 +2,7 @@
 #define SUCKER_CHESS_CHESS_POSITION_HPP
 
 #include <array>   // for std::array
+#include <cassert> // for assert
 #include <cstddef> // for std::size_t
 #include <ostream> // for std::ostream
 #include <string>  // for std::string
@@ -225,8 +226,7 @@ public: // ===================================================== MOVE VALIDATION
         assert(move.get_src().in_bounds());
         assert(move.get_dst().in_bounds());
         const ChessPiece piece = (*this)[move.get_src()];
-        const PieceColor color = piece.get_color();
-        assert(color != PieceColor::NONE);
+        assert(piece.get_color() != PieceColor::NONE);
 
         // En passant is a special move in which a pawn makes a diagonal move
         // to an empty square.
@@ -248,7 +248,7 @@ public: // ===================================================== MOVE VALIDATION
                     assert(move.get_dst() == en_passant_square());
 
                     // En passant may only be used to capture an enemy pawn.
-                    const ChessPiece ep_captured =
+                    [[maybe_unused]] const ChessPiece ep_captured =
                         (*this)(move.get_dst_file(), move.get_src_rank());
                     assert(ep_captured.get_color() != piece.get_color());
                     assert(ep_captured.get_type() == PieceType::PAWN);
@@ -263,7 +263,7 @@ public: // ===================================================== MOVE VALIDATION
     [[nodiscard]] constexpr bool is_capture(ChessMove move) const noexcept {
         assert(move.get_src().in_bounds());
         assert(move.get_dst().in_bounds());
-        const ChessPiece piece = (*this)[move.get_src()];
+        [[maybe_unused]] const ChessPiece piece = (*this)[move.get_src()];
         const ChessPiece target = (*this)[move.get_dst()];
 
         // Pieces cannot capture other pieces of their own color.
@@ -279,7 +279,7 @@ public: // ===================================================== MOVE VALIDATION
         assert(move.get_src().in_bounds());
         assert(move.get_dst().in_bounds());
         const ChessPiece piece = (*this)[move.get_src()];
-        const ChessPiece target = (*this)[move.get_dst()];
+        [[maybe_unused]] const ChessPiece target = (*this)[move.get_dst()];
 
         // Pieces cannot capture other pieces of their own color.
         assert(piece.get_color() != PieceColor::NONE);

@@ -88,7 +88,7 @@ ChessMove ReducerEngine::pick_move(
     for (const ChessMove move : legal_moves) {
         ChessPosition copy = current_pos;
         copy.make_move(move);
-        int move_score = copy.get_legal_moves().size();
+        int move_score = static_cast<int>(copy.get_legal_moves().size());
 
         if (move_score < best_move_score) {
             best_moves.clear();
