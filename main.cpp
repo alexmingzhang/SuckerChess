@@ -1,34 +1,39 @@
+#include <algorithm>
 #include <cstddef>
 #include <iostream>
 #include <string>
 
 #include "ChessEngine.hpp"
 #include "ChessGame.hpp"
-
-
-static void benchmark(std::size_t num_games) {
-    std::size_t num_draws = 0;
-    std::size_t num_white_wins = 0;
-    std::size_t num_black_wins = 0;
-    for (std::size_t i = 0; i < num_games; ++i) {
-        ChessGame game;
-        ChessEngine *white = new RandomEngine();
-        ChessEngine *black = new RandomEngine();
-        const PieceColor winner = game.run(white, black, false);
-        delete white;
-        delete black;
-        switch (winner) {
-            case PieceColor::NONE: ++num_draws; break;
-            case PieceColor::WHITE: ++num_white_wins; break;
-            case PieceColor::BLACK: ++num_black_wins; break;
-        }
-    }
-    std::cout << num_white_wins << " : " << num_draws << " : " << num_black_wins
-              << std::endl;
-}
+#include "ChessTournament.hpp"
 
 
 int main() {
-    benchmark(1000);
+    ChessPlayer *flm_player =
+        new ChessPlayer("FLM", new Engine::FirstLegalMove());
+    ChessPlayer *random_player =
+        new ChessPlayer("Random", new Engine::Random());
+    ChessPlayer *slug_player = new ChessPlayer("Slug", new Engine::Slug());
+
+    ChessPlayer *cccp_player = new ChessPlayer("CCCP", new Engine::CCCP());
+    ChessPlayer *reducer_player =
+        new ChessPlayer("Reducer", new Engine::Reducer());
+
+    ChessTournament tourney("SuckerChess Tournament");
+    tourney.add_player(flm_player);
+    tourney.add_player(random_player);
+    tourney.add_player(slug_player);
+    tourney.add_player(cccp_player);
+    tourney.add_player(reducer_player);
+
+    tourney.run(100, true);
+    tourney.sort_players_by_elo();
+
+    std::cout << "Tournament results: \n";
+    for (const ChessPlayer *p : tourney.get_players()) {
+        std::cout << p->get_name_with_elo(2) << ": " << p->get_num_wins() << '-'
+                  << p->get_num_draws() << '-' << p->get_num_losses()
+                  << std::endl;
+    }
     return 0;
 }

@@ -24,17 +24,56 @@ public:
 
 }; // class ChessEngine
 
+namespace Engine {
+
+// ============================================================ FIRST LEGAL MOVE
+
+class FirstLegalMove : public ChessEngine {
+
+public:
+
+    ChessMove pick_move(
+        const ChessPosition &current_pos,
+        const std::vector<ChessMove> &legal_moves,
+        const std::vector<ChessPosition> &pos_history,
+        const std::vector<ChessMove> &move_history
+    ) override;
+
+}; // class FirstLegalMove
+
 
 // ===============================================================  RANDOM MOVES
 
 
-class RandomEngine : public ChessEngine {
+class Random : public ChessEngine {
 
     std::mt19937 rng;
 
 public:
 
-    RandomEngine()
+    Random()
+        : rng(properly_seeded_random_engine()) {}
+
+    ChessMove pick_move(
+        const ChessPosition &current_pos,
+        const std::vector<ChessMove> &legal_moves,
+        const std::vector<ChessPosition> &pos_history,
+        const std::vector<ChessMove> &move_history
+    ) override;
+
+}; // class RandomEngine
+
+
+// =======================================  SLUG (Picks moves w/ least distance)
+
+
+class Slug : public ChessEngine {
+
+    std::mt19937 rng;
+
+public:
+
+    Slug()
         : rng(properly_seeded_random_engine()) {}
 
     ChessMove pick_move(
@@ -50,13 +89,13 @@ public:
 // ====================================== CHECKMATE, CHECK, CAPTURE, PUSH (CCCP)
 
 
-class CCCP_Engine : public ChessEngine {
+class CCCP : public ChessEngine {
 
     std::mt19937 rng;
 
 public:
 
-    CCCP_Engine()
+    CCCP()
         : rng(properly_seeded_random_engine()) {}
 
     ChessMove pick_move(
@@ -71,13 +110,13 @@ public:
 // ================================================ REDUCER (Reduce enemy moves)
 
 
-class ReducerEngine : public ChessEngine {
+class Reducer : public ChessEngine {
 
     std::mt19937 rng;
 
 public:
 
-    ReducerEngine()
+    Reducer()
         : rng(properly_seeded_random_engine()) {}
 
     ChessMove pick_move(
@@ -87,6 +126,8 @@ public:
         const std::vector<ChessMove> &move_history
     ) override;
 };
+
+} // namespace Engine
 
 
 #endif // SUCKER_CHESS_CHESS_ENGINE_HPP

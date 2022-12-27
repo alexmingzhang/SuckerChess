@@ -2,6 +2,7 @@
 #define SUCKER_CHESS_CHESS_PLAYER_HPP
 
 #include <string> // for std::string
+#include <tuple>  // for std::tuple
 
 #include "ChessEngine.hpp"
 #include "ChessGame.hpp"
@@ -44,7 +45,7 @@ public:
 
     unsigned int get_num_losses() const;
 
-    ChessGame versus(ChessPlayer &);
+    ChessGame versus(ChessPlayer *, bool verbose);
 }; // class ChessPlayer
 
 
