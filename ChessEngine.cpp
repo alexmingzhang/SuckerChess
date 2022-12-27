@@ -57,8 +57,9 @@ ChessMove CCCP_Engine::pick_move(
             if (!enemy_king_found) {
                 for (coord_t file = 0; file < NUM_FILES; ++file) {
                     for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
-                        if (current_pos[{file, rank}].type == PieceType::KING &&
-                            current_pos[{file, rank}].color !=
+                        if (current_pos[{file, rank}].get_type() ==
+                                PieceType::KING &&
+                            current_pos[{file, rank}].get_color() !=
                                 current_pos.get_color_to_move()) {
                             enemy_king_file = file;
                             enemy_king_rank = rank;

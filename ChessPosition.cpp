@@ -132,9 +132,9 @@ void ChessPosition::push_all_moves(
 ) const {
     assert(src.in_bounds());
     const ChessPiece piece = (*this)[src];
-    assert(piece.color == to_move);
-    assert(piece.type != PieceType::NONE);
-    switch (piece.type) {
+    assert(piece.get_color() == to_move);
+    assert(piece.get_type() != PieceType::NONE);
+    switch (piece.get_type()) {
         case PieceType::NONE: __builtin_unreachable();
         case PieceType::KING:
             push_leaper_move(moves, src, {-1, -1});
@@ -189,7 +189,7 @@ std::vector<ChessMove> ChessPosition::get_all_moves() const {
     for (coord_t src_file = 0; src_file < NUM_FILES; ++src_file) {
         for (coord_t src_rank = 0; src_rank < NUM_RANKS; ++src_rank) {
             const ChessPiece &piece = board[src_file][src_rank];
-            if (piece.color == to_move) {
+            if (piece.get_color() == to_move) {
                 push_all_moves(result, {src_file, src_rank});
             }
         }
@@ -206,11 +206,11 @@ void ChessPosition::make_move(const ChessMove &move) {
     assert(move.get_src().in_bounds());
     assert(move.get_dst().in_bounds());
     ChessPiece piece = (*this)[move.get_src()];
-    assert(piece.color != PieceColor::NONE);
-    assert(piece.color == to_move);
+    assert(piece.get_color() != PieceColor::NONE);
+    assert(piece.get_color() == to_move);
 
     // validate move
-    switch (piece.type) {
+    switch (piece.get_type()) {
         case NONE: __builtin_unreachable();
         case KING:
             assert(
@@ -239,11 +239,12 @@ void ChessPosition::make_move(const ChessMove &move) {
 
     // check for en passant capture
     const bool is_en_passant_capture =
-        piece.type == PAWN && move.get_src_file() != move.get_dst_file() &&
+        piece.get_type() == PAWN &&
+        move.get_src_file() != move.get_dst_file() &&
         (*this)[move.get_dst()] == EMPTY_SQUARE;
 
     // record en passant file
-    if (piece.type == PAWN &&
+    if (piece.get_type() == PAWN &&
         (move.get_src_rank() - move.get_dst_rank() == 2 ||
          move.get_src_rank() - move.get_dst_rank() == -2)) {
         assert(move.get_src_file() == move.get_dst_file());
@@ -284,13 +285,8 @@ void ChessPosition::make_move(const ChessMove &move) {
         black_can_long_castle = false;
     }
 
-    // handle promotion
-    if (move.get_promotion_type() != NONE) {
-        piece.type = move.get_promotion_type();
-    }
-
     // perform move
-    (*this)[move.get_dst()] = piece;
+    (*this)[move.get_dst()] = piece.promote(move.get_promotion_type());
     (*this)[move.get_src()] = EMPTY_SQUARE;
 
     // handle en passant capture
@@ -301,7 +297,7 @@ void ChessPosition::make_move(const ChessMove &move) {
     }
 
     // handle castling
-    if (piece.type == KING && move.distance() != 1) {
+    if (piece.get_type() == KING && move.distance() != 1) {
         assert(move.distance() == 2);
         assert(move.get_src_file() == 4);
         assert(move.get_src_rank() == move.get_dst_rank());
@@ -309,13 +305,13 @@ void ChessPosition::make_move(const ChessMove &move) {
         if (move.get_dst_file() == 6) { // short castle
             assert(board[5][rank] == EMPTY_SQUARE);
             assert(board[6][rank] == EMPTY_SQUARE);
-            assert(board[7][rank].color == to_move);
-            assert(board[7][rank].type == ROOK);
+            assert(board[7][rank].get_color() == to_move);
+            assert(board[7][rank].get_type() == ROOK);
             board[5][rank] = board[7][rank];
             board[7][rank] = EMPTY_SQUARE;
         } else if (move.get_dst_file() == 2) { // long castle
-            assert(board[0][rank].color == to_move);
-            assert(board[0][rank].type == ROOK);
+            assert(board[0][rank].get_color() == to_move);
+            assert(board[0][rank].get_type() == ROOK);
             assert(board[1][rank] == EMPTY_SQUARE);
             assert(board[2][rank] == EMPTY_SQUARE);
             assert(board[3][rank] == EMPTY_SQUARE);
@@ -343,17 +339,17 @@ std::string ChessPosition::get_move_name(
 
     assert(move.get_src().in_bounds());
     const ChessPiece piece = (*this)[move.get_src()];
-    assert(piece.color == to_move);
-    assert(piece.type != PieceType::NONE);
+    assert(piece.get_color() == to_move);
+    assert(piece.get_type() != PieceType::NONE);
 
     assert(move.get_dst().in_bounds());
     const ChessPiece captured = (*this)[move.get_dst()];
-    assert(captured.color != to_move);
+    assert(captured.get_color() != to_move);
     const bool is_capture = captured != EMPTY_SQUARE;
 
     std::ostringstream result;
 
-    if (piece.type == PieceType::KING && move.distance() == 2) {
+    if (piece.get_type() == PieceType::KING && move.distance() == 2) {
         if (move.get_dst_file() == 6) {
             result << "O-O";
         } else if (move.get_dst_file() == 2) {
@@ -362,7 +358,7 @@ std::string ChessPosition::get_move_name(
             __builtin_unreachable();
         }
     } else {
-        switch (piece.type) {
+        switch (piece.get_type()) {
             case PieceType::NONE: __builtin_unreachable();
             case PieceType::KING: result << 'K'; break;
             case PieceType::QUEEN: result << 'Q'; break;
@@ -375,13 +371,13 @@ std::string ChessPosition::get_move_name(
                 }
                 break;
         }
-        if (piece.type != PieceType::PAWN) {
+        if (piece.get_type() != PieceType::PAWN) {
             bool ambiguous_file = false;
             bool ambiguous_rank = false;
             bool ambiguous_diag = false;
             for (const ChessMove &other : legal_moves) {
                 const ChessPiece other_piece = (*this)[other.get_src()];
-                if (other_piece.type == piece.type &&
+                if (other_piece.get_type() == piece.get_type() &&
                     other.get_dst() == move.get_dst()) {
                     const bool file_match =
                         other.get_src_file() == move.get_src_file();
@@ -548,30 +544,30 @@ std::string ChessPosition::get_fen() const {
         for (coord_t rank = NUM_RANKS - 1; rank >= 0; --rank) {
             for (coord_t file = 0; file < NUM_FILES; ++file) {
                 const ChessPiece piece = board[file][rank];
-                switch (piece.type) {
+                switch (piece.get_type()) {
                     case PieceType::KING:
                         append_spaces();
-                        append_char('k', piece.color);
+                        append_char('k', piece.get_color());
                         break;
                     case PieceType::QUEEN:
                         append_spaces();
-                        append_char('q', piece.color);
+                        append_char('q', piece.get_color());
                         break;
                     case PieceType::ROOK:
                         append_spaces();
-                        append_char('r', piece.color);
+                        append_char('r', piece.get_color());
                         break;
                     case PieceType::BISHOP:
                         append_spaces();
-                        append_char('b', piece.color);
+                        append_char('b', piece.get_color());
                         break;
                     case PieceType::KNIGHT:
                         append_spaces();
-                        append_char('n', piece.color);
+                        append_char('n', piece.get_color());
                         break;
                     case PieceType::PAWN:
                         append_spaces();
-                        append_char('p', piece.color);
+                        append_char('p', piece.get_color());
                         break;
                     case PieceType::NONE: space_counter++; break;
                     default: break;

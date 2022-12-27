@@ -84,22 +84,24 @@ public: // ====================================================== SQUARE TESTING
 
     [[nodiscard]] constexpr bool is_legal_dst(ChessSquare square
     ) const noexcept {
-        return square.in_bounds() && (*this)[square].color != to_move;
+        return square.in_bounds() && (*this)[square].get_color() != to_move;
     }
 
     [[nodiscard]] constexpr bool is_legal_cap(ChessSquare square
     ) const noexcept {
         if (!square.in_bounds()) { return false; }
         const ChessPiece piece = (*this)[square];
-        return piece.color != to_move && piece.color != PieceColor::NONE;
+        return piece.get_color() != to_move &&
+               piece.get_color() != PieceColor::NONE;
     }
 
     [[nodiscard]] constexpr bool
     has_enemy_piece(ChessSquare square, PieceType type) const noexcept {
         if (!square.in_bounds()) { return false; }
         const ChessPiece piece = (*this)[square];
-        return piece.color != to_move && piece.color != PieceColor::NONE &&
-               piece.type == type;
+        return piece.get_color() != to_move &&
+               piece.get_color() != PieceColor::NONE &&
+               piece.get_type() == type;
     }
 
 public: // =========================================================== UTILITIES
@@ -119,6 +121,7 @@ public: // =========================================================== UTILITIES
             case PieceColor::WHITE: return 1;
             case PieceColor::BLACK: return NUM_RANKS - 2;
         }
+        __builtin_unreachable();
     }
 
     [[nodiscard]] constexpr coord_t promotion_rank() const {
@@ -147,7 +150,7 @@ private: // ============================================= ATTACK TESTING HELPERS
         while (is_empty(current)) { current += offset; }
         if (current.in_bounds()) {
             const ChessPiece piece = (*this)[current];
-            if (piece.color != to_move) { return piece; }
+            if (piece.get_color() != to_move) { return piece; }
         }
         return EMPTY_SQUARE;
     }
@@ -168,13 +171,13 @@ private: // ============================================= ATTACK TESTING HELPERS
     ) const {
         using enum PieceType;
         const ChessPiece a = get_slider_attacker(square, ChessOffset{-1, 0});
-        if (a.type == QUEEN || a.type == ROOK) { return true; }
+        if (a.get_type() == QUEEN || a.get_type() == ROOK) { return true; }
         const ChessPiece b = get_slider_attacker(square, ChessOffset{0, -1});
-        if (b.type == QUEEN || b.type == ROOK) { return true; }
+        if (b.get_type() == QUEEN || b.get_type() == ROOK) { return true; }
         const ChessPiece c = get_slider_attacker(square, ChessOffset{0, +1});
-        if (c.type == QUEEN || c.type == ROOK) { return true; }
+        if (c.get_type() == QUEEN || c.get_type() == ROOK) { return true; }
         const ChessPiece d = get_slider_attacker(square, ChessOffset{+1, 0});
-        if (d.type == QUEEN || d.type == ROOK) { return true; }
+        if (d.get_type() == QUEEN || d.get_type() == ROOK) { return true; }
         return false;
     }
 
@@ -182,13 +185,13 @@ private: // ============================================= ATTACK TESTING HELPERS
     ) const {
         using enum PieceType;
         const ChessPiece a = get_slider_attacker(square, ChessOffset{-1, -1});
-        if (a.type == QUEEN || a.type == BISHOP) { return true; }
+        if (a.get_type() == QUEEN || a.get_type() == BISHOP) { return true; }
         const ChessPiece b = get_slider_attacker(square, ChessOffset{-1, +1});
-        if (b.type == QUEEN || b.type == BISHOP) { return true; }
+        if (b.get_type() == QUEEN || b.get_type() == BISHOP) { return true; }
         const ChessPiece c = get_slider_attacker(square, ChessOffset{+1, -1});
-        if (c.type == QUEEN || c.type == BISHOP) { return true; }
+        if (c.get_type() == QUEEN || c.get_type() == BISHOP) { return true; }
         const ChessPiece d = get_slider_attacker(square, ChessOffset{+1, +1});
-        if (d.type == QUEEN || d.type == BISHOP) { return true; }
+        if (d.get_type() == QUEEN || d.get_type() == BISHOP) { return true; }
         return false;
     }
 
@@ -226,7 +229,8 @@ public: // ====================================================== ATTACK TESTING
         for (coord_t file = 0; file < NUM_FILES; ++file) {
             for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
                 const ChessPiece piece = board[file][rank];
-                if (piece.type == PieceType::KING && piece.color == to_move) {
+                if (piece.get_type() == PieceType::KING &&
+                    piece.get_color() == to_move) {
                     return is_attacked({file, rank});
                 }
             }

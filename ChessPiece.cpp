@@ -2,10 +2,10 @@
 
 
 std::ostream &operator<<(std::ostream &os, const ChessPiece &piece) {
-    switch (piece.color) {
+    switch (piece.get_color()) {
         case PieceColor::NONE: os << ' '; break;
         case PieceColor::WHITE:
-            switch (piece.type) {
+            switch (piece.get_type()) {
                 case PieceType::NONE: __builtin_unreachable();
                 case PieceType::KING: os << "♚"; break;
                 case PieceType::QUEEN: os << "♛"; break;
@@ -16,7 +16,7 @@ std::ostream &operator<<(std::ostream &os, const ChessPiece &piece) {
             }
             break;
         case PieceColor::BLACK:
-            switch (piece.type) {
+            switch (piece.get_type()) {
                 case PieceType::NONE: __builtin_unreachable();
                 case PieceType::KING: os << "♔"; break;
                 case PieceType::QUEEN: os << "♕"; break;
