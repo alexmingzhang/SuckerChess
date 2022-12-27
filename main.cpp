@@ -20,10 +20,11 @@ int main() {
 
     tourney.run(10);
 
+    std::cout << "Tournament results: \n";
     for (const ChessPlayer *p : tourney.get_players()) {
-        std::cout << p->get_name() << " (" << p->get_elo()
-                  << "): " << p->get_num_wins() << '-' << p->get_num_draws()
-                  << '-' << p->get_num_losses() << std::endl;
+        std::cout << p->get_name_with_elo(2) << ": " << p->get_num_wins() << '-'
+                  << p->get_num_draws() << '-' << p->get_num_losses()
+                  << std::endl;
     }
 
     return 0;

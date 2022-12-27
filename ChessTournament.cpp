@@ -30,8 +30,8 @@ void ChessTournament::run(unsigned int times) {
             for (std::size_t j = i + 1; j < players.size(); ++j) {
                 ChessPlayer *p2 = players[j];
 
-                p1->versus(*p2);
-                p2->versus(*p1);
+                game_history.push_back(p1->versus(*p2));
+                game_history.push_back(p2->versus(*p1));
             }
         }
     }
