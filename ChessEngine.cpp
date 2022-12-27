@@ -5,15 +5,40 @@
 #include <limits>  // for std::numeric_limits
 #include <random>  // for std::uniform_int_distribution
 
+namespace Engine {
 
-ChessMove RandomEngine::
+
+ChessMove FirstLegalMove::
+    pick_move(const ChessPosition &, const std::vector<ChessMove> &legal_moves, const std::vector<ChessPosition> &, const std::vector<ChessMove> &) {
+    return legal_moves[0];
+}
+
+
+ChessMove Random::
     pick_move(const ChessPosition &, const std::vector<ChessMove> &legal_moves, const std::vector<ChessPosition> &, const std::vector<ChessMove> &) {
     std::uniform_int_distribution<std::size_t> dist(0, legal_moves.size() - 1);
     return legal_moves[dist(rng)];
 }
 
 
-ChessMove CCCP_Engine::pick_move(
+ChessMove Slug::
+    pick_move(const ChessPosition &, const std::vector<ChessMove> &legal_moves, const std::vector<ChessPosition> &, const std::vector<ChessMove> &) {
+    ChessMove laziest_move = legal_moves[0];
+    coord_t laziest_move_distance =
+        legal_moves[0].distance(); // Include header file that defines coord_t?
+
+    for (const ChessMove move : legal_moves) {
+        coord_t distance = move.distance();
+        if (distance < laziest_move.distance()) {
+            laziest_move = move;
+            laziest_move_distance = distance;
+        }
+    }
+
+    return laziest_move;
+}
+
+ChessMove CCCP::pick_move(
     const ChessPosition &current_pos,
     const std::vector<ChessMove> &legal_moves,
     const std::vector<ChessPosition> &pos_history,
@@ -75,7 +100,7 @@ ChessMove CCCP_Engine::pick_move(
     return legal_moves[0];
 }
 
-ChessMove ReducerEngine::pick_move(
+ChessMove Reducer::pick_move(
     const ChessPosition &current_pos,
     const std::vector<ChessMove> &legal_moves,
     const std::vector<ChessPosition> &,
@@ -102,3 +127,5 @@ ChessMove ReducerEngine::pick_move(
     std::uniform_int_distribution<std::size_t> dist(0, best_moves.size() - 1);
     return best_moves[dist(rng)];
 }
+
+} // namespace Engine
