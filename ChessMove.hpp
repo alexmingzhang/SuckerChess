@@ -57,9 +57,9 @@ class ChessMove final {
 #ifdef SUCKER_CHESS_USE_COMPRESSED_CHESS_MOVE
     std::uint16_t data;
 #else
-    ChessSquare src;
-    ChessSquare dst;
-    PieceType promotion_type;
+    ChessSquare m_src;
+    ChessSquare m_dst;
+    PieceType m_promotion_type;
 #endif
 
 public: // ======================================================== CONSTRUCTORS
@@ -76,37 +76,43 @@ public: // ======================================================== CONSTRUCTORS
     }
 
     constexpr ChessMove(
-        ChessSquare source, ChessSquare destination, PieceType type
+        ChessSquare source, ChessSquare destination, PieceType promotion_type
     )
         : data(static_cast<std::uint16_t>(
               (source.file << 12) | (source.rank << 9) |
               (destination.file << 6) | (destination.rank << 3) |
-              static_cast<std::uint16_t>(type)
+              static_cast<std::uint16_t>(promotion_type)
           )) {
         assert(source.in_bounds());
         assert(destination.in_bounds());
-        assert(type != PieceType::KING && type != PieceType::PAWN);
+        assert(
+            promotion_type != PieceType::KING &&
+            promotion_type != PieceType::PAWN
+        );
     }
 
 #else
 
     constexpr ChessMove(ChessSquare source, ChessSquare destination)
-        : src(source)
-        , dst(destination)
-        , promotion_type(PieceType::NONE) {
+        : m_src(source)
+        , m_dst(destination)
+        , m_promotion_type(PieceType::NONE) {
         assert(source.in_bounds());
         assert(destination.in_bounds());
     }
 
     constexpr ChessMove(
-        ChessSquare source, ChessSquare destination, PieceType type
+        ChessSquare source, ChessSquare destination, PieceType promotion_type
     )
-        : src(source)
-        , dst(destination)
-        , promotion_type(type) {
+        : m_src(source)
+        , m_dst(destination)
+        , m_promotion_type(promotion_type) {
         assert(source.in_bounds());
         assert(destination.in_bounds());
-        assert(type != PieceType::KING && type != PieceType::PAWN);
+        assert(
+            promotion_type != PieceType::KING &&
+            promotion_type != PieceType::PAWN
+        );
     }
 
 #endif
@@ -159,28 +165,32 @@ public: // =========================================================== ACCESSORS
 
 #else
 
-    [[nodiscard]] constexpr ChessSquare get_src() const noexcept { return src; }
+    [[nodiscard]] constexpr ChessSquare get_src() const noexcept {
+        return m_src;
+    }
 
     [[nodiscard]] constexpr coord_t get_src_file() const noexcept {
-        return src.file;
+        return m_src.file;
     }
 
     [[nodiscard]] constexpr coord_t get_src_rank() const noexcept {
-        return src.rank;
+        return m_src.rank;
     }
 
-    [[nodiscard]] constexpr ChessSquare get_dst() const noexcept { return dst; }
+    [[nodiscard]] constexpr ChessSquare get_dst() const noexcept {
+        return m_dst;
+    }
 
     [[nodiscard]] constexpr coord_t get_dst_file() const noexcept {
-        return dst.file;
+        return m_dst.file;
     }
 
     [[nodiscard]] constexpr coord_t get_dst_rank() const noexcept {
-        return dst.rank;
+        return m_dst.rank;
     }
 
     [[nodiscard]] constexpr PieceType get_promotion_type() const noexcept {
-        return promotion_type;
+        return m_promotion_type;
     }
 
 #endif
