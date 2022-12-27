@@ -2,9 +2,11 @@
 
 #include <algorithm>  // for std::generate
 #include <cstddef>    // for std::size_t
+#include <ctime>      // for std::time_t
 #include <functional> // for std::ref
 #include <iterator>   // for std::begin, std::end
 #include <random>     // for std::random_device, std::seed_seq
+#include <sstream>    // for std::ostringstream
 
 
 std::mt19937 properly_seeded_random_engine() {
@@ -26,4 +28,13 @@ std::mt19937 properly_seeded_random_engine() {
 #endif
     std::seed_seq seed(std::begin(seed_data), std::end(seed_data));
     return std::mt19937(seed);
+}
+
+std::string get_YMD_date(char sep) {
+    std::ostringstream date;
+    std::time_t time = std::time(nullptr);
+    std::tm *now = std::localtime(&time);
+    date << (now->tm_year + 1900) << sep << (now->tm_mon + 1) << sep
+         << now->tm_mday;
+    return date.str();
 }
