@@ -198,7 +198,7 @@ std::vector<ChessMove> ChessPosition::get_all_moves() const {
 }
 
 
-void ChessPosition::make_move(const ChessMove &move) {
+void ChessPosition::make_move(ChessMove move) {
 
     assert(is_valid(move));
 
@@ -267,7 +267,7 @@ void ChessPosition::make_move(const ChessMove &move) {
 
 
 std::string ChessPosition::get_move_name(
-    const std::vector<ChessMove> &legal_moves, const ChessMove &move
+    const std::vector<ChessMove> &legal_moves, ChessMove move
 ) const {
 
     assert(is_valid(move));
@@ -301,7 +301,7 @@ std::string ChessPosition::get_move_name(
             bool ambiguous_file = false;
             bool ambiguous_rank = false;
             bool ambiguous_diag = false;
-            for (const ChessMove &other : legal_moves) {
+            for (ChessMove other : legal_moves) {
                 const ChessPiece other_piece = (*this)[other.get_src()];
                 if (other_piece.get_type() == piece.get_type() &&
                     other.get_dst() == move.get_dst()) {

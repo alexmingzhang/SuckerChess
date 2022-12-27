@@ -161,8 +161,7 @@ private: // ========================================================== UTILITIES
 
 public: // ===================================================== MOVE VALIDATION
 
-    [[nodiscard]] constexpr bool is_castle(const ChessMove &move
-    ) const noexcept {
+    [[nodiscard]] constexpr bool is_castle(ChessMove move) const noexcept {
         assert(move.get_src().in_bounds());
         assert(move.get_dst().in_bounds());
         const ChessPiece piece = (*this)[move.get_src()];
@@ -221,8 +220,7 @@ public: // ===================================================== MOVE VALIDATION
         return false;
     }
 
-    [[nodiscard]] constexpr bool is_en_passant(const ChessMove &move
-    ) const noexcept {
+    [[nodiscard]] constexpr bool is_en_passant(ChessMove move) const noexcept {
         assert(move.get_src().in_bounds());
         assert(move.get_dst().in_bounds());
         const ChessPiece piece = (*this)[move.get_src()];
@@ -261,8 +259,7 @@ public: // ===================================================== MOVE VALIDATION
         return false;
     }
 
-    [[nodiscard]] constexpr bool is_capture(const ChessMove &move
-    ) const noexcept {
+    [[nodiscard]] constexpr bool is_capture(ChessMove move) const noexcept {
         assert(move.get_src().in_bounds());
         assert(move.get_dst().in_bounds());
         const ChessPiece piece = (*this)[move.get_src()];
@@ -276,8 +273,7 @@ public: // ===================================================== MOVE VALIDATION
         return target.get_color() != PieceColor::NONE || is_en_passant(move);
     }
 
-    [[nodiscard]] constexpr bool is_valid(const ChessMove &move
-    ) const noexcept {
+    [[nodiscard]] constexpr bool is_valid(ChessMove move) const noexcept {
         assert(move.get_src().in_bounds());
         assert(move.get_dst().in_bounds());
         const ChessPiece piece = (*this)[move.get_src()];
@@ -406,16 +402,24 @@ public: // ====================================================== ATTACK TESTING
     }
 
     [[nodiscard]] constexpr bool in_check() const {
-        for (coord_t file = 0; file < NUM_FILES; ++file) {
-            for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
-                const ChessPiece piece = (*this)(file, rank);
-                if (piece.get_type() == PieceType::KING &&
-                    piece.get_color() == to_move) {
-                    return is_attacked({file, rank});
-                }
-            }
+        if (to_move == PieceColor::WHITE) {
+            return is_attacked(white_king_location);
+        } else if (to_move == PieceColor::BLACK) {
+            return is_attacked(black_king_location)
+        } else {
+            __builtin_unreachable();
         }
-        return false;
+    }
+
+    [[nodiscard]] constexpr bool puts_self_in_check(ChessMove move) const {
+        ChessPosition copy = *this;
+        copy.make_move(move);
+        copy.to_move = to_move;
+        return copy.in_check();
+    }
+
+    [[nodiscard]] constexpr bool is_legal(ChessMove move) const {
+        return is_valid(move) && !puts_self_in_check(move);
     }
 
 public: // ===================================================== MOVE GENERATION
@@ -442,21 +446,14 @@ public: // ===================================================== MOVE GENERATION
 
 public: // ====================================================== MOVE EXECUTION
 
-    void make_move(const ChessMove &move);
+    void make_move(ChessMove move);
 
 public: // ======================================================= CHECK TESTING
-
-    [[nodiscard]] bool puts_self_in_check(const ChessMove &move) const {
-        ChessPosition copy = *this;
-        copy.make_move(move);
-        copy.to_move = to_move;
-        return copy.in_check();
-    }
 
     [[nodiscard]] std::vector<ChessMove> get_legal_moves() const {
         const std::vector<ChessMove> all_moves = get_all_moves();
         std::vector<ChessMove> result;
-        for (const ChessMove &move : all_moves) {
+        for (ChessMove move : all_moves) {
             if (!puts_self_in_check(move)) { result.push_back(move); }
         }
         return result;
@@ -473,7 +470,7 @@ public: // ======================================================= CHECK TESTING
 public: // ============================================================ PRINTING
 
     [[nodiscard]] std::string get_move_name(
-        const std::vector<ChessMove> &legal_moves, const ChessMove &move
+        const std::vector<ChessMove> &legal_moves, ChessMove move
     ) const;
 
     friend std::ostream &operator<<(std::ostream &os, const ChessPosition &b);
