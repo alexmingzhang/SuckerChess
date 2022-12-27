@@ -6,7 +6,7 @@ CLANG_WARNING_FLAGS="\
 
 SOURCES="\
 ChessPiece.cpp ChessMove.cpp ChessPosition.cpp \
-Utilities.cpp ChessEngine.cpp ChessGame.cpp main.cpp"
+Utilities.cpp ChessEngine.cpp ChessGame.cpp ChessTournament.cpp main.cpp"
 
 GCC_OPT_FLAGS="-DNDEBUG -O3 -march=native -flto"
 

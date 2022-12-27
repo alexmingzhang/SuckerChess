@@ -318,6 +318,76 @@ public: // ===================================================== MOVE VALIDATION
         return true;
     }
 
+public: // ====================================================== MOVE EXECUTION
+
+    constexpr void make_move(ChessMove move) {
+        assert(is_valid(move));
+
+        // get moving piece
+        const ChessPiece piece = (*this)[move.get_src()];
+
+        // update castling rights
+        if (piece == WHITE_KING) {
+            white_can_short_castle = false;
+            white_can_long_castle = false;
+        }
+        if (move.affects({NUM_FILES - 1, 0})) {
+            white_can_short_castle = false;
+        }
+        if (move.affects({0, 0})) { white_can_long_castle = false; }
+        if (piece == BLACK_KING) {
+            black_can_short_castle = false;
+            black_can_long_castle = false;
+        }
+        if (move.affects({NUM_FILES - 1, NUM_RANKS - 1})) {
+            black_can_short_castle = false;
+        }
+        if (move.affects({0, NUM_RANKS - 1})) { black_can_long_castle = false; }
+
+        // perform move
+        if (is_en_passant(move)) {
+            (*this)(move.get_dst_file(), move.get_src_rank()) = EMPTY_SQUARE;
+        } else if (piece.get_type() == PieceType::KING && move.distance() != 1) {
+            const coord_t rank = move.get_src_rank();
+            if (move.get_dst_file() == 6) { // short castle
+                (*this)(5, rank) = (*this)(7, rank);
+                (*this)(7, rank) = EMPTY_SQUARE;
+            } else if (move.get_dst_file() == 2) { // long castle
+                (*this)(3, rank) = (*this)(0, rank);
+                (*this)(0, rank) = EMPTY_SQUARE;
+            } else {
+                __builtin_unreachable();
+            }
+        }
+        (*this)[move.get_dst()] = piece.promote(move.get_promotion_type());
+        (*this)[move.get_src()] = EMPTY_SQUARE;
+
+        // update king location
+        if (piece == WHITE_KING) {
+            white_king_location = move.get_dst();
+        } else if (piece == BLACK_KING) {
+            black_king_location = move.get_dst();
+        }
+
+        // record en passant file
+        if (piece.get_type() == PieceType::PAWN &&
+            (move.get_src_rank() - move.get_dst_rank() == 2 ||
+             move.get_src_rank() - move.get_dst_rank() == -2)) {
+            en_passant_file = move.get_src_file();
+        } else {
+            en_passant_file = NUM_FILES;
+        }
+
+        // update player to move
+        if (to_move == PieceColor::WHITE) {
+            to_move = PieceColor::BLACK;
+        } else if (to_move == PieceColor::BLACK) {
+            to_move = PieceColor::WHITE;
+        } else {
+            __builtin_unreachable();
+        }
+    }
+
 private: // ============================================= ATTACK TESTING HELPERS
 
     [[nodiscard]] constexpr ChessPiece
@@ -405,7 +475,7 @@ public: // ====================================================== ATTACK TESTING
         if (to_move == PieceColor::WHITE) {
             return is_attacked(white_king_location);
         } else if (to_move == PieceColor::BLACK) {
-            return is_attacked(black_king_location)
+            return is_attacked(black_king_location);
         } else {
             __builtin_unreachable();
         }
@@ -443,10 +513,6 @@ public: // ===================================================== MOVE GENERATION
     void push_all_moves(std::vector<ChessMove> &moves, ChessSquare src) const;
 
     [[nodiscard]] std::vector<ChessMove> get_all_moves() const;
-
-public: // ====================================================== MOVE EXECUTION
-
-    void make_move(ChessMove move);
 
 public: // ======================================================= CHECK TESTING
 
