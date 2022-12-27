@@ -55,7 +55,7 @@ operator+(const ChessSquare &square, const ChessOffset &offset) noexcept {
 }
 
 
-class ChessMove {
+class ChessMove final {
 
     ChessSquare src;
     ChessSquare dst;

@@ -24,7 +24,7 @@ enum class PieceType : std::uint8_t {
 }; // enum class PieceType
 
 
-class ChessPiece {
+class ChessPiece final {
 
 #ifdef SUCKER_CHESS_USE_COMPRESSED_CHESS_PIECE
     std::uint8_t data;

@@ -14,6 +14,8 @@
 class ChessPosition {
 
     std::array<std::array<ChessPiece, NUM_RANKS>, NUM_FILES> board;
+    ChessSquare white_king_location;
+    ChessSquare black_king_location;
     PieceColor to_move;
     coord_t en_passant_file;
     bool white_can_short_castle;
@@ -39,13 +41,16 @@ public: // ======================================================== CONSTRUCTORS
                {WHITE_KNIGHT, WHITE_PAWN, EMPTY_SQUARE, EMPTY_SQUARE,
                 EMPTY_SQUARE, EMPTY_SQUARE, BLACK_PAWN, BLACK_KNIGHT},
                {WHITE_ROOK, WHITE_PAWN, EMPTY_SQUARE, EMPTY_SQUARE,
-                EMPTY_SQUARE, EMPTY_SQUARE, BLACK_PAWN, BLACK_ROOK}}},
-          to_move(PieceColor::WHITE), en_passant_file(NUM_FILES),
-          white_can_short_castle(true), white_can_long_castle(true),
-          black_can_short_castle(true), black_can_long_castle(true) {}
+                EMPTY_SQUARE, EMPTY_SQUARE, BLACK_PAWN, BLACK_ROOK}}}
+        , white_king_location({4, 0}), black_king_location({4, NUM_RANKS - 1})
+        , to_move(PieceColor::WHITE), en_passant_file(NUM_FILES)
+        , white_can_short_castle(true), white_can_long_castle(true)
+        , black_can_short_castle(true), black_can_long_castle(true) {}
 
     explicit ChessPosition(const std::string &fen)
         : board()
+        , white_king_location()
+        , black_king_location()
         , to_move(PieceColor::NONE)
         , en_passant_file(NUM_FILES)
         , white_can_short_castle(false)

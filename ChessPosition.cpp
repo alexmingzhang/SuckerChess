@@ -239,6 +239,13 @@ void ChessPosition::make_move(const ChessMove &move) {
     (*this)[move.get_dst()] = piece.promote(move.get_promotion_type());
     (*this)[move.get_src()] = EMPTY_SQUARE;
 
+    // update king location
+    if (piece == WHITE_KING) {
+        white_king_location = move.get_dst();
+    } else if (piece == BLACK_KING) {
+        black_king_location = move.get_dst();
+    }
+
     // record en passant file
     if (piece.get_type() == PieceType::PAWN &&
         (move.get_src_rank() - move.get_dst_rank() == 2 ||
@@ -313,8 +320,7 @@ std::string ChessPosition::get_move_name(
                 } else if (!ambiguous_rank) {
                     result << static_cast<char>('1' + move.get_src_rank());
                 } else {
-                    result << static_cast<char>('a' + move.get_src_file());
-                    result << static_cast<char>('1' + move.get_src_rank());
+                    result << move.get_src();
                 }
             }
         }
@@ -325,7 +331,7 @@ std::string ChessPosition::get_move_name(
     if (move.get_promotion_type() != PieceType::NONE) {
         result << '=';
         switch (move.get_promotion_type()) {
-            case PieceType::NONE: [[fallthrough]];
+            case PieceType::NONE: __builtin_unreachable();
             case PieceType::KING: __builtin_unreachable();
             case PieceType::QUEEN: result << 'Q'; break;
             case PieceType::ROOK: result << 'R'; break;
@@ -371,6 +377,8 @@ void ChessPosition::load_fen(const std::string &fen_string) {
 
         coord_t file = 0;
         coord_t rank = NUM_RANKS - 1;
+        bool white_king_found = false;
+        bool black_king_found = false;
         for (const char c : piece_placement) {
             if (c >= '1' && c <= '8') {
                 for (coord_t j = 0; j < c - '0'; ++j) {
@@ -383,13 +391,23 @@ void ChessPosition::load_fen(const std::string &fen_string) {
                 rank--;
             } else {
                 switch (c) {
-                    case 'K': (*this)(file++, rank) = WHITE_KING; break;
+                    case 'K':
+                        assert(!white_king_found);
+                        white_king_found = true;
+                        white_king_location = {file, rank};
+                        (*this)(file++, rank) = WHITE_KING;
+                        break;
                     case 'Q': (*this)(file++, rank) = WHITE_QUEEN; break;
                     case 'R': (*this)(file++, rank) = WHITE_ROOK; break;
                     case 'B': (*this)(file++, rank) = WHITE_BISHOP; break;
                     case 'N': (*this)(file++, rank) = WHITE_KNIGHT; break;
                     case 'P': (*this)(file++, rank) = WHITE_PAWN; break;
-                    case 'k': (*this)(file++, rank) = BLACK_KING; break;
+                    case 'k':
+                        assert(!black_king_found);
+                        black_king_found = true;
+                        black_king_location = {file, rank};
+                        (*this)(file++, rank) = BLACK_KING;
+                        break;
                     case 'q': (*this)(file++, rank) = BLACK_QUEEN; break;
                     case 'r': (*this)(file++, rank) = BLACK_ROOK; break;
                     case 'b': (*this)(file++, rank) = BLACK_BISHOP; break;
@@ -399,6 +417,8 @@ void ChessPosition::load_fen(const std::string &fen_string) {
                 }
             }
         }
+        assert(white_king_found);
+        assert(black_king_found);
     }
 
     { // Determine active color
