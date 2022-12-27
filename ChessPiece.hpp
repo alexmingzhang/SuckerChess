@@ -2,6 +2,7 @@
 #define SUCKER_CHESS_CHESS_PIECE_HPP
 
 #include <cassert> // for assert
+#include <compare> // for operator<=>
 #include <cstdint> // for std::uint8_t
 #include <ostream> // for std::ostream
 

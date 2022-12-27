@@ -1,12 +1,9 @@
 #include "ChessEngine.hpp"
 
-
-#include <algorithm>  // for std::generate
-#include <cstddef>    // for std::size_t
-#include <functional> // for std::ref
-#include <iterator>   // for std::begin, std::end
-#include <limits>     // for std::numeric_limits
-#include <random>     // for std::random_device, std::seed_seq
+#include <cmath>   // for std::abs
+#include <cstddef> // for std::size_t
+#include <limits>  // for std::numeric_limits
+#include <random>  // for std::uniform_int_distribution
 
 namespace Engine {
 

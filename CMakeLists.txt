@@ -9,7 +9,7 @@ message(${CMAKE_CXX_COMPILER_ID})
 if ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
     add_compile_options(-Weverything
             -Wno-c++98-compat -Wno-c++98-compat-pedantic
-            -Wno-weak-vtables)
+            -Wno-weak-vtables -Wno-padded)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wall -Wextra -pedantic)
 endif ()
