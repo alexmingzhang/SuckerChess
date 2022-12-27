@@ -29,9 +29,8 @@ AllowShortLambdasOnASingleLine: All
 AllowShortIfStatementsOnASingleLine: AllIfsAndElse
 AllowShortLoopsOnASingleLine: true
 
-
 AlignEscapedNewlines: Right
-AlignOperands:   Align
+AlignOperands: Align
 AllowAllArgumentsOnNextLine: true
 AllowAllParametersOfDeclarationOnNextLine: true
 AlwaysBreakAfterDefinitionReturnType: None
@@ -41,21 +40,21 @@ AlwaysBreakTemplateDeclarations: MultiLine
 BinPackArguments: true
 BinPackParameters: true
 BraceWrapping:
-  AfterCaseLabel:  false
-  AfterClass:      false
+  AfterCaseLabel: false
+  AfterClass: false
   AfterControlStatement: Never
-  AfterEnum:       false
-  AfterFunction:   false
-  AfterNamespace:  false
+  AfterEnum: false
+  AfterFunction: false
+  AfterNamespace: false
   AfterObjCDeclaration: false
-  AfterStruct:     false
-  AfterUnion:      false
+  AfterStruct: false
+  AfterUnion: false
   AfterExternBlock: false
-  BeforeCatch:     false
-  BeforeElse:      false
+  BeforeCatch: false
+  BeforeElse: false
   BeforeLambdaBody: false
-  BeforeWhile:     false
-  IndentBraces:    false
+  BeforeWhile: false
+  IndentBraces: false
   SplitEmptyFunction: true
   SplitEmptyRecord: true
   SplitEmptyNamespace: true
@@ -78,7 +77,7 @@ PackConstructorInitializers: BinPack
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
 AllowAllConstructorInitializersOnNextLine: true
 FixNamespaceComments: true
-IncludeBlocks:   Preserve
+IncludeBlocks: Preserve
 IncludeIsMainSourceRegex: ''
 IndentAccessModifiers: false
 IndentGotoLabels: true
@@ -86,12 +85,10 @@ IndentPPDirectives: None
 IndentExternBlock: AfterExternBlock
 IndentRequiresClause: true
 IndentWrappedFunctionNames: false
-InsertBraces:    false
+InsertBraces: false
 InsertTrailingCommas: None
 KeepEmptyLinesAtTheStartOfBlocks: true
 LambdaBodyIndentation: Signature
-MacroBlockBegin: ''
-MacroBlockEnd:   ''
 MaxEmptyLinesToKeep: 2
 PenaltyBreakAssignment: 2
 PenaltyBreakBeforeFirstCallParameter: 19
@@ -103,8 +100,8 @@ PenaltyBreakTemplateDeclaration: 10
 PenaltyExcessCharacter: 1000000
 PenaltyReturnTypeOnItsOwnLine: 60
 PenaltyIndentedWhitespace: 0
-PPIndentWidth:   -1
-ReflowComments:  true
+PPIndentWidth: -1
+ReflowComments: true
 RemoveBracesLLVM: false
 RequiresClausePosition: OwnLine
 SeparateDefinitionBlocks: Leave
@@ -117,9 +114,6 @@ SpaceBeforeRangeBasedForLoopColon: true
 SpaceInEmptyBlock: false
 SpaceInEmptyParentheses: false
 SpacesBeforeTrailingComments: 1
-SpacesInAngles:  Never
 SpacesInContainerLiterals: true
-BitFieldColonSpacing: Both
 
 ...
-

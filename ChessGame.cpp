@@ -12,8 +12,8 @@
 void ChessGame::make_move(const ChessMove &move) {
     pos_history.push_back(current_pos);
     move_history.push_back(move);
-    if (current_pos.is_legal_cap(move.dst_file, move.dst_rank) ||
-        current_pos(move.src_file, move.src_rank).type == PieceType::PAWN) {
+    if (current_pos.is_legal_cap(move.get_dst()) ||
+        current_pos[move.get_src()].type == PieceType::PAWN) {
         half_move_clock = 0;
     } else {
         ++half_move_clock;

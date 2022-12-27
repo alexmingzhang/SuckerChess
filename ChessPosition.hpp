@@ -43,7 +43,16 @@ public: // ======================================================== CONSTRUCTORS
           white_can_short_castle(true), white_can_long_castle(true),
           black_can_short_castle(true), black_can_long_castle(true) {}
 
-    explicit ChessPosition(std::string fen) { load_fen(fen); }
+    explicit ChessPosition(const std::string &fen)
+        : board()
+        , to_move(PieceColor::NONE)
+        , en_passant_file(NUM_FILES)
+        , white_can_short_castle(false)
+        , white_can_long_castle(false)
+        , black_can_short_castle(false)
+        , black_can_long_castle(false) {
+        load_fen(fen);
+    }
 
 public: // =========================================================== ACCESSORS
 
@@ -53,14 +62,14 @@ public: // =========================================================== ACCESSORS
 
 public: // ====================================================== INDEX OPERATOR
 
-    constexpr ChessPiece &operator()(coord_t file, coord_t rank) {
-        assert(in_bounds(file, rank));
-        return board[file][rank];
+    constexpr const ChessPiece &operator[](ChessSquare square) const noexcept {
+        assert(square.in_bounds());
+        return board[square.file][square.rank];
     }
 
-    constexpr const ChessPiece &operator()(coord_t file, coord_t rank) const {
-        assert(in_bounds(file, rank));
-        return board[file][rank];
+    constexpr ChessPiece operator[](ChessSquare square) noexcept {
+        assert(square.in_bounds());
+        return board[square.file][square.rank];
     }
 
 public: // ========================================================== COMPARISON
@@ -69,28 +78,26 @@ public: // ========================================================== COMPARISON
 
 public: // ====================================================== SQUARE TESTING
 
-    [[nodiscard]] constexpr bool
-    is_empty(coord_t file, coord_t rank) const noexcept {
-        return in_bounds(file, rank) && board[file][rank] == EMPTY_SQUARE;
+    [[nodiscard]] constexpr bool is_empty(ChessSquare square) const noexcept {
+        return square.in_bounds() && (*this)[square] == EMPTY_SQUARE;
     }
 
-    [[nodiscard]] constexpr bool
-    is_legal_dst(coord_t file, coord_t rank) const noexcept {
-        return in_bounds(file, rank) && board[file][rank].color != to_move;
+    [[nodiscard]] constexpr bool is_legal_dst(ChessSquare square
+    ) const noexcept {
+        return square.in_bounds() && (*this)[square].color != to_move;
     }
 
-    [[nodiscard]] constexpr bool
-    is_legal_cap(coord_t file, coord_t rank) const noexcept {
-        if (!in_bounds(file, rank)) { return false; }
-        const ChessPiece piece = board[file][rank];
+    [[nodiscard]] constexpr bool is_legal_cap(ChessSquare square
+    ) const noexcept {
+        if (!square.in_bounds()) { return false; }
+        const ChessPiece piece = (*this)[square];
         return piece.color != to_move && piece.color != PieceColor::NONE;
     }
 
-    [[nodiscard]] constexpr bool contains_enemy_piece(
-        coord_t file, coord_t rank, PieceType type
-    ) const noexcept {
-        if (!in_bounds(file, rank)) { return false; }
-        const ChessPiece piece = board[file][rank];
+    [[nodiscard]] constexpr bool
+    has_enemy_piece(ChessSquare square, PieceType type) const noexcept {
+        if (!square.in_bounds()) { return false; }
+        const ChessPiece piece = (*this)[square];
         return piece.color != to_move && piece.color != PieceColor::NONE &&
                piece.type == type;
     }
@@ -106,6 +113,14 @@ public: // =========================================================== UTILITIES
         __builtin_unreachable();
     }
 
+    [[nodiscard]] constexpr coord_t pawn_origin_rank() const {
+        switch (to_move) {
+            case PieceColor::NONE: __builtin_unreachable();
+            case PieceColor::WHITE: return 1;
+            case PieceColor::BLACK: return NUM_RANKS - 2;
+        }
+    }
+
     [[nodiscard]] constexpr coord_t promotion_rank() const {
         switch (to_move) {
             case PieceColor::NONE: __builtin_unreachable();
@@ -115,117 +130,96 @@ public: // =========================================================== UTILITIES
         __builtin_unreachable();
     }
 
-    [[nodiscard]] constexpr coord_t en_passant_rank() const {
+    [[nodiscard]] constexpr ChessSquare en_passant_square() const {
         switch (to_move) {
             case PieceColor::NONE: __builtin_unreachable();
-            case PieceColor::WHITE: return NUM_RANKS - 3;
-            case PieceColor::BLACK: return 2;
+            case PieceColor::WHITE: return {en_passant_file, NUM_RANKS - 3};
+            case PieceColor::BLACK: return {en_passant_file, 2};
         }
         __builtin_unreachable();
     }
 
-public: // ====================================================== ATTACK TESTING
+private: // ============================================= ATTACK TESTING HELPERS
 
-    [[nodiscard]] constexpr ChessPiece get_slider_attacker(
-        coord_t file, coord_t rank, coord_t file_offset, coord_t rank_offset
-    ) const {
-        coord_t cur_file = file + file_offset;
-        coord_t cur_rank = rank + rank_offset;
-        while (is_empty(cur_file, cur_rank)) {
-            cur_file += file_offset;
-            cur_rank += rank_offset;
-        }
-        if (in_bounds(cur_file, cur_rank)) {
-            const ChessPiece piece = board[cur_file][cur_rank];
+    [[nodiscard]] constexpr ChessPiece
+    get_slider_attacker(ChessSquare square, ChessOffset offset) const {
+        ChessSquare current = square + offset;
+        while (is_empty(current)) { current += offset; }
+        if (current.in_bounds()) {
+            const ChessPiece piece = (*this)[current];
             if (piece.color != to_move) { return piece; }
         }
         return EMPTY_SQUARE;
     }
 
-    [[nodiscard]] constexpr bool
-    is_attacked_by_king(coord_t file, coord_t rank) const {
-        return contains_enemy_piece(file - 1, rank - 1, PieceType::KING) ||
-               contains_enemy_piece(file - 1, rank, PieceType::KING) ||
-               contains_enemy_piece(file - 1, rank + 1, PieceType::KING) ||
-               contains_enemy_piece(file, rank - 1, PieceType::KING) ||
-               contains_enemy_piece(file, rank + 1, PieceType::KING) ||
-               contains_enemy_piece(file + 1, rank - 1, PieceType::KING) ||
-               contains_enemy_piece(file + 1, rank, PieceType::KING) ||
-               contains_enemy_piece(file + 1, rank + 1, PieceType::KING);
+    [[nodiscard]] constexpr bool is_attacked_by_king(ChessSquare square) const {
+        using enum PieceType;
+        return has_enemy_piece(square + ChessOffset{-1, -1}, KING) ||
+               has_enemy_piece(square + ChessOffset{-1, 0}, KING) ||
+               has_enemy_piece(square + ChessOffset{-1, +1}, KING) ||
+               has_enemy_piece(square + ChessOffset{0, -1}, KING) ||
+               has_enemy_piece(square + ChessOffset{0, +1}, KING) ||
+               has_enemy_piece(square + ChessOffset{+1, -1}, KING) ||
+               has_enemy_piece(square + ChessOffset{+1, 0}, KING) ||
+               has_enemy_piece(square + ChessOffset{+1, +1}, KING);
     }
 
-    [[nodiscard]] constexpr bool
-    is_attacked_orthogonally(coord_t file, coord_t rank) const {
-        const ChessPiece a = get_slider_attacker(file, rank, -1, 0);
-        if (a.type == PieceType::QUEEN || a.type == PieceType::ROOK) {
-            return true;
-        }
-        const ChessPiece b = get_slider_attacker(file, rank, 0, -1);
-        if (b.type == PieceType::QUEEN || b.type == PieceType::ROOK) {
-            return true;
-        }
-        const ChessPiece c = get_slider_attacker(file, rank, 0, +1);
-        if (c.type == PieceType::QUEEN || c.type == PieceType::ROOK) {
-            return true;
-        }
-        const ChessPiece d = get_slider_attacker(file, rank, +1, 0);
-        if (d.type == PieceType::QUEEN || d.type == PieceType::ROOK) {
-            return true;
-        }
+    [[nodiscard]] constexpr bool is_attacked_orthogonally(ChessSquare square
+    ) const {
+        using enum PieceType;
+        const ChessPiece a = get_slider_attacker(square, ChessOffset{-1, 0});
+        if (a.type == QUEEN || a.type == ROOK) { return true; }
+        const ChessPiece b = get_slider_attacker(square, ChessOffset{0, -1});
+        if (b.type == QUEEN || b.type == ROOK) { return true; }
+        const ChessPiece c = get_slider_attacker(square, ChessOffset{0, +1});
+        if (c.type == QUEEN || c.type == ROOK) { return true; }
+        const ChessPiece d = get_slider_attacker(square, ChessOffset{+1, 0});
+        if (d.type == QUEEN || d.type == ROOK) { return true; }
         return false;
     }
 
-    [[nodiscard]] constexpr bool
-    is_attacked_diagonally(coord_t file, coord_t rank) const {
-        const ChessPiece a = get_slider_attacker(file, rank, +1, +1);
-        if (a.type == PieceType::QUEEN || a.type == PieceType::BISHOP) {
-            return true;
-        }
-        const ChessPiece b = get_slider_attacker(file, rank, +1, -1);
-        if (b.type == PieceType::QUEEN || b.type == PieceType::BISHOP) {
-            return true;
-        }
-        const ChessPiece c = get_slider_attacker(file, rank, -1, +1);
-        if (c.type == PieceType::QUEEN || c.type == PieceType::BISHOP) {
-            return true;
-        }
-        const ChessPiece d = get_slider_attacker(file, rank, -1, -1);
-        if (d.type == PieceType::QUEEN || d.type == PieceType::BISHOP) {
-            return true;
-        }
+    [[nodiscard]] constexpr bool is_attacked_diagonally(ChessSquare square
+    ) const {
+        using enum PieceType;
+        const ChessPiece a = get_slider_attacker(square, ChessOffset{-1, -1});
+        if (a.type == QUEEN || a.type == BISHOP) { return true; }
+        const ChessPiece b = get_slider_attacker(square, ChessOffset{-1, +1});
+        if (b.type == QUEEN || b.type == BISHOP) { return true; }
+        const ChessPiece c = get_slider_attacker(square, ChessOffset{+1, -1});
+        if (c.type == QUEEN || c.type == BISHOP) { return true; }
+        const ChessPiece d = get_slider_attacker(square, ChessOffset{+1, +1});
+        if (d.type == QUEEN || d.type == BISHOP) { return true; }
         return false;
     }
 
-    [[nodiscard]] constexpr bool
-    is_attacked_by_knight(coord_t file, coord_t rank) const {
-        return contains_enemy_piece(file - 2, rank - 1, PieceType::KNIGHT) ||
-               contains_enemy_piece(file - 2, rank + 1, PieceType::KNIGHT) ||
-               contains_enemy_piece(file - 1, rank - 2, PieceType::KNIGHT) ||
-               contains_enemy_piece(file - 1, rank + 2, PieceType::KNIGHT) ||
-               contains_enemy_piece(file + 1, rank - 2, PieceType::KNIGHT) ||
-               contains_enemy_piece(file + 1, rank + 2, PieceType::KNIGHT) ||
-               contains_enemy_piece(file + 2, rank - 1, PieceType::KNIGHT) ||
-               contains_enemy_piece(file + 2, rank + 1, PieceType::KNIGHT);
+    [[nodiscard]] constexpr bool is_attacked_by_knight(ChessSquare square
+    ) const {
+        using enum PieceType;
+        return has_enemy_piece(square + ChessOffset{-2, -1}, KNIGHT) ||
+               has_enemy_piece(square + ChessOffset{-2, +1}, KNIGHT) ||
+               has_enemy_piece(square + ChessOffset{-1, -2}, KNIGHT) ||
+               has_enemy_piece(square + ChessOffset{-1, +2}, KNIGHT) ||
+               has_enemy_piece(square + ChessOffset{+1, -2}, KNIGHT) ||
+               has_enemy_piece(square + ChessOffset{+1, +2}, KNIGHT) ||
+               has_enemy_piece(square + ChessOffset{+2, -1}, KNIGHT) ||
+               has_enemy_piece(square + ChessOffset{+2, +1}, KNIGHT);
     }
 
-    [[nodiscard]] constexpr bool
-    is_attacked_by_pawn(coord_t file, coord_t rank) const {
+    [[nodiscard]] constexpr bool is_attacked_by_pawn(ChessSquare square) const {
+        using enum PieceType;
         const coord_t direction = pawn_direction();
-        return contains_enemy_piece(
-                   file - 1, rank + direction, PieceType::PAWN
-               ) ||
-               contains_enemy_piece(
-                   file + 1, rank + direction, PieceType::PAWN
-               );
+        return has_enemy_piece(square + ChessOffset{-1, direction}, PAWN) ||
+               has_enemy_piece(square + ChessOffset{+1, direction}, PAWN);
     }
 
-    [[nodiscard]] constexpr bool is_attacked(coord_t file, coord_t rank) const {
-        assert(in_bounds(file, rank));
-        return is_attacked_by_king(file, rank) ||
-               is_attacked_orthogonally(file, rank) ||
-               is_attacked_diagonally(file, rank) ||
-               is_attacked_by_knight(file, rank) ||
-               is_attacked_by_pawn(file, rank);
+public: // ====================================================== ATTACK TESTING
+
+    [[nodiscard]] constexpr bool is_attacked(ChessSquare square) const {
+        assert(square.in_bounds());
+        return is_attacked_by_king(square) ||
+               is_attacked_orthogonally(square) ||
+               is_attacked_diagonally(square) ||
+               is_attacked_by_knight(square) || is_attacked_by_pawn(square);
     }
 
     [[nodiscard]] constexpr bool in_check() const {
@@ -233,7 +227,7 @@ public: // ====================================================== ATTACK TESTING
             for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
                 const ChessPiece piece = board[file][rank];
                 if (piece.type == PieceType::KING && piece.color == to_move) {
-                    return is_attacked(file, rank);
+                    return is_attacked({file, rank});
                 }
             }
         }
@@ -243,29 +237,22 @@ public: // ====================================================== ATTACK TESTING
 public: // ===================================================== MOVE GENERATION
 
     void push_leaper_move(
-        std::vector<ChessMove> &moves, coord_t src_file, coord_t src_rank,
-        coord_t file_offset, coord_t rank_offset
+        std::vector<ChessMove> &moves, ChessSquare src, ChessOffset offset
     ) const;
 
     void push_slider_moves(
-        std::vector<ChessMove> &moves, coord_t src_file, coord_t src_rank,
-        coord_t file_offset, coord_t rank_offset
+        std::vector<ChessMove> &moves, ChessSquare src, ChessOffset offset
     ) const;
 
     void push_promotion_moves(
-        std::vector<ChessMove> &moves, coord_t src_file, coord_t src_rank,
-        coord_t dst_file, coord_t dst_rank
+        std::vector<ChessMove> &moves, ChessSquare src, ChessSquare dst
     ) const;
 
-    void push_pawn_moves(
-        std::vector<ChessMove> &moves, coord_t src_file, coord_t src_rank
-    ) const;
+    void push_pawn_moves(std::vector<ChessMove> &moves, ChessSquare src) const;
 
     void push_castling_moves(std::vector<ChessMove> &moves) const;
 
-    void push_all_moves(
-        std::vector<ChessMove> &moves, coord_t src_file, coord_t src_rank
-    ) const;
+    void push_all_moves(std::vector<ChessMove> &moves, ChessSquare src) const;
 
     [[nodiscard]] std::vector<ChessMove> get_all_moves() const;
 

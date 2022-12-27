@@ -7,101 +7,77 @@
 
 
 void ChessPosition::push_leaper_move(
-    std::vector<ChessMove> &moves, coord_t src_file, coord_t src_rank,
-    coord_t file_offset, coord_t rank_offset
+    std::vector<ChessMove> &moves, ChessSquare src, ChessOffset offset
 ) const {
-    const coord_t dst_file = src_file + file_offset;
-    const coord_t dst_rank = src_rank + rank_offset;
-    if (is_legal_dst(dst_file, dst_rank)) {
-        moves.emplace_back(src_file, src_rank, dst_file, dst_rank);
-    }
+    const ChessSquare dst = src + offset;
+    if (is_legal_dst(dst)) { moves.emplace_back(src, dst); }
 }
 
 
 void ChessPosition::push_slider_moves(
-    std::vector<ChessMove> &moves, coord_t src_file, coord_t src_rank,
-    coord_t file_offset, coord_t rank_offset
+    std::vector<ChessMove> &moves, ChessSquare src, ChessOffset offset
 ) const {
-    coord_t dst_file = src_file + file_offset;
-    coord_t dst_rank = src_rank + rank_offset;
-    while (is_empty(dst_file, dst_rank)) {
-        moves.emplace_back(src_file, src_rank, dst_file, dst_rank);
-        dst_file += file_offset;
-        dst_rank += rank_offset;
+    ChessSquare dst = src + offset;
+    while (is_empty(dst)) {
+        moves.emplace_back(src, dst);
+        dst += offset;
     }
-    if (is_legal_dst(dst_file, dst_rank)) {
-        moves.emplace_back(src_file, src_rank, dst_file, dst_rank);
-    }
+    if (is_legal_dst(dst)) { moves.emplace_back(src, dst); }
 }
 
 
 void ChessPosition::push_promotion_moves(
-    std::vector<ChessMove> &moves, coord_t src_file, coord_t src_rank,
-    coord_t dst_file, coord_t dst_rank
+    std::vector<ChessMove> &moves, ChessSquare src, ChessSquare dst
 ) const {
-    if (dst_rank == promotion_rank()) {
-        moves.emplace_back(
-            src_file, src_rank, dst_file, dst_rank, PieceType::QUEEN
-        );
-        moves.emplace_back(
-            src_file, src_rank, dst_file, dst_rank, PieceType::ROOK
-        );
-        moves.emplace_back(
-            src_file, src_rank, dst_file, dst_rank, PieceType::BISHOP
-        );
-        moves.emplace_back(
-            src_file, src_rank, dst_file, dst_rank, PieceType::KNIGHT
-        );
+    using enum PieceType;
+    if (dst.rank == promotion_rank()) {
+        moves.emplace_back(src, dst, QUEEN);
+        moves.emplace_back(src, dst, ROOK);
+        moves.emplace_back(src, dst, BISHOP);
+        moves.emplace_back(src, dst, KNIGHT);
     } else {
-        moves.emplace_back(src_file, src_rank, dst_file, dst_rank);
+        moves.emplace_back(src, dst);
     }
 }
 
 
 void ChessPosition::push_pawn_moves(
-    std::vector<ChessMove> &moves, coord_t src_file, coord_t src_rank
+    std::vector<ChessMove> &moves, ChessSquare src
 ) const {
     const coord_t direction = pawn_direction();
-    coord_t dst_file = src_file;
-    coord_t dst_rank = src_rank + direction;
+    const ChessSquare dst_move = src + ChessOffset{0, direction};
 
     // non-capturing
-    if (is_empty(dst_file, dst_rank)) {
-        push_promotion_moves(moves, src_file, src_rank, dst_file, dst_rank);
-    }
+    if (is_empty(dst_move)) {
+        push_promotion_moves(moves, src, dst_move);
 
-    // non-capturing double move
-    dst_rank = src_rank + 2 * direction;
-    if (((to_move == PieceColor::WHITE && src_rank == 1) ||
-         (to_move == PieceColor::BLACK && src_rank == NUM_RANKS - 2)) &&
-        is_empty(dst_file, dst_rank - direction) &&
-        is_empty(dst_file, dst_rank)) {
-        moves.emplace_back(src_file, src_rank, dst_file, dst_rank);
+        // non-capturing double move
+        if (src.rank == pawn_origin_rank()) {
+            const ChessSquare dst_double_move =
+                dst_move + ChessOffset{0, direction};
+            if (is_empty(dst_double_move)) {
+                moves.emplace_back(src, dst_double_move);
+            }
+        }
     }
 
     // capture to src_file - 1
-    dst_rank = src_rank + direction;
-    dst_file = src_file - 1;
-    if (is_legal_cap(dst_file, dst_rank)) {
-        push_promotion_moves(moves, src_file, src_rank, dst_file, dst_rank);
-    }
-
-    // en-passant
-    if (in_bounds(dst_file, dst_rank) &&
-        (dst_file == en_passant_file && dst_rank == en_passant_rank())) {
-        moves.emplace_back(src_file, src_rank, dst_file, dst_rank);
+    const ChessSquare dst_capture_l = src + ChessOffset{-1, direction};
+    if (is_legal_cap(dst_capture_l)) {
+        push_promotion_moves(moves, src, dst_capture_l);
     }
 
     // capture to src_file + 1
-    dst_file = src_file + 1;
-    if (is_legal_cap(dst_file, dst_rank)) {
-        push_promotion_moves(moves, src_file, src_rank, dst_file, dst_rank);
+    const ChessSquare dst_capture_r = src + ChessOffset{+1, direction};
+    if (is_legal_cap(dst_capture_r)) {
+        push_promotion_moves(moves, src, dst_capture_r);
     }
 
     // en-passant
-    if (in_bounds(dst_file, dst_rank) &&
-        (dst_file == en_passant_file && dst_rank == en_passant_rank())) {
-        moves.emplace_back(src_file, src_rank, dst_file, dst_rank);
+    const ChessSquare dst_ep = en_passant_square();
+    if (dst_ep.in_bounds() &&
+        (dst_capture_l == dst_ep || dst_capture_r == dst_ep)) {
+        moves.emplace_back(src, dst_ep);
     }
 }
 
@@ -112,18 +88,18 @@ void ChessPosition::push_castling_moves(std::vector<ChessMove> &moves) const {
             assert(board[4][0] == WHITE_KING);
             assert(board[7][0] == WHITE_ROOK);
             if (board[5][0] == EMPTY_SQUARE && board[6][0] == EMPTY_SQUARE &&
-                !is_attacked(4, 0) && !is_attacked(5, 0) &&
-                !is_attacked(6, 0)) {
-                moves.emplace_back(4, 0, 6, 0);
+                !is_attacked({4, 0}) && !is_attacked({5, 0}) &&
+                !is_attacked({6, 0})) {
+                moves.emplace_back(ChessSquare{4, 0}, ChessSquare{6, 0});
             }
         }
         if (white_can_long_castle) {
             assert(board[0][0] == WHITE_ROOK);
             assert(board[4][0] == WHITE_KING);
             if (board[1][0] == EMPTY_SQUARE && board[2][0] == EMPTY_SQUARE &&
-                board[3][0] == EMPTY_SQUARE && !is_attacked(2, 0) &&
-                !is_attacked(3, 0) && !is_attacked(4, 0)) {
-                moves.emplace_back(4, 0, 2, 0);
+                board[3][0] == EMPTY_SQUARE && !is_attacked({2, 0}) &&
+                !is_attacked({3, 0}) && !is_attacked({4, 0})) {
+                moves.emplace_back(ChessSquare{4, 0}, ChessSquare{2, 0});
             }
         }
     } else if (to_move == PieceColor::BLACK) {
@@ -131,18 +107,18 @@ void ChessPosition::push_castling_moves(std::vector<ChessMove> &moves) const {
             assert(board[4][7] == BLACK_KING);
             assert(board[7][7] == BLACK_ROOK);
             if (board[5][7] == EMPTY_SQUARE && board[6][7] == EMPTY_SQUARE &&
-                !is_attacked(4, 7) && !is_attacked(5, 7) &&
-                !is_attacked(6, 7)) {
-                moves.emplace_back(4, 7, 6, 7);
+                !is_attacked({4, 7}) && !is_attacked({5, 7}) &&
+                !is_attacked({6, 7})) {
+                moves.emplace_back(ChessSquare{4, 7}, ChessSquare{6, 7});
             }
         }
         if (black_can_long_castle) {
             assert(board[0][7] == BLACK_ROOK);
             assert(board[4][7] == BLACK_KING);
             if (board[1][7] == EMPTY_SQUARE && board[2][7] == EMPTY_SQUARE &&
-                board[3][7] == EMPTY_SQUARE && !is_attacked(2, 7) &&
-                !is_attacked(3, 7) && !is_attacked(4, 7)) {
-                moves.emplace_back(4, 7, 2, 7);
+                board[3][7] == EMPTY_SQUARE && !is_attacked({2, 7}) &&
+                !is_attacked({3, 7}) && !is_attacked({4, 7})) {
+                moves.emplace_back(ChessSquare{4, 7}, ChessSquare{2, 7});
             }
         }
     } else {
@@ -152,58 +128,58 @@ void ChessPosition::push_castling_moves(std::vector<ChessMove> &moves) const {
 
 
 void ChessPosition::push_all_moves(
-    std::vector<ChessMove> &moves, coord_t src_file, coord_t src_rank
+    std::vector<ChessMove> &moves, ChessSquare src
 ) const {
-    assert(in_bounds(src_file, src_rank));
-    const ChessPiece piece = board[src_file][src_rank];
+    assert(src.in_bounds());
+    const ChessPiece piece = (*this)[src];
     assert(piece.color == to_move);
     assert(piece.type != PieceType::NONE);
     switch (piece.type) {
         case PieceType::NONE: __builtin_unreachable();
         case PieceType::KING:
-            push_leaper_move(moves, src_file, src_rank, -1, -1);
-            push_leaper_move(moves, src_file, src_rank, -1, 0);
-            push_leaper_move(moves, src_file, src_rank, -1, +1);
-            push_leaper_move(moves, src_file, src_rank, 0, -1);
-            push_leaper_move(moves, src_file, src_rank, 0, +1);
-            push_leaper_move(moves, src_file, src_rank, +1, -1);
-            push_leaper_move(moves, src_file, src_rank, +1, 0);
-            push_leaper_move(moves, src_file, src_rank, +1, +1);
+            push_leaper_move(moves, src, {-1, -1});
+            push_leaper_move(moves, src, {-1, 0});
+            push_leaper_move(moves, src, {-1, +1});
+            push_leaper_move(moves, src, {0, -1});
+            push_leaper_move(moves, src, {0, +1});
+            push_leaper_move(moves, src, {+1, -1});
+            push_leaper_move(moves, src, {+1, 0});
+            push_leaper_move(moves, src, {+1, +1});
             push_castling_moves(moves);
             break;
         case PieceType::QUEEN:
-            push_slider_moves(moves, src_file, src_rank, -1, -1);
-            push_slider_moves(moves, src_file, src_rank, -1, 0);
-            push_slider_moves(moves, src_file, src_rank, -1, +1);
-            push_slider_moves(moves, src_file, src_rank, 0, -1);
-            push_slider_moves(moves, src_file, src_rank, 0, +1);
-            push_slider_moves(moves, src_file, src_rank, +1, -1);
-            push_slider_moves(moves, src_file, src_rank, +1, 0);
-            push_slider_moves(moves, src_file, src_rank, +1, +1);
+            push_slider_moves(moves, src, {-1, -1});
+            push_slider_moves(moves, src, {-1, 0});
+            push_slider_moves(moves, src, {-1, +1});
+            push_slider_moves(moves, src, {0, -1});
+            push_slider_moves(moves, src, {0, +1});
+            push_slider_moves(moves, src, {+1, -1});
+            push_slider_moves(moves, src, {+1, 0});
+            push_slider_moves(moves, src, {+1, +1});
             break;
         case PieceType::ROOK:
-            push_slider_moves(moves, src_file, src_rank, -1, 0);
-            push_slider_moves(moves, src_file, src_rank, 0, -1);
-            push_slider_moves(moves, src_file, src_rank, 0, +1);
-            push_slider_moves(moves, src_file, src_rank, +1, 0);
+            push_slider_moves(moves, src, {-1, 0});
+            push_slider_moves(moves, src, {0, -1});
+            push_slider_moves(moves, src, {0, +1});
+            push_slider_moves(moves, src, {+1, 0});
             break;
         case PieceType::BISHOP:
-            push_slider_moves(moves, src_file, src_rank, -1, -1);
-            push_slider_moves(moves, src_file, src_rank, -1, +1);
-            push_slider_moves(moves, src_file, src_rank, +1, -1);
-            push_slider_moves(moves, src_file, src_rank, +1, +1);
+            push_slider_moves(moves, src, {-1, -1});
+            push_slider_moves(moves, src, {-1, +1});
+            push_slider_moves(moves, src, {+1, -1});
+            push_slider_moves(moves, src, {+1, +1});
             break;
         case PieceType::KNIGHT:
-            push_leaper_move(moves, src_file, src_rank, -2, -1);
-            push_leaper_move(moves, src_file, src_rank, -2, +1);
-            push_leaper_move(moves, src_file, src_rank, -1, -2);
-            push_leaper_move(moves, src_file, src_rank, -1, +2);
-            push_leaper_move(moves, src_file, src_rank, +1, -2);
-            push_leaper_move(moves, src_file, src_rank, +1, +2);
-            push_leaper_move(moves, src_file, src_rank, +2, -1);
-            push_leaper_move(moves, src_file, src_rank, +2, +1);
+            push_leaper_move(moves, src, {-2, -1});
+            push_leaper_move(moves, src, {-2, +1});
+            push_leaper_move(moves, src, {-1, -2});
+            push_leaper_move(moves, src, {-1, +2});
+            push_leaper_move(moves, src, {+1, -2});
+            push_leaper_move(moves, src, {+1, +2});
+            push_leaper_move(moves, src, {+2, -1});
+            push_leaper_move(moves, src, {+2, +1});
             break;
-        case PieceType::PAWN: push_pawn_moves(moves, src_file, src_rank); break;
+        case PieceType::PAWN: push_pawn_moves(moves, src); break;
     }
 }
 
@@ -214,7 +190,7 @@ std::vector<ChessMove> ChessPosition::get_all_moves() const {
         for (coord_t src_rank = 0; src_rank < NUM_RANKS; ++src_rank) {
             const ChessPiece &piece = board[src_file][src_rank];
             if (piece.color == to_move) {
-                push_all_moves(result, src_file, src_rank);
+                push_all_moves(result, {src_file, src_rank});
             }
         }
     }
@@ -224,111 +200,127 @@ std::vector<ChessMove> ChessPosition::get_all_moves() const {
 
 void ChessPosition::make_move(const ChessMove &move) {
 
+    using enum PieceType;
+
     // get and validate moving piece
-    assert(in_bounds(move.src_file, move.src_rank));
-    assert(in_bounds(move.dst_file, move.dst_rank));
-    ChessPiece piece = board[move.src_file][move.src_rank];
+    assert(move.get_src().in_bounds());
+    assert(move.get_dst().in_bounds());
+    ChessPiece piece = (*this)[move.get_src()];
     assert(piece.color != PieceColor::NONE);
     assert(piece.color == to_move);
 
     // validate move
     switch (piece.type) {
-        case PieceType::NONE: __builtin_unreachable();
-        case PieceType::KING:
-            assert(move.distance() == 1 || move.distance() == 2);
+        case NONE: __builtin_unreachable();
+        case KING:
+            assert(
+                move.distance() == 1 ||
+                (move.distance() == 2 &&
+                 move.get_src_rank() == move.get_dst_rank())
+            );
             break;
-        case PieceType::QUEEN:
-            assert(move.is_orthogonal() || move.is_diagonal());
+        case QUEEN: assert(move.is_orthogonal() || move.is_diagonal()); break;
+        case ROOK: assert(move.is_orthogonal()); break;
+        case BISHOP: assert(move.is_diagonal()); break;
+        case KNIGHT:
+            assert(move.distance() == 2);
+            assert(!move.is_orthogonal());
+            assert(!move.is_diagonal());
             break;
-        case PieceType::ROOK: assert(move.is_orthogonal()); break;
-        case PieceType::BISHOP: assert(move.is_diagonal()); break;
-        case PieceType::KNIGHT: assert(move.distance() == 2); break;
-        case PieceType::PAWN:
-            assert(move.distance() == 1 || move.distance() == 2);
+        case PAWN:
+            assert(move.get_src_rank() != move.get_dst_rank());
+            assert(
+                move.distance() == 1 ||
+                (move.distance() == 2 &&
+                 move.get_src_file() == move.get_dst_file())
+            );
             break;
     }
 
     // check for en passant capture
     const bool is_en_passant_capture =
-        piece.type == PieceType::PAWN && move.src_file != move.dst_file &&
-        move.src_rank != move.dst_rank &&
-        board[move.dst_file][move.dst_rank] == EMPTY_SQUARE;
+        piece.type == PAWN && move.get_src_file() != move.get_dst_file() &&
+        (*this)[move.get_dst()] == EMPTY_SQUARE;
 
     // record en passant file
-    if (piece.type == PieceType::PAWN &&
-        (move.src_rank - move.dst_rank == 2 ||
-         move.src_rank - move.dst_rank == -2)) {
-        assert(move.src_file == move.dst_file);
-        en_passant_file = move.src_file;
+    if (piece.type == PAWN &&
+        (move.get_src_rank() - move.get_dst_rank() == 2 ||
+         move.get_src_rank() - move.get_dst_rank() == -2)) {
+        assert(move.get_src_file() == move.get_dst_file());
+        en_passant_file = move.get_src_file();
     } else {
         en_passant_file = NUM_FILES;
     }
 
     // update castling rights
+    constexpr ChessSquare WHITE_SHORT_ROOK_SQUARE = {NUM_FILES - 1, 0};
+    constexpr ChessSquare WHITE_LONG_ROOK_SQUARE = {0, 0};
+    constexpr ChessSquare BLACK_SHORT_ROOK_SQUARE = {
+        NUM_FILES - 1, NUM_RANKS - 1};
+    constexpr ChessSquare BLACK_LONG_ROOK_SQUARE = {0, NUM_RANKS - 1};
+
     if (piece == WHITE_KING) {
         white_can_short_castle = false;
         white_can_long_castle = false;
     }
-    if (piece == WHITE_ROOK && move.src_file == NUM_FILES - 1 &&
-        move.src_rank == 0) {
+    if (move.get_src() == WHITE_SHORT_ROOK_SQUARE ||
+        move.get_dst() == WHITE_SHORT_ROOK_SQUARE) {
         white_can_short_castle = false;
     }
-    if (move.dst_file == NUM_FILES - 1 && move.dst_rank == 0) {
-        white_can_short_castle = false;
-    }
-    if (piece == WHITE_ROOK && move.src_file == 0 && move.src_rank == 0) {
-        white_can_long_castle = false;
-    }
-    if (move.dst_file == 0 && move.dst_rank == 0) {
+    if (move.get_src() == WHITE_LONG_ROOK_SQUARE ||
+        move.get_dst() == WHITE_LONG_ROOK_SQUARE) {
         white_can_long_castle = false;
     }
     if (piece == BLACK_KING) {
         black_can_short_castle = false;
         black_can_long_castle = false;
     }
-    if (piece == BLACK_ROOK && move.src_file == NUM_FILES - 1 &&
-        move.src_rank == NUM_RANKS - 1) {
+    if (move.get_src() == BLACK_SHORT_ROOK_SQUARE ||
+        move.get_dst() == BLACK_SHORT_ROOK_SQUARE) {
         black_can_short_castle = false;
     }
-    if (move.dst_file == NUM_FILES - 1 && move.dst_rank == NUM_RANKS - 1) {
-        black_can_short_castle = false;
-    }
-    if (piece == BLACK_ROOK && move.src_file == 0 &&
-        move.src_rank == NUM_RANKS - 1) {
-        black_can_long_castle = false;
-    }
-    if (move.dst_file == 0 && move.dst_rank == NUM_RANKS - 1) {
+    if (move.get_src() == BLACK_LONG_ROOK_SQUARE ||
+        move.get_dst() == BLACK_LONG_ROOK_SQUARE) {
         black_can_long_castle = false;
     }
 
     // handle promotion
-    if (move.promotion_type != PieceType::NONE) {
-        piece.type = move.promotion_type;
+    if (move.get_promotion_type() != NONE) {
+        piece.type = move.get_promotion_type();
     }
 
     // perform move
-    board[move.dst_file][move.dst_rank] = piece;
-    board[move.src_file][move.src_rank] = EMPTY_SQUARE;
+    (*this)[move.get_dst()] = piece;
+    (*this)[move.get_src()] = EMPTY_SQUARE;
 
     // handle en passant capture
     if (is_en_passant_capture) {
-        assert(
-            contains_enemy_piece(move.dst_file, move.src_rank, PieceType::PAWN)
+        assert(has_enemy_piece({move.get_dst_file(), move.get_src_rank()}, PAWN)
         );
-        board[move.dst_file][move.src_rank] = EMPTY_SQUARE;
+        board[move.get_dst_file()][move.get_src_rank()] = EMPTY_SQUARE;
     }
 
     // handle castling
-    if (piece.type == PieceType::KING && move.distance() != 1) {
+    if (piece.type == KING && move.distance() != 1) {
         assert(move.distance() == 2);
-        assert(move.src_file == 4);
-        assert(move.src_rank == move.dst_rank);
-        if (move.dst_file == 6) { // short castle
-            board[5][move.src_rank] = board[7][move.src_rank];
-            board[7][move.src_rank] = EMPTY_SQUARE;
-        } else if (move.dst_file == 2) { // long castle
-            board[3][move.src_rank] = board[0][move.src_rank];
-            board[0][move.src_rank] = EMPTY_SQUARE;
+        assert(move.get_src_file() == 4);
+        assert(move.get_src_rank() == move.get_dst_rank());
+        const coord_t rank = move.get_src_rank();
+        if (move.get_dst_file() == 6) { // short castle
+            assert(board[5][rank] == EMPTY_SQUARE);
+            assert(board[6][rank] == EMPTY_SQUARE);
+            assert(board[7][rank].color == to_move);
+            assert(board[7][rank].type == ROOK);
+            board[5][rank] = board[7][rank];
+            board[7][rank] = EMPTY_SQUARE;
+        } else if (move.get_dst_file() == 2) { // long castle
+            assert(board[0][rank].color == to_move);
+            assert(board[0][rank].type == ROOK);
+            assert(board[1][rank] == EMPTY_SQUARE);
+            assert(board[2][rank] == EMPTY_SQUARE);
+            assert(board[3][rank] == EMPTY_SQUARE);
+            board[3][rank] = board[0][rank];
+            board[0][rank] = EMPTY_SQUARE;
         } else {
             __builtin_unreachable();
         }
@@ -349,22 +341,22 @@ std::string ChessPosition::get_move_name(
     const std::vector<ChessMove> &legal_moves, const ChessMove &move
 ) const {
 
-    assert(in_bounds(move.src_file, move.src_rank));
-    const ChessPiece piece = board[move.src_file][move.src_rank];
+    assert(move.get_src().in_bounds());
+    const ChessPiece piece = (*this)[move.get_src()];
     assert(piece.color == to_move);
     assert(piece.type != PieceType::NONE);
 
-    assert(in_bounds(move.dst_file, move.dst_rank));
-    const ChessPiece captured = board[move.dst_file][move.dst_rank];
+    assert(move.get_dst().in_bounds());
+    const ChessPiece captured = (*this)[move.get_dst()];
     assert(captured.color != to_move);
     const bool is_capture = captured != EMPTY_SQUARE;
 
     std::ostringstream result;
 
     if (piece.type == PieceType::KING && move.distance() == 2) {
-        if (move.dst_file == 6) {
+        if (move.get_dst_file() == 6) {
             result << "O-O";
-        } else if (move.dst_file == 2) {
+        } else if (move.get_dst_file() == 2) {
             result << "O-O-O";
         } else {
             __builtin_unreachable();
@@ -379,7 +371,7 @@ std::string ChessPosition::get_move_name(
             case PieceType::KNIGHT: result << 'N'; break;
             case PieceType::PAWN:
                 if (is_capture) {
-                    result << static_cast<char>('a' + move.src_file);
+                    result << static_cast<char>('a' + move.get_src_file());
                 }
                 break;
         }
@@ -388,13 +380,13 @@ std::string ChessPosition::get_move_name(
             bool ambiguous_rank = false;
             bool ambiguous_diag = false;
             for (const ChessMove &other : legal_moves) {
-                const ChessPiece other_piece =
-                    board[other.src_file][other.src_rank];
+                const ChessPiece other_piece = (*this)[other.get_src()];
                 if (other_piece.type == piece.type &&
-                    other.dst_file == move.dst_file &&
-                    other.dst_rank == move.dst_rank) {
-                    const bool file_match = other.src_file == move.src_file;
-                    const bool rank_match = other.src_rank == move.src_rank;
+                    other.get_dst() == move.get_dst()) {
+                    const bool file_match =
+                        other.get_src_file() == move.get_src_file();
+                    const bool rank_match =
+                        other.get_src_rank() == move.get_src_rank();
                     ambiguous_file |= file_match && !rank_match;
                     ambiguous_rank |= !file_match && rank_match;
                     ambiguous_diag |= !file_match && !rank_match;
@@ -402,23 +394,23 @@ std::string ChessPosition::get_move_name(
             }
             if (ambiguous_rank || ambiguous_file || ambiguous_diag) {
                 if (!ambiguous_file) {
-                    result << static_cast<char>('a' + move.src_file);
+                    result << static_cast<char>('a' + move.get_src_file());
                 } else if (!ambiguous_rank) {
-                    result << static_cast<char>('1' + move.src_rank);
+                    result << static_cast<char>('1' + move.get_src_rank());
                 } else {
-                    result << static_cast<char>('a' + move.src_file);
-                    result << static_cast<char>('1' + move.src_rank);
+                    result << static_cast<char>('a' + move.get_src_file());
+                    result << static_cast<char>('1' + move.get_src_rank());
                 }
             }
         }
         if (is_capture) { result << 'x'; }
-        result << static_cast<char>('a' + move.dst_file);
-        result << static_cast<char>('1' + move.dst_rank);
+        result << static_cast<char>('a' + move.get_dst_file());
+        result << static_cast<char>('1' + move.get_dst_rank());
     }
 
-    if (move.promotion_type != PieceType::NONE) {
+    if (move.get_promotion_type() != PieceType::NONE) {
         result << '=';
-        switch (move.promotion_type) {
+        switch (move.get_promotion_type()) {
             case PieceType::NONE: [[fallthrough]];
             case PieceType::KING: __builtin_unreachable();
             case PieceType::QUEEN: result << 'Q'; break;
@@ -621,15 +613,15 @@ std::string ChessPosition::get_fen() const {
     }
 
     // Get en passant square
-    if (en_passant_file != NUM_FILES) {
-        fen << static_cast<char>('a' + en_passant_file)
-            << static_cast<char>('1' + en_passant_rank());
+    if (en_passant_square().in_bounds()) {
+        fen << en_passant_square();
     } else {
         fen << '-';
     }
 
     return fen.str();
 }
+
 
 int ChessPosition::get_material_advantage() const {
     int material_advantage = 0;

@@ -22,11 +22,8 @@ std::mt19937 properly_seeded_random_engine() {
 }
 
 
-ChessMove RandomEngine::pick_move(
-    const ChessPosition &current_pos, const std::vector<ChessMove> &legal_moves,
-    const std::vector<ChessPosition> &pos_history,
-    const std::vector<ChessMove> &move_history
-) {
+ChessMove RandomEngine::
+    pick_move(const ChessPosition &, const std::vector<ChessMove> &legal_moves, const std::vector<ChessPosition> &, const std::vector<ChessMove> &) {
     std::uniform_int_distribution<std::size_t> dist(0, legal_moves.size() - 1);
     return legal_moves[dist(rng)];
 }
@@ -34,8 +31,7 @@ ChessMove RandomEngine::pick_move(
 
 ChessMove CCCP_Engine::pick_move(
     const ChessPosition &current_pos, const std::vector<ChessMove> &legal_moves,
-    const std::vector<ChessPosition> &pos_history,
-    const std::vector<ChessMove> &move_history
+    const std::vector<ChessPosition> &, const std::vector<ChessMove> &
 
 ) {
     std::vector<ChessMove> deepest_moves = {legal_moves[0]};
@@ -53,7 +49,7 @@ ChessMove CCCP_Engine::pick_move(
             return move;
         } else if (copy.in_check()) {
             return move;
-        } else if (current_pos(move.dst_file, move.dst_rank) != EMPTY_SQUARE) {
+        } else if (current_pos[move.get_dst()] != EMPTY_SQUARE) {
             return move;
         } else if (copy.stalemated()) {
             continue;
@@ -61,8 +57,8 @@ ChessMove CCCP_Engine::pick_move(
             if (!enemy_king_found) {
                 for (coord_t file = 0; file < NUM_FILES; ++file) {
                     for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
-                        if (current_pos(file, rank).type == PieceType::KING &&
-                            current_pos(file, rank).color !=
+                        if (current_pos[{file, rank}].type == PieceType::KING &&
+                            current_pos[{file, rank}].color !=
                                 current_pos.get_color_to_move()) {
                             enemy_king_file = file;
                             enemy_king_rank = rank;
@@ -76,12 +72,12 @@ ChessMove CCCP_Engine::pick_move(
             }
 
             if (std::max(
-                    std::abs(enemy_king_file - move.dst_file),
-                    std::abs(enemy_king_rank - move.dst_rank)
+                    std::abs(enemy_king_file - move.get_dst_file()),
+                    std::abs(enemy_king_rank - move.get_dst_rank())
                 ) <
                 std::max(
-                    std::abs(enemy_king_file - move.src_file),
-                    std::abs(enemy_king_rank - move.src_rank)
+                    std::abs(enemy_king_file - move.get_src_file()),
+                    std::abs(enemy_king_rank - move.get_src_rank())
                 )) {}
 
             if (move.distance() > deepest_move_distance) {

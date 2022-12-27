@@ -6,20 +6,20 @@
 
 
 enum class PieceColor : std::uint8_t {
-    NONE,
-    WHITE,
-    BLACK,
+    NONE = 0,
+    WHITE = 1,
+    BLACK = 2,
 }; // enum class PieceColor
 
 
 enum class PieceType : std::uint8_t {
-    NONE,
-    KING,
-    QUEEN,
-    ROOK,
-    BISHOP,
-    KNIGHT,
-    PAWN,
+    NONE = 0,
+    KING = 1,
+    QUEEN = 2,
+    ROOK = 3,
+    BISHOP = 4,
+    KNIGHT = 5,
+    PAWN = 6,
 }; // enum class PieceType
 
 
@@ -38,11 +38,10 @@ struct ChessPiece {
 
     constexpr bool operator==(const ChessPiece &) const noexcept = default;
 
-    constexpr int get_material_value() const {
+    [[nodiscard]] constexpr int get_material_value() const {
         int value;
-
         switch (type) {
-            case PieceType::NONE: [[fallthrough]];
+            case PieceType::NONE: return 0;
             case PieceType::KING: return 0;
             case PieceType::QUEEN: value = 9;
             case PieceType::ROOK: value = 5;

@@ -15,73 +15,129 @@ constexpr coord_t NUM_FILES = 8;
 constexpr coord_t NUM_RANKS = 8;
 
 
-constexpr bool in_bounds(coord_t file, coord_t rank) noexcept {
-    return (file >= 0) && (file < NUM_FILES) && (rank >= 0) &&
-           (rank < NUM_RANKS);
+struct ChessSquare {
+
+    coord_t file;
+    coord_t rank;
+
+    [[nodiscard]] constexpr bool in_bounds() const noexcept {
+        return (file >= 0) && (file < NUM_FILES) && (rank >= 0) &&
+               (rank < NUM_RANKS);
+    }
+
+    constexpr auto operator<=>(const ChessSquare &) const noexcept = default;
+
+}; // struct ChessSquare
+
+
+std::ostream &operator<<(std::ostream &os, const ChessSquare &square);
+
+
+struct ChessOffset {
+
+    coord_t file_offset;
+    coord_t rank_offset;
+
+}; // struct ChessOffset
+
+
+constexpr ChessSquare &
+operator+=(ChessSquare &square, const ChessOffset &offset) noexcept {
+    square.file += offset.file_offset;
+    square.rank += offset.rank_offset;
+    return square;
 }
 
 
-struct ChessMove {
+constexpr ChessSquare
+operator+(const ChessSquare &square, const ChessOffset &offset) noexcept {
+    return {square.file + offset.file_offset, square.rank + offset.rank_offset};
+}
 
-    coord_t src_file : 4;
-    coord_t src_rank : 4;
-    coord_t dst_file : 4;
-    coord_t dst_rank : 4;
+
+class ChessMove {
+
+    ChessSquare src;
+    ChessSquare dst;
     PieceType promotion_type;
 
-    explicit constexpr ChessMove()
-        : src_file(0)
-        , src_rank(0)
-        , dst_file(0)
-        , dst_rank(0)
-        , promotion_type(PieceType::NONE) {}
+public: // ======================================================== CONSTRUCTORS
 
-    explicit constexpr ChessMove(coord_t sf, coord_t sr, coord_t df, coord_t dr)
-        : src_file(sf)
-        , src_rank(sr)
-        , dst_file(df)
-        , dst_rank(dr)
+    explicit constexpr ChessMove(ChessSquare source, ChessSquare destination)
+        : src(source)
+        , dst(destination)
         , promotion_type(PieceType::NONE) {
-        assert(in_bounds(sf, sr));
-        assert(in_bounds(df, dr));
+        assert(source.in_bounds());
+        assert(destination.in_bounds());
     }
 
     explicit constexpr ChessMove(
-        coord_t sf, coord_t sr, coord_t df, coord_t dr, PieceType pt
+        ChessSquare source, ChessSquare destination, PieceType type
     )
-        : src_file(sf)
-        , src_rank(sr)
-        , dst_file(df)
-        , dst_rank(dr)
-        , promotion_type(pt) {
-        assert(in_bounds(sf, sr));
-        assert(in_bounds(df, dr));
-        assert(pt != PieceType::KING && pt != PieceType::PAWN);
+        : src(source)
+        , dst(destination)
+        , promotion_type(type) {
+        assert(source.in_bounds());
+        assert(destination.in_bounds());
+        assert(type != PieceType::KING && type != PieceType::PAWN);
     }
+
+public: // =========================================================== ACCESSORS
+
+    [[nodiscard]] constexpr ChessSquare get_src() const noexcept { return src; }
+
+    [[nodiscard]] constexpr coord_t get_src_file() const noexcept {
+        return src.file;
+    }
+
+    [[nodiscard]] constexpr coord_t get_src_rank() const noexcept {
+        return src.rank;
+    }
+
+    [[nodiscard]] constexpr ChessSquare get_dst() const noexcept { return dst; }
+
+    [[nodiscard]] constexpr coord_t get_dst_file() const noexcept {
+        return dst.file;
+    }
+
+    [[nodiscard]] constexpr coord_t get_dst_rank() const noexcept {
+        return dst.rank;
+    }
+
+    [[nodiscard]] constexpr PieceType get_promotion_type() const noexcept {
+        return promotion_type;
+    }
+
+public: // ========================================================== COMPARISON
 
     constexpr auto operator<=>(const ChessMove &) const noexcept = default;
 
+public: // ======================================================= STATE TESTING
+
     [[nodiscard]] constexpr bool is_orthogonal() const noexcept {
-        return src_file == dst_file || src_rank == dst_rank;
+        return get_src_file() == get_dst_file() ||
+               get_src_rank() == get_dst_rank();
     }
 
     [[nodiscard]] constexpr bool is_diagonal() const noexcept {
-        return std::abs(src_file - dst_file) == std::abs(src_rank - dst_rank);
+        return std::abs(get_src_file() - get_dst_file()) ==
+               std::abs(get_src_rank() - get_dst_rank());
     }
 
     [[nodiscard]] constexpr coord_t distance() const noexcept {
         return std::max(
-            std::abs(src_file - dst_file), std::abs(src_rank - dst_rank)
+            std::abs(get_src_file() - get_dst_file()),
+            std::abs(get_src_rank() - get_dst_rank())
         );
     }
 
-}; // struct ChessMove
+}; // class ChessMove
 
 
 std::ostream &operator<<(std::ostream &os, const ChessMove &move);
 
 
-constexpr ChessMove NULL_MOVE(0, 0, 0, 0);
+constexpr ChessMove NULL_MOVE({0, 0}, {0, 0});
 
 
 #endif // SUCKER_CHESS_CHESS_MOVE_HPP

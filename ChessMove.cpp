@@ -1,12 +1,17 @@
 #include "ChessMove.hpp"
 
 
+std::ostream &operator<<(std::ostream &os, const ChessSquare &square) {
+    os << static_cast<char>('a' + square.file);
+    os << static_cast<char>('1' + square.rank);
+    return os;
+}
+
+
 std::ostream &operator<<(std::ostream &os, const ChessMove &move) {
-    os << static_cast<char>('a' + move.src_file);
-    os << static_cast<char>('1' + move.src_rank);
-    os << static_cast<char>('a' + move.dst_file);
-    os << static_cast<char>('1' + move.dst_rank);
-    switch (move.promotion_type) {
+    os << move.get_src();
+    os << move.get_dst();
+    switch (move.get_promotion_type()) {
         case PieceType::NONE: break;
         case PieceType::KING: __builtin_unreachable();
         case PieceType::QUEEN: os << 'q'; break;
