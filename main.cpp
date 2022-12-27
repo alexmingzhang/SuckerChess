@@ -12,21 +12,21 @@ int main() {
     int num_white_wins = 0;
     int num_black_wins = 0;
 
-    ChessGame game;
-    const PieceColor winner =
-        game.run(new RandomEngine(), new CCCP_Engine(), true);
+    for (int i = 0; i < 10000; ++i) {
+        ChessGame game;
+        const PieceColor winner =
+            game.run(new RandomEngine(), new CCCP_Engine(), false);
 
-    switch (winner) {
-        case PieceColor::NONE: ++num_draws; break;
-        case PieceColor::WHITE: ++num_white_wins; break;
-        case PieceColor::BLACK: ++num_black_wins; break;
+        switch (winner) {
+            case PieceColor::NONE: ++num_draws; break;
+            case PieceColor::WHITE: ++num_white_wins; break;
+            case PieceColor::BLACK: ++num_black_wins; break;
+        }
     }
-
     std::cout << num_white_wins << " : " << num_draws << " : " << num_black_wins
               << std::endl;
 
-    std::cout << game.get_PGN() << std::endl;
-
+    // std::cout << game.get_PGN() << std::endl;
 
     return 0;
 }
