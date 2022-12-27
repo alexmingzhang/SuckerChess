@@ -4,29 +4,27 @@
 
 #include "ChessEngine.hpp"
 #include "ChessGame.hpp"
+#include "ChessTournament.hpp"
 
 
 int main() {
+    ChessPlayer *random_player = new ChessPlayer("Random", new RandomEngine());
+    ChessPlayer *cccp_player = new ChessPlayer("CCCP", new CCCP_Engine());
+    ChessPlayer *reducer_player =
+        new ChessPlayer("Reducer", new ReducerEngine());
 
-    int num_draws = 0;
-    int num_white_wins = 0;
-    int num_black_wins = 0;
+    ChessTournament tourney("SuckerChess Tournament");
+    tourney.add_player(random_player);
+    tourney.add_player(cccp_player);
+    tourney.add_player(reducer_player);
 
-    for (int i = 0; i < 10000; ++i) {
-        ChessGame game;
-        const PieceColor winner =
-            game.run(new RandomEngine(), new CCCP_Engine(), true);
+    tourney.run(10);
 
-        switch (winner) {
-            case PieceColor::NONE: ++num_draws; break;
-            case PieceColor::WHITE: ++num_white_wins; break;
-            case PieceColor::BLACK: ++num_black_wins; break;
-        }
+    for (const ChessPlayer *p : tourney.get_players()) {
+        std::cout << p->get_name() << " (" << p->get_elo()
+                  << "): " << p->get_num_wins() << '-' << p->get_num_draws()
+                  << '-' << p->get_num_losses() << std::endl;
     }
-    std::cout << num_white_wins << " : " << num_draws << " : " << num_black_wins
-              << std::endl;
-
-    // std::cout << game.get_PGN() << std::endl;
 
     return 0;
 }

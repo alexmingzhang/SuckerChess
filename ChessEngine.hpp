@@ -68,4 +68,25 @@ public:
 };
 
 
+// ================================================ REDUCER (Reduce enemy moves)
+
+
+class ReducerEngine : public ChessEngine {
+
+    std::mt19937 rng;
+
+public:
+
+    ReducerEngine()
+        : rng(properly_seeded_random_engine()) {}
+
+    ChessMove pick_move(
+        const ChessPosition &current_pos,
+        const std::vector<ChessMove> &legal_moves,
+        const std::vector<ChessPosition> &pos_history,
+        const std::vector<ChessMove> &move_history
+    ) override;
+};
+
+
 #endif // SUCKER_CHESS_CHESS_ENGINE_HPP

@@ -19,4 +19,6 @@ add_executable(SuckerChess main.cpp
         ChessMove.cpp ChessMove.hpp
         ChessPosition.cpp ChessPosition.hpp
         ChessEngine.cpp ChessEngine.hpp
-        ChessGame.cpp ChessGame.hpp Utilities.cpp Utilities.hpp)
+        ChessGame.cpp ChessGame.hpp
+        ChessTournament.cpp ChessTournament.hpp
+        Utilities.cpp Utilities.hpp)
