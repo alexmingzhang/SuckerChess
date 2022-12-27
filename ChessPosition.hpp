@@ -394,7 +394,7 @@ public: // ====================================================== MOVE EXECUTION
 private: // ============================================= ATTACK TESTING HELPERS
 
     [[nodiscard]] constexpr ChessPiece
-    get_slider_attacker(ChessSquare square, ChessOffset offset) const {
+    get_slider_attacker(ChessSquare square, ChessOffset offset) const noexcept {
         ChessSquare current = square + offset;
         while (is_empty(current)) { current += offset; }
         if (current.in_bounds()) {
@@ -404,7 +404,8 @@ private: // ============================================= ATTACK TESTING HELPERS
         return EMPTY_SQUARE;
     }
 
-    [[nodiscard]] constexpr bool is_attacked_by_king(ChessSquare square) const {
+    [[nodiscard]] constexpr bool is_attacked_by_king(ChessSquare square
+    ) const noexcept {
         using enum PieceType;
         return has_enemy_piece(square + ChessOffset{-1, -1}, KING) ||
                has_enemy_piece(square + ChessOffset{-1, 0}, KING) ||
@@ -417,7 +418,7 @@ private: // ============================================= ATTACK TESTING HELPERS
     }
 
     [[nodiscard]] constexpr bool is_attacked_orthogonally(ChessSquare square
-    ) const {
+    ) const noexcept {
         using enum PieceType;
         const ChessPiece a = get_slider_attacker(square, ChessOffset{-1, 0});
         if (a.get_type() == QUEEN || a.get_type() == ROOK) { return true; }
@@ -431,7 +432,7 @@ private: // ============================================= ATTACK TESTING HELPERS
     }
 
     [[nodiscard]] constexpr bool is_attacked_diagonally(ChessSquare square
-    ) const {
+    ) const noexcept {
         using enum PieceType;
         const ChessPiece a = get_slider_attacker(square, ChessOffset{-1, -1});
         if (a.get_type() == QUEEN || a.get_type() == BISHOP) { return true; }
@@ -445,7 +446,7 @@ private: // ============================================= ATTACK TESTING HELPERS
     }
 
     [[nodiscard]] constexpr bool is_attacked_by_knight(ChessSquare square
-    ) const {
+    ) const noexcept {
         using enum PieceType;
         return has_enemy_piece(square + ChessOffset{-2, -1}, KNIGHT) ||
                has_enemy_piece(square + ChessOffset{-2, +1}, KNIGHT) ||
@@ -457,7 +458,8 @@ private: // ============================================= ATTACK TESTING HELPERS
                has_enemy_piece(square + ChessOffset{+2, +1}, KNIGHT);
     }
 
-    [[nodiscard]] constexpr bool is_attacked_by_pawn(ChessSquare square) const {
+    [[nodiscard]] constexpr bool is_attacked_by_pawn(ChessSquare square
+    ) const noexcept {
         using enum PieceType;
         const coord_t direction = pawn_direction();
         return has_enemy_piece(square + ChessOffset{-1, direction}, PAWN) ||
@@ -466,7 +468,8 @@ private: // ============================================= ATTACK TESTING HELPERS
 
 public: // ====================================================== ATTACK TESTING
 
-    [[nodiscard]] constexpr bool is_attacked(ChessSquare square) const {
+    [[nodiscard]] constexpr bool is_attacked(ChessSquare square
+    ) const noexcept {
         assert(square.in_bounds());
         return is_attacked_by_king(square) ||
                is_attacked_orthogonally(square) ||
@@ -474,7 +477,7 @@ public: // ====================================================== ATTACK TESTING
                is_attacked_by_knight(square) || is_attacked_by_pawn(square);
     }
 
-    [[nodiscard]] constexpr bool in_check() const {
+    [[nodiscard]] constexpr bool in_check() const noexcept {
         if (to_move == PieceColor::WHITE) {
             return is_attacked(white_king_location);
         } else if (to_move == PieceColor::BLACK) {
@@ -484,40 +487,204 @@ public: // ====================================================== ATTACK TESTING
         }
     }
 
-    [[nodiscard]] constexpr bool puts_self_in_check(ChessMove move) const {
+    [[nodiscard]] constexpr bool puts_self_in_check(ChessMove move
+    ) const noexcept {
         ChessPosition copy = *this;
         copy.make_move(move);
         copy.to_move = to_move;
         return copy.in_check();
     }
 
-    [[nodiscard]] constexpr bool is_legal(ChessMove move) const {
+    [[nodiscard]] constexpr bool is_legal(ChessMove move) const noexcept {
         return is_valid(move) && !puts_self_in_check(move);
     }
 
 public: // ===================================================== MOVE GENERATION
 
-    void push_if_legal(std::vector<ChessMove> &moves, ChessMove move) const;
+    constexpr void push_if_legal(std::vector<ChessMove> &moves, ChessMove move)
+        const noexcept {
+        assert(is_valid(move));
+        if (is_legal(move)) { moves.push_back(move); }
+    }
 
-    void push_leaper_move(
+    constexpr void push_leaper_move(
         std::vector<ChessMove> &moves, ChessSquare src, ChessOffset offset
-    ) const;
+    ) const noexcept {
+        const ChessSquare dst = src + offset;
+        if (is_valid_dst(dst)) { push_if_legal(moves, {src, dst}); }
+    }
 
-    void push_slider_moves(
+    constexpr void push_slider_moves(
         std::vector<ChessMove> &moves, ChessSquare src, ChessOffset offset
-    ) const;
+    ) const noexcept {
+        ChessSquare dst = src + offset;
+        while (is_empty(dst)) {
+            push_if_legal(moves, {src, dst});
+            dst += offset;
+        }
+        if (is_valid_dst(dst)) { push_if_legal(moves, {src, dst}); }
+    }
 
-    void push_promotion_moves(
+    constexpr void push_promotion_moves(
         std::vector<ChessMove> &moves, ChessSquare src, ChessSquare dst
-    ) const;
+    ) const noexcept {
+        using enum PieceType;
+        if (dst.rank == promotion_rank()) {
+            push_if_legal(moves, {src, dst, QUEEN});
+            push_if_legal(moves, {src, dst, ROOK});
+            push_if_legal(moves, {src, dst, BISHOP});
+            push_if_legal(moves, {src, dst, KNIGHT});
+        } else {
+            push_if_legal(moves, {src, dst});
+        }
+    }
 
-    void push_pawn_moves(std::vector<ChessMove> &moves, ChessSquare src) const;
+    constexpr void push_pawn_moves(
+        std::vector<ChessMove> &moves, ChessSquare src
+    ) const noexcept {
+        const coord_t direction = pawn_direction();
+        const ChessSquare dst_move = src + ChessOffset{0, direction};
+        if (is_empty(dst_move)) {
+            push_promotion_moves(moves, src, dst_move);
+            if (src.rank == pawn_origin_rank()) {
+                const ChessSquare dst_double_move =
+                    dst_move + ChessOffset{0, direction};
+                if (is_empty(dst_double_move)) {
+                    // no promotion possible on initial double-step move
+                    push_if_legal(moves, {src, dst_double_move});
+                }
+            }
+        }
+        const ChessSquare dst_capture_l = src + ChessOffset{-1, direction};
+        if (is_valid_cap(dst_capture_l)) {
+            push_promotion_moves(moves, src, dst_capture_l);
+        }
+        const ChessSquare dst_capture_r = src + ChessOffset{+1, direction};
+        if (is_valid_cap(dst_capture_r)) {
+            push_promotion_moves(moves, src, dst_capture_r);
+        }
+        const ChessSquare dst_ep = en_passant_square();
+        if (dst_ep.in_bounds() &&
+            (dst_capture_l == dst_ep || dst_capture_r == dst_ep)) {
+            push_if_legal(moves, {src, dst_ep});
+        }
+    }
 
-    void push_castling_moves(std::vector<ChessMove> &moves) const;
+    constexpr void push_castling_moves(std::vector<ChessMove> &moves
+    ) const noexcept {
+        if (to_move == PieceColor::WHITE) {
+            if (white_can_short_castle) {
+                assert(board[4][0] == WHITE_KING);
+                assert(board[7][0] == WHITE_ROOK);
+                if (board[5][0] == EMPTY_SQUARE &&
+                    board[6][0] == EMPTY_SQUARE && !is_attacked({4, 0}) &&
+                    !is_attacked({5, 0}) && !is_attacked({6, 0})) {
+                    moves.emplace_back(ChessSquare{4, 0}, ChessSquare{6, 0});
+                }
+            }
+            if (white_can_long_castle) {
+                assert(board[0][0] == WHITE_ROOK);
+                assert(board[4][0] == WHITE_KING);
+                if (board[1][0] == EMPTY_SQUARE &&
+                    board[2][0] == EMPTY_SQUARE &&
+                    board[3][0] == EMPTY_SQUARE && !is_attacked({2, 0}) &&
+                    !is_attacked({3, 0}) && !is_attacked({4, 0})) {
+                    moves.emplace_back(ChessSquare{4, 0}, ChessSquare{2, 0});
+                }
+            }
+        } else if (to_move == PieceColor::BLACK) {
+            if (black_can_short_castle) {
+                assert(board[4][7] == BLACK_KING);
+                assert(board[7][7] == BLACK_ROOK);
+                if (board[5][7] == EMPTY_SQUARE &&
+                    board[6][7] == EMPTY_SQUARE && !is_attacked({4, 7}) &&
+                    !is_attacked({5, 7}) && !is_attacked({6, 7})) {
+                    moves.emplace_back(ChessSquare{4, 7}, ChessSquare{6, 7});
+                }
+            }
+            if (black_can_long_castle) {
+                assert(board[0][7] == BLACK_ROOK);
+                assert(board[4][7] == BLACK_KING);
+                if (board[1][7] == EMPTY_SQUARE &&
+                    board[2][7] == EMPTY_SQUARE &&
+                    board[3][7] == EMPTY_SQUARE && !is_attacked({2, 7}) &&
+                    !is_attacked({3, 7}) && !is_attacked({4, 7})) {
+                    moves.emplace_back(ChessSquare{4, 7}, ChessSquare{2, 7});
+                }
+            }
+        } else {
+            __builtin_unreachable();
+        }
+    }
 
-    void push_legal_moves(std::vector<ChessMove> &moves, ChessSquare src) const;
+    constexpr void push_legal_moves(
+        std::vector<ChessMove> &moves, ChessSquare src
+    ) const noexcept {
+        assert(src.in_bounds());
+        const ChessPiece piece = (*this)[src];
+        assert(piece.get_color() == to_move);
+        assert(piece.get_type() != PieceType::NONE);
+        switch (piece.get_type()) {
+            case PieceType::NONE: __builtin_unreachable();
+            case PieceType::KING:
+                push_leaper_move(moves, src, {-1, -1});
+                push_leaper_move(moves, src, {-1, 0});
+                push_leaper_move(moves, src, {-1, +1});
+                push_leaper_move(moves, src, {0, -1});
+                push_leaper_move(moves, src, {0, +1});
+                push_leaper_move(moves, src, {+1, -1});
+                push_leaper_move(moves, src, {+1, 0});
+                push_leaper_move(moves, src, {+1, +1});
+                push_castling_moves(moves);
+                break;
+            case PieceType::QUEEN:
+                push_slider_moves(moves, src, {-1, -1});
+                push_slider_moves(moves, src, {-1, 0});
+                push_slider_moves(moves, src, {-1, +1});
+                push_slider_moves(moves, src, {0, -1});
+                push_slider_moves(moves, src, {0, +1});
+                push_slider_moves(moves, src, {+1, -1});
+                push_slider_moves(moves, src, {+1, 0});
+                push_slider_moves(moves, src, {+1, +1});
+                break;
+            case PieceType::ROOK:
+                push_slider_moves(moves, src, {-1, 0});
+                push_slider_moves(moves, src, {0, -1});
+                push_slider_moves(moves, src, {0, +1});
+                push_slider_moves(moves, src, {+1, 0});
+                break;
+            case PieceType::BISHOP:
+                push_slider_moves(moves, src, {-1, -1});
+                push_slider_moves(moves, src, {-1, +1});
+                push_slider_moves(moves, src, {+1, -1});
+                push_slider_moves(moves, src, {+1, +1});
+                break;
+            case PieceType::KNIGHT:
+                push_leaper_move(moves, src, {-2, -1});
+                push_leaper_move(moves, src, {-2, +1});
+                push_leaper_move(moves, src, {-1, -2});
+                push_leaper_move(moves, src, {-1, +2});
+                push_leaper_move(moves, src, {+1, -2});
+                push_leaper_move(moves, src, {+1, +2});
+                push_leaper_move(moves, src, {+2, -1});
+                push_leaper_move(moves, src, {+2, +1});
+                break;
+            case PieceType::PAWN: push_pawn_moves(moves, src); break;
+        }
+    }
 
-    [[nodiscard]] std::vector<ChessMove> get_legal_moves() const;
+    [[nodiscard]] std::vector<ChessMove> get_legal_moves() const noexcept {
+        std::vector<ChessMove> result;
+        for (coord_t src_file = 0; src_file < NUM_FILES; ++src_file) {
+            for (coord_t src_rank = 0; src_rank < NUM_RANKS; ++src_rank) {
+                const ChessPiece &piece = (*this)(src_file, src_rank);
+                if (piece.get_color() == to_move) {
+                    push_legal_moves(result, {src_file, src_rank});
+                }
+            }
+        }
+        return result;
+    }
 
 public: // ======================================================= CHECK TESTING
 

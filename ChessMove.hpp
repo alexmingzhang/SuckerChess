@@ -66,7 +66,7 @@ public: // ======================================================== CONSTRUCTORS
 
 #ifdef SUCKER_CHESS_USE_COMPRESSED_CHESS_MOVE
 
-    constexpr ChessMove(ChessSquare source, ChessSquare destination)
+    constexpr ChessMove(ChessSquare source, ChessSquare destination) noexcept
         : data(static_cast<std::uint16_t>(
               (source.file << 12) | (source.rank << 9) |
               (destination.file << 6) | (destination.rank << 3)
@@ -77,7 +77,7 @@ public: // ======================================================== CONSTRUCTORS
 
     constexpr ChessMove(
         ChessSquare source, ChessSquare destination, PieceType promotion_type
-    )
+    ) noexcept
         : data(static_cast<std::uint16_t>(
               (source.file << 12) | (source.rank << 9) |
               (destination.file << 6) | (destination.rank << 3) |
@@ -93,7 +93,7 @@ public: // ======================================================== CONSTRUCTORS
 
 #else
 
-    constexpr ChessMove(ChessSquare source, ChessSquare destination)
+    constexpr ChessMove(ChessSquare source, ChessSquare destination) noexcept
         : m_src(source)
         , m_dst(destination)
         , m_promotion_type(PieceType::NONE) {
@@ -103,7 +103,7 @@ public: // ======================================================== CONSTRUCTORS
 
     constexpr ChessMove(
         ChessSquare source, ChessSquare destination, PieceType promotion_type
-    )
+    ) noexcept
         : m_src(source)
         , m_dst(destination)
         , m_promotion_type(promotion_type) {
