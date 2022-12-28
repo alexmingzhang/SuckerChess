@@ -43,7 +43,7 @@ public:
 
     void sort_players_by_elo();
 
-    void run(int num_rounds, bool verbose);
+    void run(int num_rounds, int print_frequency);
 
     void print_info() const;
 

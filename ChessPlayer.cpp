@@ -16,11 +16,23 @@ std::string ChessPlayer::get_name_with_elo(int precision) const {
 
 double ChessPlayer::get_elo() const { return elo; }
 
-unsigned int ChessPlayer::get_num_wins() const { return num_wins; }
+unsigned int ChessPlayer::get_num_wins_as_white() const {
+    return num_wins_as_white;
+}
+
+unsigned int ChessPlayer::get_num_wins_as_black() const {
+    return num_wins_as_black;
+}
 
 unsigned int ChessPlayer::get_num_draws() const { return num_draws; }
 
-unsigned int ChessPlayer::get_num_losses() const { return num_losses; }
+unsigned int ChessPlayer::get_num_losses_as_white() const {
+    return num_losses_as_white;
+}
+
+unsigned int ChessPlayer::get_num_losses_as_black() const {
+    return num_losses_as_black;
+}
 
 // *this white, other black
 ChessGame ChessPlayer::versus(ChessPlayer *other, bool verbose) {
@@ -52,15 +64,15 @@ ChessGame ChessPlayer::versus(ChessPlayer *other, bool verbose) {
             break;
         case PieceColor::WHITE:
             if (verbose) { std::cout << this->name << " won!\n"; }
-            this->num_wins++;
-            other->num_losses++;
+            this->num_wins_as_white++;
+            other->num_losses_as_black++;
             this->elo += KFACTOR * (1.0 - this_expected_score);
             other->elo += KFACTOR * (0.0 - other_expected_score);
             break;
         case PieceColor::BLACK:
             if (verbose) { std::cout << other->name << " won!\n"; }
-            this->num_losses++;
-            other->num_wins++;
+            this->num_losses_as_white++;
+            other->num_wins_as_black++;
             this->elo += KFACTOR * (0.0 - this_expected_score);
             other->elo += KFACTOR * (1.0 - other_expected_score);
             break;

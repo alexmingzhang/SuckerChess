@@ -8,14 +8,18 @@
 #include "ChessGame.hpp"
 #include "ChessTournament.hpp"
 
+ChessGame find_cool_game() {
+    PieceColor winner;
+    while (1) {
+        ChessGame game;
+        if (game.run(new Engine::CCCP(), new Engine::FirstLegalMove(), false) ==
+            PieceColor::BLACK) {
+            return game;
+        }
+    }
+}
 
 int main() {
-    // ChessGame game;
-    // game.run(nullptr, new Engine::CCCP(), true);
-    // std::cout << game.get_PGN() << std::endl;
-    // ;
-    // return 0;
-
     ChessPlayer *flm_player =
         new ChessPlayer("FLM", new Engine::FirstLegalMove());
     ChessPlayer *random_player =
@@ -36,7 +40,7 @@ int main() {
     tourney.add_player(cccp_player);
     tourney.add_player(reducer_player);
 
-    tourney.run(10000, false);
+    tourney.run(100, 10);
     tourney.sort_players_by_elo();
 
     tourney.print_info();

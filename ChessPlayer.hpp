@@ -19,9 +19,11 @@ public:
 private:
 
     double elo;
-    unsigned int num_wins;
+    unsigned int num_wins_as_white;
+    unsigned int num_wins_as_black;
     unsigned int num_draws;
-    unsigned int num_losses;
+    unsigned int num_losses_as_white;
+    unsigned int num_losses_as_black;
 
 public:
 
@@ -29,9 +31,11 @@ public:
         : name(n)
         , engine(e)
         , elo(1000)
-        , num_wins(0)
+        , num_wins_as_white(0)
+        , num_wins_as_black(0)
         , num_draws(0)
-        , num_losses(0) {}
+        , num_losses_as_white(0)
+        , num_losses_as_black(0) {}
 
     const std::string &get_name() const;
 
@@ -39,11 +43,11 @@ public:
 
     double get_elo() const;
 
-    unsigned int get_num_wins() const;
-
+    unsigned int get_num_wins_as_white() const;
+    unsigned int get_num_wins_as_black() const;
     unsigned int get_num_draws() const;
-
-    unsigned int get_num_losses() const;
+    unsigned int get_num_losses_as_white() const;
+    unsigned int get_num_losses_as_black() const;
 
     ChessGame versus(ChessPlayer *, bool verbose);
 }; // class ChessPlayer

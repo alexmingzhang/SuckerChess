@@ -188,17 +188,20 @@ ChessMove CCCP::pick_move(
         ChessPosition copy = current_pos;
         copy.make_move(move);
 
-        bool draw_by_repetition = false;
-        int count = 0;
-        for (const ChessPosition &pos : pos_history) {
-            if (pos == copy) { ++count; }
-            if (count >= 2) {
-                draw_by_repetition = true;
-                break;
+        bool drawn = copy.stalemated();
+
+        if (!drawn) {
+            int count = 0;
+            for (const ChessPosition &pos : pos_history) {
+                if (pos == copy) { ++count; }
+                if (count >= 2) {
+                    drawn = true;
+                    break;
+                }
             }
         }
 
-        if (copy.stalemated() || draw_by_repetition) {
+        if (drawn) {
             continue;
         } else if (copy.checkmated()) {
             return move;
