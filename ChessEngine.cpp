@@ -30,9 +30,7 @@ std::vector<ChessMove> Check::pick_preferred_moves(
     [[maybe_unused]] const std::vector<ChessMove> &move_history
 ) {
     return maximal_elements(allowed_moves, [&](ChessMove move) {
-        ChessPosition copy = current_pos;
-        copy.make_move(move);
-        return copy.in_check();
+        return current_pos.puts_opponent_in_check(move);
     });
 }
 
@@ -244,7 +242,7 @@ ChessMove CCCP::pick_move(
             continue;
         } else if (copy.checkmated()) {
             return move;
-        } else if (copy.in_check()) {
+        } else if (current_pos.puts_opponent_in_check(move)) {
             check_move = move;
         } else if (check_move == NULL_MOVE && current_pos[move.get_dst()] != EMPTY_SQUARE) {
             int capture_move_material_advantage = std::abs(

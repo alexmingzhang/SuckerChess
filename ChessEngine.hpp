@@ -5,8 +5,8 @@
 #include <random> // for std::mt19937
 #include <vector> // for std::vector
 
-#include "ChessMove.hpp"
 #include "ChessPosition.hpp"
+#include "src/ChessMove.hpp"
 
 
 class ChessPreference {

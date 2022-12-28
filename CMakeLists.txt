@@ -15,11 +15,11 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif ()
 
 add_executable(SuckerChess main.cpp
-        ChessPiece.hpp ChessPiece.cpp
-        ChessMove.cpp ChessMove.hpp
+        src/ChessPiece.hpp src/ChessPiece.cpp
+        src/ChessMove.cpp src/ChessMove.hpp
         ChessPosition.cpp ChessPosition.hpp
         ChessEngine.cpp ChessEngine.hpp
         ChessGame.cpp ChessGame.hpp
         ChessPlayer.cpp ChessPlayer.hpp
         ChessTournament.cpp ChessTournament.hpp
-        Utilities.cpp Utilities.hpp CastlingRights.cpp CastlingRights.hpp)
+        Utilities.cpp Utilities.hpp src/CastlingRights.cpp src/CastlingRights.hpp)

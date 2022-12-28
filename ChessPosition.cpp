@@ -80,7 +80,7 @@ std::string ChessPosition::get_move_name(
         copy.make_move(move);
         if (copy.checkmated()) {
             result << '#';
-        } else if (copy.in_check()) {
+        } else if (puts_opponent_in_check(move)) {
             result << '+';
         }
     }

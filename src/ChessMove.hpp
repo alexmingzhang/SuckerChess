@@ -6,6 +6,7 @@
 #include <cmath>     // for std::abs
 #include <compare>   // for operator<=>
 #include <cstdint>   // for std::uint16_t
+#include <numeric>   // for std::gcd
 #include <ostream>   // for std::ostream
 
 #include "ChessPiece.hpp"
@@ -92,8 +93,8 @@ public: // ======================================================== CONSTRUCTORS
         assert(source.in_bounds());
         assert(destination.in_bounds());
         assert(
-            promotion_type != PieceType::KING &&
-            promotion_type != PieceType::PAWN
+            (promotion_type != PieceType::KING) &&
+            (promotion_type != PieceType::PAWN)
         );
     }
 
@@ -116,8 +117,8 @@ public: // ======================================================== CONSTRUCTORS
         assert(source.in_bounds());
         assert(destination.in_bounds());
         assert(
-            promotion_type != PieceType::KING &&
-            promotion_type != PieceType::PAWN
+            (promotion_type != PieceType::KING) &&
+            (promotion_type != PieceType::PAWN)
         );
     }
 
@@ -129,13 +130,13 @@ public: // =========================================================== ACCESSORS
 
     [[nodiscard]] constexpr coord_t get_src_file() const noexcept {
         const auto result = static_cast<coord_t>(data >> 12);
-        assert(result >= 0 && result < NUM_FILES);
+        assert((result >= 0) && (result < NUM_FILES));
         return result;
     }
 
     [[nodiscard]] constexpr coord_t get_src_rank() const noexcept {
         const auto result = static_cast<coord_t>((data >> 9) & 7);
-        assert(result >= 0 && result < NUM_RANKS);
+        assert((result >= 0) && (result < NUM_RANKS));
         return result;
     }
 
@@ -145,13 +146,13 @@ public: // =========================================================== ACCESSORS
 
     [[nodiscard]] constexpr coord_t get_dst_file() const noexcept {
         const auto result = static_cast<coord_t>((data >> 6) & 7);
-        assert(result >= 0 && result < NUM_FILES);
+        assert((result >= 0) && (result < NUM_FILES));
         return result;
     }
 
     [[nodiscard]] constexpr coord_t get_dst_rank() const noexcept {
         const auto result = static_cast<coord_t>((data >> 3) & 7);
-        assert(result >= 0 && result < NUM_RANKS);
+        assert((result >= 0) && (result < NUM_RANKS));
         return result;
     }
 
@@ -163,8 +164,8 @@ public: // =========================================================== ACCESSORS
         using enum PieceType;
         const auto result = static_cast<PieceType>(data & 7);
         assert(
-            result == NONE || result == QUEEN || result == ROOK ||
-            result == BISHOP || result == KNIGHT
+            (result == NONE) || (result == QUEEN) || (result == ROOK) ||
+            (result == BISHOP) || (result == KNIGHT)
         );
         return result;
     }
@@ -212,17 +213,26 @@ public: // ======================================================= STATE TESTING
     }
 
     [[nodiscard]] constexpr bool affects(ChessSquare square) const noexcept {
-        return get_src() == square || get_dst() == square;
+        return (get_src() == square) || (get_dst() == square);
     }
 
+public: // ============================================================ GEOMETRY
+
     [[nodiscard]] constexpr bool is_orthogonal() const noexcept {
-        return get_src_file() == get_dst_file() ||
-               get_src_rank() == get_dst_rank();
+        return (get_src_file() == get_dst_file()) ||
+               (get_src_rank() == get_dst_rank());
     }
 
     [[nodiscard]] constexpr bool is_diagonal() const noexcept {
         return std::abs(get_src_file() - get_dst_file()) ==
                std::abs(get_src_rank() - get_dst_rank());
+    }
+
+    [[nodiscard]] constexpr ChessOffset direction() const noexcept {
+        const coord_t delta_file = get_dst_file() - get_src_file();
+        const coord_t delta_rank = get_dst_rank() - get_src_rank();
+        const coord_t gcd = std::gcd(delta_file, delta_rank);
+        return {delta_file / gcd, delta_rank / gcd};
     }
 
     [[nodiscard]] constexpr coord_t distance() const noexcept {
