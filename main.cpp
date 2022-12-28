@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cstddef>
+#include <iomanip>
 #include <iostream>
 #include <string>
 
@@ -9,11 +10,19 @@
 
 
 int main() {
+    // ChessGame game;
+    // game.run(nullptr, new Engine::CCCP(), true);
+    // std::cout << game.get_PGN() << std::endl;
+    // ;
+    // return 0;
+
     ChessPlayer *flm_player =
         new ChessPlayer("FLM", new Engine::FirstLegalMove());
     ChessPlayer *random_player =
         new ChessPlayer("Random", new Engine::Random());
-    ChessPlayer *slug_player = new ChessPlayer("Slug", new Engine::Slug());
+    ChessPlayer *lazy_player = new ChessPlayer("Lazy", new Engine::Lazy());
+    ChessPlayer *energetic_player =
+        new ChessPlayer("Energetic", new Engine::Lazy());
 
     ChessPlayer *cccp_player = new ChessPlayer("CCCP", new Engine::CCCP());
     ChessPlayer *reducer_player =
@@ -22,18 +31,15 @@ int main() {
     ChessTournament tourney("SuckerChess Tournament");
     tourney.add_player(flm_player);
     tourney.add_player(random_player);
-    tourney.add_player(slug_player);
+    tourney.add_player(lazy_player);
+    tourney.add_player(energetic_player);
     tourney.add_player(cccp_player);
     tourney.add_player(reducer_player);
 
-    tourney.run(100, true);
+    tourney.run(10000, false);
     tourney.sort_players_by_elo();
 
-    std::cout << "Tournament results: \n";
-    for (const ChessPlayer *p : tourney.get_players()) {
-        std::cout << p->get_name_with_elo(2) << ": " << p->get_num_wins() << '-'
-                  << p->get_num_draws() << '-' << p->get_num_losses()
-                  << std::endl;
-    }
+    tourney.print_info();
+
     return 0;
 }

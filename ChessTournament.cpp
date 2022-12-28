@@ -6,22 +6,12 @@
 #include "ChessTournament.hpp"
 
 #include <cstddef>  // for std::size_t
+#include <iomanip>  // for std::setw
 #include <iostream> // for std::cout, std::endl
 
 
-void ChessTournament::add_player(ChessPlayer *player) {
-    players.push_back(player);
-}
+const std::string &ChessTournament::get_name() const { return name; }
 
-void ChessTournament::sort_players_by_elo() {
-    std::sort(
-        players.begin(),
-        players.end(),
-        [](ChessPlayer *a, ChessPlayer *b) {
-            return a->get_elo() < b->get_elo();
-        }
-    );
-}
 
 const std::vector<ChessPlayer *> &ChessTournament::get_players() const {
     return players;
@@ -33,10 +23,30 @@ const std::vector<ChessGame> &ChessTournament::get_game_history() const {
 }
 
 
+void ChessTournament::add_player(ChessPlayer *player) {
+    players.push_back(player);
+}
+
+void ChessTournament::sort_players_by_elo() {
+    std::sort(
+        players.begin(),
+        players.end(),
+        [](ChessPlayer *a, ChessPlayer *b) {
+            return a->get_elo() > b->get_elo();
+        }
+    );
+}
+
 // Run every possible distinct matchup
-void ChessTournament::run(unsigned int num_rounds, bool verbose) {
-    for (unsigned int round = 0; round < num_rounds; ++round) {
-        if (verbose) { std::cout << "ROUND " << round << std::endl; }
+void ChessTournament::run(int num_rounds, bool verbose) {
+    while (num_rounds == -1 || this->current_round < num_rounds) {
+
+        if (current_round % 10 == 0) {
+            sort_players_by_elo();
+            print_info();
+        }
+
+        if (verbose) { std::cout << "ROUND " << current_round << std::endl; }
 
         for (std::size_t i = 0; i < players.size(); ++i) {
             ChessPlayer *p1 = players[i];
@@ -44,18 +54,29 @@ void ChessTournament::run(unsigned int num_rounds, bool verbose) {
             for (std::size_t j = i + 1; j < players.size(); ++j) {
                 ChessPlayer *p2 = players[j];
 
-                std::cout << current_game_index << ": ";
+                if (verbose) { std::cout << current_game_index << ": "; }
                 game_history.push_back(p1->versus(p2, verbose));
                 current_game_index++;
 
-                std::cout << current_game_index << ": ";
+                if (verbose) { std::cout << current_game_index << ": "; }
                 game_history.push_back(p2->versus(p1, verbose));
                 current_game_index++;
             }
         }
-    }
 
-    if (verbose) {
-        std::cout << "Total games played: " << current_game_index << std::endl;
+        current_round++;
+    }
+}
+
+void ChessTournament::print_info() const {
+    std::cout << name << " (round " << current_round << ", game "
+              << current_game_index << ") \n";
+
+    for (std::size_t i = 0; i < players.size(); ++i) {
+        const ChessPlayer *p = players[i];
+        std::cout << std::setw(2) << i + 1 << ". " << std::setw(20)
+                  << p->get_name_with_elo(2) << ": " << p->get_num_wins() << '-'
+                  << p->get_num_draws() << '-' << p->get_num_losses()
+                  << std::endl;
     }
 }

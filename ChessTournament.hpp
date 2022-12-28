@@ -11,29 +11,41 @@
 
 class ChessTournament {
 
-    std::string event_name;
+    std::string name;
     std::vector<ChessPlayer *> players;
     std::vector<ChessGame> game_history;
+    std::size_t current_round;
     std::size_t current_game_index;
-
 
 public:
 
-    explicit ChessTournament(const std::string &n)
-        : event_name(n)
+    explicit ChessTournament()
+        : name("SuckerChess Tournament")
         , players()
         , game_history()
+        , current_round(0)
         , current_game_index(0) {}
 
-    void add_player(ChessPlayer *);
+    explicit ChessTournament(const std::string &n)
+        : name(n)
+        , players()
+        , game_history()
+        , current_round(0)
+        , current_game_index(0) {}
 
-    void sort_players_by_elo();
+    const std::string &get_name() const;
 
     const std::vector<ChessPlayer *> &get_players() const;
 
     const std::vector<ChessGame> &get_game_history() const;
 
-    void run(unsigned int num_rounds, bool verbose);
+    void add_player(ChessPlayer *);
+
+    void sort_players_by_elo();
+
+    void run(int num_rounds, bool verbose);
+
+    void print_info() const;
 
 }; // class ChessTournament
 

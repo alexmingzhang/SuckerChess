@@ -67,6 +67,16 @@ public: // =========================================================== ACCESSORS
         return to_move;
     }
 
+    [[nodiscard]] constexpr ChessSquare
+    get_white_king_location() const noexcept {
+        return white_king_location;
+    }
+
+    [[nodiscard]] constexpr ChessSquare
+    get_black_king_location() const noexcept {
+        return black_king_location;
+    }
+
 public: // ====================================================== INDEX OPERATOR
 
     constexpr const ChessPiece &operator[](ChessSquare square) const noexcept {

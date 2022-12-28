@@ -46,6 +46,13 @@ struct ChessSquare final {
         return {file + offset.file_offset, rank + offset.rank_offset};
     }
 
+    [[nodiscord]] constexpr coord_t dist_to(const ChessSquare &other
+    ) const noexcept {
+        return std::max(
+            std::abs(this->file - other.file), std::abs(this->rank - other.rank)
+        );
+    }
+
 }; // struct ChessSquare
 
 

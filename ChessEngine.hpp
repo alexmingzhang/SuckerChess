@@ -61,19 +61,19 @@ public:
         const std::vector<ChessMove> &move_history
     ) override;
 
-}; // class RandomEngine
+}; // class Random
 
 
-// =======================================  SLUG (Picks moves w/ least distance)
+// =======================================  LAZY (Picks moves w/ least distance)
 
 
-class Slug : public ChessEngine {
+class Lazy : public ChessEngine {
 
     std::mt19937 rng;
 
 public:
 
-    Slug()
+    Lazy()
         : rng(properly_seeded_random_engine()) {}
 
     ChessMove pick_move(
@@ -83,19 +83,19 @@ public:
         const std::vector<ChessMove> &move_history
     ) override;
 
-}; // class RandomEngine
+}; // class Lazy
 
 
-// ====================================== CHECKMATE, CHECK, CAPTURE, PUSH (CCCP)
+// ===================================  ENERGETIC (Picks moves w/ most distance)
 
 
-class CCCP : public ChessEngine {
+class Energetic : public ChessEngine {
 
     std::mt19937 rng;
 
 public:
 
-    CCCP()
+    Energetic()
         : rng(properly_seeded_random_engine()) {}
 
     ChessMove pick_move(
@@ -104,7 +104,8 @@ public:
         const std::vector<ChessPosition> &pos_history,
         const std::vector<ChessMove> &move_history
     ) override;
-};
+
+}; // class Energetic
 
 
 // ================================================ REDUCER (Reduce enemy moves)
@@ -125,7 +126,28 @@ public:
         const std::vector<ChessPosition> &pos_history,
         const std::vector<ChessMove> &move_history
     ) override;
-};
+}; // class Reducer
+
+
+// ====================================== CHECKMATE, CHECK, CAPTURE, PUSH (CCCP)
+
+
+class CCCP : public ChessEngine {
+
+    std::mt19937 rng;
+
+public:
+
+    CCCP()
+        : rng(properly_seeded_random_engine()) {}
+
+    ChessMove pick_move(
+        const ChessPosition &current_pos,
+        const std::vector<ChessMove> &legal_moves,
+        const std::vector<ChessPosition> &pos_history,
+        const std::vector<ChessMove> &move_history
+    ) override;
+}; // class CCCP
 
 } // namespace Engine
 
