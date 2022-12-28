@@ -1,8 +1,7 @@
 #include "ChessGame.hpp"
 #include "Utilities.hpp"
 
-#include <algorithm> // for std::find, std::find_if
-#include <cctype>    // for std::isspace
+#include <algorithm> // for std::find
 #include <cstddef>   // for std::size_t
 #include <iostream>  // for std::cin, std::cout, std::endl
 #include <sstream>   // for std::istringstream, std::ostringstream
@@ -34,18 +33,6 @@ bool ChessGame::drawn() const {
         if (count >= 2) { return true; }
     }
     return false;
-}
-
-
-inline void trim(std::string &str) {
-    const auto first_char = std::find_if(str.begin(), str.end(), [](char ch) {
-        return !std::isspace(ch);
-    });
-    str.erase(str.begin(), first_char);
-    const auto last_char = std::find_if(str.rbegin(), str.rend(), [](char ch) {
-        return !std::isspace(ch);
-    });
-    str.erase(last_char.base(), str.end());
 }
 
 
@@ -99,32 +86,36 @@ PieceColor
 ChessGame::run(ChessEngine *white, ChessEngine *black, bool verbose) {
     while (true) {
 
-        print(verbose, current_pos);
+        println(verbose, current_pos);
 
         if (current_pos.checkmated()) {
             switch (current_pos.get_color_to_move()) {
                 case PieceColor::NONE: __builtin_unreachable();
                 case PieceColor::WHITE:
-                    print(verbose, "Black wins! Game over.");
+                    println(verbose, "Black wins! Game over.");
                     winner = PieceColor::BLACK;
                     return PieceColor::BLACK;
                 case PieceColor::BLACK:
-                    print(verbose, "White wins! Game over.");
+                    println(verbose, "White wins! Game over.");
                     winner = PieceColor::WHITE;
                     return PieceColor::WHITE;
             }
         }
 
         if (drawn()) {
-            print(verbose, "Draw! Game over.");
+            println(verbose, "Draw! Game over.");
             return PieceColor::NONE;
         }
 
         if (verbose) {
             switch (current_pos.get_color_to_move()) {
                 case PieceColor::NONE: __builtin_unreachable();
-                case PieceColor::WHITE: print(verbose, "White to move."); break;
-                case PieceColor::BLACK: print(verbose, "Black to move."); break;
+                case PieceColor::WHITE:
+                    println(verbose, "White to move.");
+                    break;
+                case PieceColor::BLACK:
+                    println(verbose, "Black to move.");
+                    break;
             }
         }
 
@@ -153,7 +144,7 @@ ChessGame::run(ChessEngine *white, ChessEngine *black, bool verbose) {
                     legal_moves.begin(), legal_moves.end(), chosen_move
                 ) != legal_moves.end()
             );
-            print(
+            println(
                 verbose,
                 "Chosen move: " +
                     current_pos.get_move_name(legal_moves, chosen_move)
@@ -206,7 +197,7 @@ std::string ChessGame::get_PGN() const {
     std::ostringstream PGN;
 
     PGN << "[Site \"https://github.com/alexmingzhang/SuckerChess/\"]\n";
-    PGN << "[Date \"" << get_YMD_date('.') << "\"]\n";
+    PGN << "[Date \"" << get_ymd_date('.') << "\"]\n";
     PGN << get_PGN_result();
     PGN << get_PGN_move_text();
 
@@ -223,7 +214,7 @@ std::string ChessGame::get_full_PGN(
 
     PGN << "[Event \"" << event_name << "\"]\n";
     PGN << "[Site \"https://github.com/alexmingzhang/SuckerChess/\"]\n";
-    PGN << "[Date \"" << get_YMD_date('.') << "\"]\n";
+    PGN << "[Date \"" << get_ymd_date('.') << "\"]\n";
     PGN << "[Round \"" << num_round << "\"]\n";
     PGN << "[White \"" << white_name << "\"]\n";
     PGN << "[Black \"" << black_name << "\"]\n";
