@@ -46,10 +46,9 @@ struct ChessSquare final {
         return {file + offset.file_offset, rank + offset.rank_offset};
     }
 
-    [[nodiscord]] constexpr coord_t dist_to(const ChessSquare &other
-    ) const noexcept {
+    constexpr coord_t distance(ChessSquare other) const noexcept {
         return std::max(
-            std::abs(this->file - other.file), std::abs(this->rank - other.rank)
+            std::abs(file - other.file), std::abs(rank - other.rank)
         );
     }
 
@@ -73,7 +72,7 @@ public: // ======================================================== CONSTRUCTORS
 
 #ifdef SUCKER_CHESS_USE_COMPRESSED_CHESS_MOVE
 
-    constexpr ChessMove(ChessSquare source, ChessSquare destination)
+    constexpr ChessMove(ChessSquare source, ChessSquare destination) noexcept
         : data(static_cast<std::uint16_t>(
               (source.file << 12) | (source.rank << 9) |
               (destination.file << 6) | (destination.rank << 3)
@@ -84,7 +83,7 @@ public: // ======================================================== CONSTRUCTORS
 
     constexpr ChessMove(
         ChessSquare source, ChessSquare destination, PieceType promotion_type
-    )
+    ) noexcept
         : data(static_cast<std::uint16_t>(
               (source.file << 12) | (source.rank << 9) |
               (destination.file << 6) | (destination.rank << 3) |
@@ -100,7 +99,7 @@ public: // ======================================================== CONSTRUCTORS
 
 #else
 
-    constexpr ChessMove(ChessSquare source, ChessSquare destination)
+    constexpr ChessMove(ChessSquare source, ChessSquare destination) noexcept
         : m_src(source)
         , m_dst(destination)
         , m_promotion_type(PieceType::NONE) {
@@ -110,7 +109,7 @@ public: // ======================================================== CONSTRUCTORS
 
     constexpr ChessMove(
         ChessSquare source, ChessSquare destination, PieceType promotion_type
-    )
+    ) noexcept
         : m_src(source)
         , m_dst(destination)
         , m_promotion_type(promotion_type) {
@@ -223,10 +222,7 @@ public: // ======================================================= STATE TESTING
     }
 
     [[nodiscard]] constexpr coord_t distance() const noexcept {
-        return std::max(
-            std::abs(get_src_file() - get_dst_file()),
-            std::abs(get_src_rank() - get_dst_rank())
-        );
+        return get_src().distance(get_dst());
     }
 
 }; // class ChessMove

@@ -1,12 +1,26 @@
 #include "Utilities.hpp"
 
-#include <algorithm>  // for std::generate
+#include <algorithm>  // for std::find_if, std::generate
+#include <cctype>     // for std::isspace
 #include <cstddef>    // for std::size_t
-#include <ctime>      // for std::time_t
+#include <ctime>      // for std::time, std::time_t, std::tm, std::localtime
 #include <functional> // for std::ref
 #include <iterator>   // for std::begin, std::end
 #include <random>     // for std::random_device, std::seed_seq
 #include <sstream>    // for std::ostringstream
+
+
+void trim(std::string &str) {
+    const auto first_char = std::find_if(str.begin(), str.end(), [](char ch) {
+        return !std::isspace(ch);
+    });
+    str.erase(str.begin(), first_char);
+    const auto last_char = std::find_if(str.rbegin(), str.rend(), [](char ch) {
+        return !std::isspace(ch);
+    });
+    str.erase(last_char.base(), str.end());
+}
+
 
 std::mt19937 properly_seeded_random_engine() {
     constexpr std::size_t SEED_SIZE =
@@ -30,7 +44,7 @@ std::mt19937 properly_seeded_random_engine() {
 }
 
 
-std::string get_YMD_date(char sep) {
+std::string get_ymd_date(char sep) {
     std::ostringstream date;
     std::time_t time = std::time(nullptr);
     std::tm *now = std::localtime(&time);
