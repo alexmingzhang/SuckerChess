@@ -7,7 +7,6 @@
 
 #include "ChessMove.hpp"
 #include "ChessPosition.hpp"
-#include "Utilities.hpp"
 
 
 class ChessPreference {
@@ -45,6 +44,42 @@ public:
 namespace Preference {
 
 
+class MateInOne : public ChessPreference {
+
+    std::vector<ChessMove> pick_preferred_moves(
+        const ChessPosition &current_pos,
+        const std::vector<ChessMove> &allowed_moves,
+        const std::vector<ChessPosition> &pos_history,
+        const std::vector<ChessMove> &move_history
+    ) override;
+
+}; // class MateInOne
+
+
+class Check : public ChessPreference {
+
+    std::vector<ChessMove> pick_preferred_moves(
+        const ChessPosition &current_pos,
+        const std::vector<ChessMove> &allowed_moves,
+        const std::vector<ChessPosition> &pos_history,
+        const std::vector<ChessMove> &move_history
+    ) override;
+
+}; // class Check
+
+
+class Capture : public ChessPreference {
+
+    std::vector<ChessMove> pick_preferred_moves(
+        const ChessPosition &current_pos,
+        const std::vector<ChessMove> &allowed_moves,
+        const std::vector<ChessPosition> &pos_history,
+        const std::vector<ChessMove> &move_history
+    ) override;
+
+}; // class Capture
+
+
 class Swarm : public ChessPreference {
 
     std::vector<ChessMove> pick_preferred_moves(
@@ -69,18 +104,6 @@ class Huddle : public ChessPreference {
 }; // class Huddle
 
 
-class MateInOne : public ChessPreference {
-
-    std::vector<ChessMove> pick_preferred_moves(
-        const ChessPosition &current_pos,
-        const std::vector<ChessMove> &allowed_moves,
-        const std::vector<ChessPosition> &pos_history,
-        const std::vector<ChessMove> &move_history
-    ) override;
-
-}; // class MateInOne
-
-
 } // namespace Preference
 
 
@@ -94,35 +117,21 @@ class Preference : public ChessEngine {
 
 public:
 
-    Preference()
-        : rng(properly_seeded_random_engine())
-        , preferences() {}
+    Preference();
 
-    void add_preference(std::unique_ptr<ChessPreference> &&pref) {
-        preferences.push_back(std::move(pref));
-    }
+    void add_preference(std::unique_ptr<ChessPreference> &&pref);
 
     ChessMove pick_move(
         const ChessPosition &current_pos,
         const std::vector<ChessMove> &legal_moves,
         const std::vector<ChessPosition> &pos_history,
         const std::vector<ChessMove> &move_history
-    ) override {
-        std::vector<ChessMove> allowed_moves = legal_moves;
-        for (const std::unique_ptr<ChessPreference> &pref : preferences) {
-            if (allowed_moves.size() <= 1) { break; }
-            allowed_moves = pref->pick_preferred_moves(
-                current_pos, allowed_moves, pos_history, move_history
-            );
-        }
-        assert(allowed_moves.size() > 0);
-        return random_choice(rng, allowed_moves);
-    }
+    ) override;
 
 }; // class Preference
 
 
-class FirstLegalMove : public ChessEngine { // ================ FIRST LEGAL MOVE
+class FirstLegalMove : public ChessEngine {
 
 public:
 
@@ -136,14 +145,13 @@ public:
 }; // class FirstLegalMove
 
 
-class Random : public ChessEngine { // ============================ RANDOM MOVES
+class Random : public ChessEngine {
 
     std::mt19937 rng;
 
 public:
 
-    Random()
-        : rng(properly_seeded_random_engine()) {}
+    Random();
 
     ChessMove pick_move(
         const ChessPosition &current_pos,
@@ -155,14 +163,13 @@ public:
 }; // class Random
 
 
-class Lazy : public ChessEngine { // ====== LAZY (Picks moves w/ least distance)
+class Lazy : public ChessEngine {
 
     std::mt19937 rng;
 
 public:
 
-    Lazy()
-        : rng(properly_seeded_random_engine()) {}
+    Lazy();
 
     ChessMove pick_move(
         const ChessPosition &current_pos,
@@ -174,17 +181,13 @@ public:
 }; // class Lazy
 
 
-// ===================================  ENERGETIC (Picks moves w/ most distance)
-
-
 class Energetic : public ChessEngine {
 
     std::mt19937 rng;
 
 public:
 
-    Energetic()
-        : rng(properly_seeded_random_engine()) {}
+    Energetic();
 
     ChessMove pick_move(
         const ChessPosition &current_pos,
@@ -196,14 +199,13 @@ public:
 }; // class Energetic
 
 
-class Reducer : public ChessEngine { // =========== REDUCER (Reduce enemy moves)
+class Reducer : public ChessEngine {
 
     std::mt19937 rng;
 
 public:
 
-    Reducer()
-        : rng(properly_seeded_random_engine()) {}
+    Reducer();
 
     ChessMove pick_move(
         const ChessPosition &current_pos,
@@ -211,10 +213,8 @@ public:
         const std::vector<ChessPosition> &pos_history,
         const std::vector<ChessMove> &move_history
     ) override;
+
 }; // class Reducer
-
-
-// ====================================== CHECKMATE, CHECK, CAPTURE, PUSH (CCCP)
 
 
 class CCCP : public ChessEngine {
@@ -223,8 +223,7 @@ class CCCP : public ChessEngine {
 
 public:
 
-    CCCP()
-        : rng(properly_seeded_random_engine()) {}
+    CCCP();
 
     ChessMove pick_move(
         const ChessPosition &current_pos,
@@ -232,6 +231,7 @@ public:
         const std::vector<ChessPosition> &pos_history,
         const std::vector<ChessMove> &move_history
     ) override;
+
 }; // class CCCP
 
 

@@ -45,7 +45,7 @@ void ChessTournament::run(int num_rounds, int print_frequency) {
            this->current_round < static_cast<std::size_t>(num_rounds)) {
 
         if (!disable_printing && current_round % print_frequency == 0) {
-            // sort_players_by_elo();
+            sort_players_by_elo();
             print_info();
         }
 

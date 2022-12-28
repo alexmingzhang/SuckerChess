@@ -8,20 +8,12 @@
 #include "ChessGame.hpp"
 #include "ChessTournament.hpp"
 
-ChessGame find_cool_game() {
-    PieceColor winner;
-    while (1) {
-        ChessGame game;
-        if (game.run(new Engine::CCCP(), new Engine::FirstLegalMove(), false) ==
-            PieceColor::BLACK) {
-            return game;
-        }
-    }
-}
-
 int main() {
-    ChessPlayer *flm_player =
-        new ChessPlayer("FLM", new Engine::FirstLegalMove());
+    //    ChessGame game;
+    //    game.run(nullptr, pref_engine, true);
+    //    std::cout << game.get_PGN() << std::endl;
+    //    return 0;
+    auto flm_player = new ChessPlayer("FLM", new Engine::FirstLegalMove());
     ChessPlayer *random_player =
         new ChessPlayer("Random", new Engine::Random());
     ChessPlayer *lazy_player = new ChessPlayer("Lazy", new Engine::Lazy());
@@ -32,6 +24,13 @@ int main() {
     ChessPlayer *reducer_player =
         new ChessPlayer("Reducer", new Engine::Reducer());
 
+    Engine::Preference *pref_engine = new Engine::Preference();
+    pref_engine->add_preference(std::make_unique<Preference::MateInOne>());
+    pref_engine->add_preference(std::make_unique<Preference::Swarm>());
+
+    Engine::Preference *pref_engine_2 = new Engine::Preference();
+    pref_engine_2->add_preference(std::make_unique<Preference::MateInOne>());
+
     ChessTournament tourney("SuckerChess Tournament");
     tourney.add_player(flm_player);
     tourney.add_player(random_player);
@@ -39,6 +38,8 @@ int main() {
     tourney.add_player(energetic_player);
     tourney.add_player(cccp_player);
     tourney.add_player(reducer_player);
+    tourney.add_player(new ChessPlayer("Pref", pref_engine));
+    tourney.add_player(new ChessPlayer("Pref2", pref_engine_2));
 
     tourney.run(100, 10);
     tourney.sort_players_by_elo();
