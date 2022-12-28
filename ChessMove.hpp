@@ -46,6 +46,12 @@ struct ChessSquare final {
         return {file + offset.file_offset, rank + offset.rank_offset};
     }
 
+    constexpr coord_t distance(ChessSquare other) const noexcept {
+        return std::max(
+            std::abs(file - other.file), std::abs(rank - other.rank)
+        );
+    }
+
 }; // struct ChessSquare
 
 
@@ -216,10 +222,7 @@ public: // ======================================================= STATE TESTING
     }
 
     [[nodiscard]] constexpr coord_t distance() const noexcept {
-        return std::max(
-            std::abs(get_src_file() - get_dst_file()),
-            std::abs(get_src_rank() - get_dst_rank())
-        );
+        return get_src().distance(get_dst());
     }
 
 }; // class ChessMove
