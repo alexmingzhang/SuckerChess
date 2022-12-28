@@ -67,6 +67,23 @@ public: // =========================================================== ACCESSORS
         return to_move;
     }
 
+    [[nodiscard]] constexpr ChessSquare get_king_location() const noexcept {
+        switch (to_move) {
+            case PieceColor::NONE: __builtin_unreachable();
+            case PieceColor::WHITE: return white_king_location;
+            case PieceColor::BLACK: return black_king_location;
+        }
+    }
+
+    [[nodiscard]] constexpr ChessSquare
+    get_enemy_king_location() const noexcept {
+        switch (to_move) {
+            case PieceColor::NONE: __builtin_unreachable();
+            case PieceColor::WHITE: return black_king_location;
+            case PieceColor::BLACK: return white_king_location;
+        }
+    }
+
 public: // ====================================================== INDEX OPERATOR
 
     constexpr const ChessPiece &operator[](ChessSquare square) const noexcept {
