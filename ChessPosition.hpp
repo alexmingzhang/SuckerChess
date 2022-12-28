@@ -8,6 +8,7 @@
 #include <string>  // for std::string
 #include <vector>  // for std::vector
 
+#include "CastlingRights.hpp"
 #include "ChessMove.hpp"
 #include "ChessPiece.hpp"
 
@@ -19,10 +20,7 @@ class ChessPosition {
     ChessSquare black_king_location;
     PieceColor to_move;
     coord_t en_passant_file;
-    bool white_can_short_castle;
-    bool white_can_long_castle;
-    bool black_can_short_castle;
-    bool black_can_long_castle;
+    CastlingRights castling_rights;
 
 public: // ======================================================== CONSTRUCTORS
 
@@ -45,8 +43,7 @@ public: // ======================================================== CONSTRUCTORS
                 EMPTY_SQUARE, EMPTY_SQUARE, BLACK_PAWN, BLACK_ROOK}}}
         , white_king_location({4, 0}), black_king_location({4, NUM_RANKS - 1})
         , to_move(PieceColor::WHITE), en_passant_file(NUM_FILES)
-        , white_can_short_castle(true), white_can_long_castle(true)
-        , black_can_short_castle(true), black_can_long_castle(true) {}
+        , castling_rights(true, true, true, true) {}
 
     explicit ChessPosition(const std::string &fen)
         : board()
@@ -54,10 +51,7 @@ public: // ======================================================== CONSTRUCTORS
         , black_king_location()
         , to_move(PieceColor::NONE)
         , en_passant_file(NUM_FILES)
-        , white_can_short_castle(false)
-        , white_can_long_castle(false)
-        , black_can_short_castle(false)
-        , black_can_long_castle(false) {
+        , castling_rights(false, false, false, false) {
         load_fen(fen);
     }
 
@@ -101,8 +95,10 @@ public: // =========================================================== ACCESSORS
     ) const noexcept {
         switch (color) {
             case PieceColor::NONE: __builtin_unreachable();
-            case PieceColor::WHITE: return white_can_short_castle;
-            case PieceColor::BLACK: return black_can_short_castle;
+            case PieceColor::WHITE:
+                return castling_rights.white_can_short_castle();
+            case PieceColor::BLACK:
+                return castling_rights.black_can_short_castle();
         }
         __builtin_unreachable();
     }
@@ -111,8 +107,10 @@ public: // =========================================================== ACCESSORS
     ) const noexcept {
         switch (color) {
             case PieceColor::NONE: __builtin_unreachable();
-            case PieceColor::WHITE: return white_can_long_castle;
-            case PieceColor::BLACK: return black_can_long_castle;
+            case PieceColor::WHITE:
+                return castling_rights.white_can_long_castle();
+            case PieceColor::BLACK:
+                return castling_rights.black_can_long_castle();
         }
         __builtin_unreachable();
     }
@@ -402,21 +400,25 @@ public: // ====================================================== MOVE EXECUTION
 
         // update castling rights
         if (piece == WHITE_KING) {
-            white_can_short_castle = false;
-            white_can_long_castle = false;
+            castling_rights.disallow_white_short_castle();
+            castling_rights.disallow_white_long_castle();
         }
         if (move.affects({NUM_FILES - 1, 0})) {
-            white_can_short_castle = false;
+            castling_rights.disallow_white_short_castle();
         }
-        if (move.affects({0, 0})) { white_can_long_castle = false; }
+        if (move.affects({0, 0})) {
+            castling_rights.disallow_white_long_castle();
+        }
         if (piece == BLACK_KING) {
-            black_can_short_castle = false;
-            black_can_long_castle = false;
+            castling_rights.disallow_black_short_castle();
+            castling_rights.disallow_black_long_castle();
         }
         if (move.affects({NUM_FILES - 1, NUM_RANKS - 1})) {
-            black_can_short_castle = false;
+            castling_rights.disallow_black_short_castle();
         }
-        if (move.affects({0, NUM_RANKS - 1})) { black_can_long_castle = false; }
+        if (move.affects({0, NUM_RANKS - 1})) {
+            castling_rights.disallow_black_long_castle();
+        }
 
         // perform move
         if (is_en_passant(move)) {
@@ -647,7 +649,7 @@ public: // ===================================================== MOVE GENERATION
     constexpr void push_castling_moves(std::vector<ChessMove> &moves
     ) const noexcept {
         if (to_move == PieceColor::WHITE) {
-            if (white_can_short_castle) {
+            if (castling_rights.white_can_short_castle()) {
                 assert(board[4][0] == WHITE_KING);
                 assert(board[7][0] == WHITE_ROOK);
                 if (board[5][0] == EMPTY_SQUARE &&
@@ -656,7 +658,7 @@ public: // ===================================================== MOVE GENERATION
                     moves.emplace_back(ChessSquare{4, 0}, ChessSquare{6, 0});
                 }
             }
-            if (white_can_long_castle) {
+            if (castling_rights.white_can_long_castle()) {
                 assert(board[0][0] == WHITE_ROOK);
                 assert(board[4][0] == WHITE_KING);
                 if (board[1][0] == EMPTY_SQUARE &&
@@ -667,7 +669,7 @@ public: // ===================================================== MOVE GENERATION
                 }
             }
         } else if (to_move == PieceColor::BLACK) {
-            if (black_can_short_castle) {
+            if (castling_rights.black_can_short_castle()) {
                 assert(board[4][7] == BLACK_KING);
                 assert(board[7][7] == BLACK_ROOK);
                 if (board[5][7] == EMPTY_SQUARE &&
@@ -676,7 +678,7 @@ public: // ===================================================== MOVE GENERATION
                     moves.emplace_back(ChessSquare{4, 7}, ChessSquare{6, 7});
                 }
             }
-            if (black_can_long_castle) {
+            if (castling_rights.black_can_long_castle()) {
                 assert(board[0][7] == BLACK_ROOK);
                 assert(board[4][7] == BLACK_KING);
                 if (board[1][7] == EMPTY_SQUARE &&

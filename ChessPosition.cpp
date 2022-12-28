@@ -171,22 +171,9 @@ void ChessPosition::load_fen(const std::string &fen_string) {
     }
 
     { // Determine castling rights
-        std::string castling_rights;
-        fen >> castling_rights;
-        white_can_short_castle = false;
-        white_can_long_castle = false;
-        black_can_short_castle = false;
-        black_can_long_castle = false;
-
-        for (const char c : castling_rights) {
-            switch (c) {
-                case 'K': white_can_short_castle = true; break;
-                case 'Q': white_can_long_castle = true; break;
-                case 'k': black_can_short_castle = true; break;
-                case 'q': black_can_long_castle = true; break;
-                default: break;
-            }
-        }
+        std::string castling_rights_str;
+        fen >> castling_rights_str;
+        castling_rights = CastlingRights(castling_rights_str);
     }
 
     { // Determine en passant square
@@ -252,42 +239,15 @@ std::string ChessPosition::get_fen() const {
                     case PieceType::NONE: space_counter++; break;
                 }
             }
-
             append_spaces();
-
             if (rank != 0) { fen << '/'; }
         }
     }
     fen << ' ';
 
-    // Get active color
     fen << (to_move == PieceColor::WHITE ? 'w' : 'b') << ' ';
+    fen << castling_rights << ' ';
 
-    // Get castling rights
-    {
-        bool at_least_one_castle_right = false;
-
-        if (white_can_short_castle) {
-            fen << 'K';
-            at_least_one_castle_right = true;
-        }
-        if (white_can_long_castle) {
-            fen << 'Q';
-            at_least_one_castle_right = true;
-        }
-        if (black_can_short_castle) {
-            fen << 'k';
-            at_least_one_castle_right = true;
-        }
-        if (black_can_long_castle) {
-            fen << 'q';
-            at_least_one_castle_right = true;
-        }
-
-        if (at_least_one_castle_right) { fen << ' '; }
-    }
-
-    // Get en passant square
     if (en_passant_square().in_bounds()) {
         fen << en_passant_square();
     } else {

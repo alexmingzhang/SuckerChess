@@ -5,7 +5,7 @@ CLANG_WARNING_FLAGS="\
 -Wno-poison-system-directories -Wno-weak-vtables -Wno-padded -Wno-conditional-uninitialized"
 
 SOURCES="\
-ChessPiece.cpp ChessMove.cpp ChessPosition.cpp \
+ChessPiece.cpp ChessMove.cpp CastlingRights.cpp ChessPosition.cpp \
 Utilities.cpp ChessEngine.cpp ChessGame.cpp \
 ChessPlayer.cpp ChessTournament.cpp main.cpp"
 
