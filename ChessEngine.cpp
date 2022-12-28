@@ -142,7 +142,7 @@ ChessMove CCCP::pick_move(
                     capture_move_material_advantage;
                 best_capture_move = move;
             }
-        } else if (best_capture_move == NULL_MOVE && move.get_dst().dist_to(enemy_king_square) < move.get_src().dist_to(enemy_king_square)) {
+        } else if (best_capture_move == NULL_MOVE && move.get_dst().distance(enemy_king_square) < move.get_src().distance(enemy_king_square)) {
             push_moves.push_back(move);
         }
     }
