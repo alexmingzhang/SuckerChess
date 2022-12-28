@@ -14,7 +14,7 @@ std::string ChessPosition::get_move_name(
     const ChessPiece piece = (*this)[move.get_src()];
     std::ostringstream result;
 
-    if (piece.get_type() == PieceType::KING && move.distance() == 2) {
+    if (is_castle(move)) {
         if (move.get_dst_file() == 6) {
             result << "O-O";
         } else if (move.get_dst_file() == 2) {
@@ -123,7 +123,6 @@ void ChessPosition::load_fen(const std::string &fen_string) {
                 for (coord_t j = 0; j < c - '0'; ++j) {
                     (*this)(file + j, rank) = EMPTY_SQUARE;
                 }
-
                 file += c - '0';
             } else if (c == '/') {
                 file = 0;

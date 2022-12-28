@@ -83,6 +83,7 @@ public: // =========================================================== ACCESSORS
             case PieceColor::WHITE: return white_king_location;
             case PieceColor::BLACK: return black_king_location;
         }
+        __builtin_unreachable();
     }
 
     [[nodiscard]] constexpr ChessSquare
@@ -92,6 +93,7 @@ public: // =========================================================== ACCESSORS
             case PieceColor::WHITE: return black_king_location;
             case PieceColor::BLACK: return white_king_location;
         }
+        __builtin_unreachable();
     }
 
 public: // ====================================================== INDEX OPERATOR
@@ -735,9 +737,9 @@ public: // ================================================================ MISC
 
     void load_fen(const std::string &);
 
-    std::string get_fen() const;
+    [[nodiscard]] std::string get_fen() const;
 
-    int get_material_advantage() const;
+    [[nodiscard]] int get_material_advantage() const;
 
 }; // class ChessPosition
 

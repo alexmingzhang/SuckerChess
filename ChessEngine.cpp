@@ -5,6 +5,86 @@
 #include <limits>  // for std::numeric_limits
 #include <random>  // for std::uniform_int_distribution
 
+
+namespace Preference {
+
+
+std::vector<ChessMove> Swarm::pick_preferred_moves(
+    const ChessPosition &current_pos,
+    const std::vector<ChessMove> &allowed_moves,
+    [[maybe_unused]] const std::vector<ChessPosition> &pos_history,
+    [[maybe_unused]] const std::vector<ChessMove> &move_history
+) {
+    const ChessSquare enemy_king_location =
+        current_pos.get_enemy_king_location();
+    std::vector<ChessMove> result;
+    coord_t best = std::numeric_limits<coord_t>::max();
+    for (ChessMove move : allowed_moves) {
+        const coord_t score = enemy_king_location.distance(move.get_src()) -
+                              enemy_king_location.distance(move.get_dst());
+        if (score < best) {
+            result.clear();
+            result.push_back(move);
+            best = score;
+        } else if (score == best) {
+            result.push_back(move);
+        }
+    }
+    return result;
+}
+
+
+std::vector<ChessMove> Huddle::pick_preferred_moves(
+    const ChessPosition &current_pos,
+    const std::vector<ChessMove> &allowed_moves,
+    [[maybe_unused]] const std::vector<ChessPosition> &pos_history,
+    [[maybe_unused]] const std::vector<ChessMove> &move_history
+) {
+    const ChessSquare king_location = current_pos.get_king_location();
+    std::vector<ChessMove> result;
+    coord_t best = std::numeric_limits<coord_t>::max();
+    for (ChessMove move : allowed_moves) {
+        const coord_t score = king_location.distance(move.get_src()) -
+                              king_location.distance(move.get_dst());
+        if (score < best) {
+            result.clear();
+            result.push_back(move);
+            best = score;
+        } else if (score == best) {
+            result.push_back(move);
+        }
+    }
+    return result;
+}
+
+
+std::vector<ChessMove> MateInOne::pick_preferred_moves(
+    const ChessPosition &current_pos,
+    const std::vector<ChessMove> &allowed_moves,
+    [[maybe_unused]] const std::vector<ChessPosition> &pos_history,
+    [[maybe_unused]] const std::vector<ChessMove> &move_history
+) {
+    std::vector<ChessMove> result;
+    bool found_mate = false;
+    for (ChessMove move : allowed_moves) {
+        ChessPosition copy = current_pos;
+        copy.make_move(move);
+        const bool score = copy.checkmated();
+        if (score && !found_mate) {
+            result.clear();
+            result.push_back(move);
+            found_mate = true;
+        } else if (score == found_mate) {
+            result.push_back(move);
+        }
+    }
+    return result;
+}
+
+
+} // namespace Preference
+
+
 namespace Engine {
 
 
@@ -15,8 +95,7 @@ ChessMove FirstLegalMove::
 
 ChessMove Random::
     pick_move(const ChessPosition &, const std::vector<ChessMove> &legal_moves, const std::vector<ChessPosition> &, const std::vector<ChessMove> &) {
-    std::uniform_int_distribution<std::size_t> dist(0, legal_moves.size() - 1);
-    return legal_moves[dist(rng)];
+    return random_choice(rng, legal_moves);
 }
 
 ChessMove Lazy::
@@ -65,13 +144,8 @@ ChessMove Energetic::
     return longest_moves[dist(rng)];
 }
 
-ChessMove Reducer::pick_move(
-    const ChessPosition &current_pos,
-    const std::vector<ChessMove> &legal_moves,
-    const std::vector<ChessPosition> &,
-    const std::vector<ChessMove> &
-
-) {
+ChessMove Reducer::
+    pick_move(const ChessPosition &current_pos, const std::vector<ChessMove> &legal_moves, const std::vector<ChessPosition> &, const std::vector<ChessMove> &) {
     std::vector<ChessMove> best_moves;
     int best_move_score = std::numeric_limits<int>::max();
 

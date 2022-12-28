@@ -39,7 +39,8 @@ void ChessTournament::sort_players_by_elo() {
 
 // Run every possible distinct matchup
 void ChessTournament::run(int num_rounds, bool verbose) {
-    while (num_rounds == -1 || this->current_round < num_rounds) {
+    while (num_rounds == -1 ||
+           current_round < static_cast<std::size_t>(num_rounds)) {
 
         if (current_round % 10 == 0) {
             sort_players_by_elo();

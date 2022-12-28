@@ -26,18 +26,18 @@ public:
         , current_round(0)
         , current_game_index(0) {}
 
-    explicit ChessTournament(const std::string &n)
-        : name(n)
+    explicit ChessTournament(std::string n)
+        : name(std::move(n))
         , players()
         , game_history()
         , current_round(0)
         , current_game_index(0) {}
 
-    const std::string &get_name() const;
+    [[nodiscard]] const std::string &get_name() const;
 
-    const std::vector<ChessPlayer *> &get_players() const;
+    [[nodiscard]] const std::vector<ChessPlayer *> &get_players() const;
 
-    const std::vector<ChessGame> &get_game_history() const;
+    [[nodiscard]] const std::vector<ChessGame> &get_game_history() const;
 
     void add_player(ChessPlayer *);
 
