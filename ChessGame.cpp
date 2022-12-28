@@ -11,7 +11,7 @@
 void ChessGame::make_move(const ChessMove &move) {
     pos_history.push_back(current_pos);
     move_history.push_back(move);
-    if (current_pos.is_valid_cap(move.get_dst()) ||
+    if (current_pos.is_capture(move) ||
         current_pos[move.get_src()].get_type() == PieceType::PAWN) {
         half_move_clock = 0;
     } else {
@@ -93,11 +93,11 @@ ChessGame::run(ChessEngine *white, ChessEngine *black, bool verbose) {
                 case PieceColor::NONE: __builtin_unreachable();
                 case PieceColor::WHITE:
                     println(verbose, "Black wins! Game over.");
-                    winner = PieceColor::BLACK;
+                    current_status = GameStatus::BLACK_WON_BY_CHECKMATE;
                     return PieceColor::BLACK;
                 case PieceColor::BLACK:
                     println(verbose, "White wins! Game over.");
-                    winner = PieceColor::WHITE;
+                    current_status = GameStatus::WHITE_WON_BY_CHECKMATE;
                     return PieceColor::WHITE;
             }
         }
@@ -157,20 +157,15 @@ ChessGame::run(ChessEngine *white, ChessEngine *black, bool verbose) {
 std::string ChessGame::get_PGN_result() const {
     std::ostringstream result;
     result << "[Result \"";
-
-    if (drawn()) {
-        result << "1/2-1/2";
-    } else if (winner == PieceColor::WHITE) {
-        result << "1-0";
-    } else if (winner == PieceColor::BLACK) {
-        result << "0-1";
-    } else {
-        result << "*";
+    switch (current_status) {
+        case GameStatus::IN_PROGRESS: result << "*"; break;
+        case GameStatus::WHITE_WON_BY_CHECKMATE: result << "1-0"; break;
+        case GameStatus::BLACK_WON_BY_CHECKMATE: result << "0-1"; break;
+        case GameStatus::DRAWN_BY_STALEMATE: result << "1/2-1/2"; break;
+        case GameStatus::DRAWN_BY_REPETITION: result << "1/2-1/2"; break;
+        case GameStatus::DRAWN_BY_50_MOVE_RULE: result << "1/2-1/2"; break;
     }
-
     result << "\"]\n";
-
-
     return result.str();
 }
 

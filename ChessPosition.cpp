@@ -6,14 +6,11 @@
 
 
 std::string ChessPosition::get_move_name(
-    const std::vector<ChessMove> &legal_moves, ChessMove move
+    const std::vector<ChessMove> &legal_moves, ChessMove move, bool suffix
 ) const {
-
     assert(is_valid(move));
-
     const ChessPiece piece = (*this)[move.get_src()];
     std::ostringstream result;
-
     if (is_castle(move)) {
         if (move.get_dst_file() == 6) {
             result << "O-O";
@@ -66,7 +63,6 @@ std::string ChessPosition::get_move_name(
         if (is_capture(move)) { result << 'x'; }
         result << move.get_dst();
     }
-
     if (move.get_promotion_type() != PieceType::NONE) {
         result << '=';
         switch (move.get_promotion_type()) {
@@ -79,13 +75,14 @@ std::string ChessPosition::get_move_name(
             case PieceType::PAWN: __builtin_unreachable();
         }
     }
-
-    ChessPosition copy = *this;
-    copy.make_move(move);
-    if (copy.checkmated()) {
-        result << '#';
-    } else if (copy.in_check()) {
-        result << '+';
+    if (suffix) {
+        ChessPosition copy = *this;
+        copy.make_move(move);
+        if (copy.checkmated()) {
+            result << '#';
+        } else if (copy.in_check()) {
+            result << '+';
+        }
     }
     return result.str();
 }
@@ -105,6 +102,13 @@ std::ostream &operator<<(std::ostream &os, const ChessPosition &pos) {
     os << "  └───┴───┴───┴───┴───┴───┴───┴───┘\n";
     return os;
 }
+
+
+// static constexpr std::array<char, 20> FEN_BOARD_CHARACTERS = {
+//     'K', 'Q', 'R', 'B', 'N', 'P',           // white pieces
+//     'k', 'q', 'r', 'b', 'n', 'p',           // black pieces
+//     '1', '2', '3', '4', '5', '6', '7', '8', // empty squares
+// };
 
 
 void ChessPosition::load_fen(const std::string &fen_string) {

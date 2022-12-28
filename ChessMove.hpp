@@ -207,6 +207,10 @@ public: // ========================================================== COMPARISON
 
 public: // ======================================================= STATE TESTING
 
+    [[nodiscard]] constexpr bool in_bounds() const noexcept {
+        return get_src().in_bounds() && get_dst().in_bounds();
+    }
+
     [[nodiscard]] constexpr bool affects(ChessSquare square) const noexcept {
         return get_src() == square || get_dst() == square;
     }

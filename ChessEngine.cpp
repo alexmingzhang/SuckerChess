@@ -56,7 +56,7 @@ std::vector<ChessMove> Swarm::pick_preferred_moves(
     [[maybe_unused]] const std::vector<ChessMove> &move_history
 ) {
     const ChessSquare enemy_king_location =
-        current_pos.get_enemy_king_location();
+        current_pos.get_enemy_king_location(current_pos.get_color_to_move());
     return minimal_elements(allowed_moves, [&](ChessMove move) {
         return enemy_king_location.distance(move.get_dst()) -
                enemy_king_location.distance(move.get_src());
@@ -70,7 +70,8 @@ std::vector<ChessMove> Huddle::pick_preferred_moves(
     [[maybe_unused]] const std::vector<ChessPosition> &pos_history,
     [[maybe_unused]] const std::vector<ChessMove> &move_history
 ) {
-    const ChessSquare king_location = current_pos.get_king_location();
+    const ChessSquare king_location =
+        current_pos.get_king_location(current_pos.get_color_to_move());
     return minimal_elements(allowed_moves, [&](ChessMove move) {
         return king_location.distance(move.get_dst()) -
                king_location.distance(move.get_src());

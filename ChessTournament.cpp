@@ -38,13 +38,14 @@ void ChessTournament::sort_players_by_elo() {
 
 // Run every possible distinct matchup
 void ChessTournament::run(int num_rounds, int print_frequency) {
-    bool disable_printing = print_frequency == -1;
-    bool verbose = print_frequency == 0;
+    bool disable_printing = (print_frequency == -1);
+    bool verbose = (print_frequency == 0);
 
     while (num_rounds == -1 ||
            this->current_round < static_cast<std::size_t>(num_rounds)) {
 
-        if (!disable_printing && current_round % print_frequency == 0) {
+        if (!disable_printing &&
+            current_round % static_cast<std::size_t>(print_frequency) == 0) {
             sort_players_by_elo();
             print_info();
         }
