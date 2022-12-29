@@ -49,8 +49,8 @@ ChessGame ChessPlayer::versus(ChessPlayer &black, bool verbose) {
             break;
         case PieceColor::BLACK:
             if (verbose) { std::cout << black.name << " won!\n"; }
-            ++white.num_wins_as_white;
-            ++black.num_losses_as_black;
+            ++white.num_losses_as_white;
+            ++black.num_wins_as_black;
             white.elo += ELO_K_FACTOR * (0.0 - white_expected_score);
             black.elo += ELO_K_FACTOR * (1.0 - black_expected_score);
             break;
