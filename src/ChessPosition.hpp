@@ -6,10 +6,10 @@
 #include <string>  // for std::string
 #include <vector>  // for std::vector
 
-#include "src/CastlingRights.hpp"
-#include "src/ChessBoard.hpp"
-#include "src/ChessMove.hpp"
-#include "src/ChessPiece.hpp"
+#include "CastlingRights.hpp"
+#include "ChessBoard.hpp"
+#include "ChessMove.hpp"
+#include "ChessPiece.hpp"
 
 
 class ChessPosition {

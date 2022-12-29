@@ -6,9 +6,9 @@
 #include <vector>  // for std::vector
 
 #include "ChessEngine.hpp"
+#include "ChessMove.hpp"
+#include "ChessPiece.hpp"
 #include "ChessPosition.hpp"
-#include "src/ChessMove.hpp"
-#include "src/ChessPiece.hpp"
 
 
 enum class GameStatus : std::uint8_t {

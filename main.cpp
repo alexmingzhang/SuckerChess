@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include "ChessPosition.hpp"
-#include "Utilities.hpp"
+#include "src/ChessPosition.hpp"
+#include "src/Utilities.hpp"
 
 
 static void self_test() {

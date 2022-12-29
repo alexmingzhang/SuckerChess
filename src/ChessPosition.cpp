@@ -1,8 +1,8 @@
 #include "ChessPosition.hpp"
 
 #include <algorithm> // for std::sort
-#include <iostream>  // for std::cout, std::endl
 #include <sstream>   // for std::istringstream, std::ostringstream
+#include <stdexcept> // for std::invalid_argument
 
 
 bool ChessPosition::check_consistency() const noexcept {

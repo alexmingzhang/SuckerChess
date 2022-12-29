@@ -18,9 +18,9 @@ endif ()
 add_executable(SuckerChess main.cpp
         src/ChessPiece.hpp src/ChessPiece.cpp
         src/ChessMove.cpp src/ChessMove.hpp
-        ChessPosition.cpp ChessPosition.hpp
-        ChessEngine.cpp ChessEngine.hpp
-        ChessGame.cpp ChessGame.hpp
-        ChessPlayer.cpp ChessPlayer.hpp
-        ChessTournament.cpp ChessTournament.hpp
-        Utilities.cpp Utilities.hpp src/CastlingRights.cpp src/CastlingRights.hpp src/ChessBoard.cpp src/ChessBoard.hpp)
+        src/ChessPosition.cpp src/ChessPosition.hpp
+        src/ChessEngine.cpp src/ChessEngine.hpp
+        src/ChessGame.cpp src/ChessGame.hpp
+        src/ChessPlayer.cpp src/ChessPlayer.hpp
+        src/ChessTournament.cpp src/ChessTournament.hpp
+        src/Utilities.cpp src/Utilities.hpp src/CastlingRights.cpp src/CastlingRights.hpp src/ChessBoard.cpp src/ChessBoard.hpp)
