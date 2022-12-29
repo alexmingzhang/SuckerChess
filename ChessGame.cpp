@@ -87,6 +87,8 @@ ChessGame::run(ChessEngine *white, ChessEngine *black, bool verbose) {
     while (true) {
 
         println(verbose, current_pos);
+        println(verbose, current_pos.get_fen());
+        assert(current_pos.check_consistency());
 
         if (current_pos.checkmated()) {
             switch (current_pos.get_color_to_move()) {

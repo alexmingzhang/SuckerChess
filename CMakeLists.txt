@@ -9,6 +9,7 @@ message(${CMAKE_CXX_COMPILER_ID})
 if ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
     add_compile_options(-Weverything
             -Wno-c++98-compat -Wno-c++98-compat-pedantic
+            -Wno-zero-as-null-pointer-constant
             -Wno-weak-vtables -Wno-padded)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wall -Wextra -pedantic)
@@ -22,4 +23,4 @@ add_executable(SuckerChess main.cpp
         ChessGame.cpp ChessGame.hpp
         ChessPlayer.cpp ChessPlayer.hpp
         ChessTournament.cpp ChessTournament.hpp
-        Utilities.cpp Utilities.hpp src/CastlingRights.cpp src/CastlingRights.hpp)
+        Utilities.cpp Utilities.hpp src/CastlingRights.cpp src/CastlingRights.hpp ChessBoard.cpp ChessBoard.hpp)

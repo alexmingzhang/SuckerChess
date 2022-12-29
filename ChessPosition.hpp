@@ -1,13 +1,12 @@
 #ifndef SUCKER_CHESS_CHESS_POSITION_HPP
 #define SUCKER_CHESS_CHESS_POSITION_HPP
 
-#include <array>   // for std::array
 #include <cassert> // for assert
-#include <cstddef> // for std::size_t
 #include <ostream> // for std::ostream
 #include <string>  // for std::string
 #include <vector>  // for std::vector
 
+#include "ChessBoard.hpp"
 #include "src/CastlingRights.hpp"
 #include "src/ChessMove.hpp"
 #include "src/ChessPiece.hpp"
@@ -15,7 +14,7 @@
 
 class ChessPosition {
 
-    std::array<std::array<ChessPiece, NUM_RANKS>, NUM_FILES> board;
+    ChessBoard board;
     ChessSquare white_king_location;
     ChessSquare black_king_location;
     PieceColor to_move;
@@ -25,24 +24,11 @@ class ChessPosition {
 public: // ======================================================== CONSTRUCTORS
 
     explicit constexpr ChessPosition() noexcept
-        : board{{{WHITE_ROOK, WHITE_PAWN, EMPTY_SQUARE, EMPTY_SQUARE,
-                EMPTY_SQUARE, EMPTY_SQUARE, BLACK_PAWN, BLACK_ROOK},
-               {WHITE_KNIGHT, WHITE_PAWN, EMPTY_SQUARE, EMPTY_SQUARE,
-                EMPTY_SQUARE, EMPTY_SQUARE, BLACK_PAWN, BLACK_KNIGHT},
-               {WHITE_BISHOP, WHITE_PAWN, EMPTY_SQUARE, EMPTY_SQUARE,
-                EMPTY_SQUARE, EMPTY_SQUARE, BLACK_PAWN, BLACK_BISHOP},
-               {WHITE_QUEEN, WHITE_PAWN, EMPTY_SQUARE, EMPTY_SQUARE,
-                EMPTY_SQUARE, EMPTY_SQUARE, BLACK_PAWN, BLACK_QUEEN},
-               {WHITE_KING, WHITE_PAWN, EMPTY_SQUARE, EMPTY_SQUARE,
-                EMPTY_SQUARE, EMPTY_SQUARE, BLACK_PAWN, BLACK_KING},
-               {WHITE_BISHOP, WHITE_PAWN, EMPTY_SQUARE, EMPTY_SQUARE,
-                EMPTY_SQUARE, EMPTY_SQUARE, BLACK_PAWN, BLACK_BISHOP},
-               {WHITE_KNIGHT, WHITE_PAWN, EMPTY_SQUARE, EMPTY_SQUARE,
-                EMPTY_SQUARE, EMPTY_SQUARE, BLACK_PAWN, BLACK_KNIGHT},
-               {WHITE_ROOK, WHITE_PAWN, EMPTY_SQUARE, EMPTY_SQUARE,
-                EMPTY_SQUARE, EMPTY_SQUARE, BLACK_PAWN, BLACK_ROOK}}}
-        , white_king_location({4, 0}), black_king_location({4, NUM_RANKS - 1})
-        , to_move(PieceColor::WHITE), en_passant_file(NUM_FILES)
+        : board()
+        , white_king_location({4, 0})
+        , black_king_location({4, NUM_RANKS - 1})
+        , to_move(PieceColor::WHITE)
+        , en_passant_file(NUM_FILES)
         , castling_rights(true, true, true, true) {}
 
     explicit ChessPosition(const std::string &fen)
@@ -117,20 +103,17 @@ public: // =========================================================== ACCESSORS
 
 public: // ====================================================== INDEX OPERATOR
 
-    constexpr const ChessPiece &operator[](ChessSquare square) const noexcept {
+    constexpr ChessPiece operator[](ChessSquare square) const noexcept {
         assert(square.in_bounds());
-        return board[static_cast<std::size_t>(square.file)]
-                    [static_cast<std::size_t>(square.rank)];
+        return board[square];
     }
 
     constexpr ChessPiece &operator[](ChessSquare square) noexcept {
         assert(square.in_bounds());
-        return board[static_cast<std::size_t>(square.file)]
-                    [static_cast<std::size_t>(square.rank)];
+        return board[square];
     }
 
-    constexpr const ChessPiece &
-    operator()(coord_t file, coord_t rank) const noexcept {
+    constexpr ChessPiece operator()(coord_t file, coord_t rank) const noexcept {
         return (*this)[{file, rank}];
     }
 
@@ -142,58 +125,7 @@ public: // ========================================================== COMPARISON
 
     constexpr bool operator==(const ChessPosition &) const noexcept = default;
 
-private: // ===================================================== SQUARE TESTING
-
-    [[nodiscard]] constexpr bool is_empty(ChessSquare square) const noexcept {
-        return square.in_bounds() && ((*this)[square] == EMPTY_SQUARE);
-    }
-
-    [[nodiscard]] constexpr bool
-    is_valid_dst(PieceColor moving_color, ChessSquare square) const noexcept {
-        return square.in_bounds() &&
-               ((*this)[square].get_color() != moving_color);
-    }
-
-    [[nodiscard]] constexpr bool
-    is_valid_cap(PieceColor moving_color, ChessSquare square) const noexcept {
-        if (!square.in_bounds()) { return false; }
-        const ChessPiece target = (*this)[square];
-        const PieceColor target_color = target.get_color();
-        return (target_color != moving_color) &&
-               (target_color != PieceColor::NONE);
-    }
-
 private: // ===================================================== PAWN UTILITIES
-
-    [[nodiscard]] static constexpr coord_t pawn_direction(PieceColor color
-    ) noexcept {
-        switch (color) {
-            case PieceColor::NONE: __builtin_unreachable();
-            case PieceColor::WHITE: return +1;
-            case PieceColor::BLACK: return -1;
-        }
-        __builtin_unreachable();
-    }
-
-    [[nodiscard]] static constexpr coord_t pawn_origin_rank(PieceColor color
-    ) noexcept {
-        switch (color) {
-            case PieceColor::NONE: __builtin_unreachable();
-            case PieceColor::WHITE: return 1;
-            case PieceColor::BLACK: return NUM_RANKS - 2;
-        }
-        __builtin_unreachable();
-    }
-
-    [[nodiscard]] static constexpr coord_t promotion_rank(PieceColor color
-    ) noexcept {
-        switch (color) {
-            case PieceColor::NONE: __builtin_unreachable();
-            case PieceColor::WHITE: return NUM_RANKS - 1;
-            case PieceColor::BLACK: return 0;
-        }
-        __builtin_unreachable();
-    }
 
     [[nodiscard]] constexpr ChessSquare en_passant_square() const noexcept {
         switch (to_move) {
@@ -219,7 +151,9 @@ private: // ============================================ MOVE VALIDATION HELPERS
         const ChessPiece piece = (*this)[move.get_src()];
         const PieceType type = piece.get_type();
         const PieceColor color = piece.get_color();
-        ensure(color != PieceColor::NONE);
+        const PieceColor opponent = (color == PieceColor::WHITE)
+                                        ? PieceColor::BLACK
+                                        : PieceColor::WHITE;
 
         // Castling is a special move in which a king travels two squares.
         ensure(type == PieceType::KING);
@@ -242,15 +176,21 @@ private: // ============================================ MOVE VALIDATION HELPERS
         const ChessPiece FRIENDLY_ROOK = {color, PieceType::ROOK};
         if (move.get_dst_file() == 2) {
             ensure((*this)(0, rank) == FRIENDLY_ROOK);
-            ensure(is_empty({1, rank}));
-            ensure(is_empty({2, rank}));
-            ensure(is_empty({3, rank}));
+            ensure((*this)(1, rank) == EMPTY_SQUARE);
+            ensure((*this)(2, rank) == EMPTY_SQUARE);
+            ensure((*this)(3, rank) == EMPTY_SQUARE);
+            ensure(!board.is_attacked_by(opponent, {2, rank}));
+            ensure(!board.is_attacked_by(opponent, {3, rank}));
+            ensure(!board.is_attacked_by(opponent, {4, rank}));
             ensure(can_long_castle(color));
         } else {
             ensure(move.get_dst_file() == 6);
             ensure((*this)(NUM_FILES - 1, rank) == FRIENDLY_ROOK);
-            ensure(is_empty({5, rank}));
-            ensure(is_empty({6, rank}));
+            ensure((*this)(5, rank) == EMPTY_SQUARE);
+            ensure((*this)(6, rank) == EMPTY_SQUARE);
+            ensure(!board.is_attacked_by(opponent, {4, rank}));
+            ensure(!board.is_attacked_by(opponent, {5, rank}));
+            ensure(!board.is_attacked_by(opponent, {6, rank}));
             ensure(can_short_castle(color));
         }
 
@@ -271,7 +211,8 @@ private: // ============================================ MOVE VALIDATION HELPERS
         // forward diagonal move to an empty square.
         ensure(type == PieceType::PAWN);
         ensure(
-            move.get_dst_rank() == move.get_src_rank() + pawn_direction(color)
+            move.get_dst_rank() ==
+            move.get_src_rank() + ChessBoard::pawn_direction(color)
         );
         ensure(move.distance() == 1);
         ensure(move.is_diagonal());
@@ -303,7 +244,7 @@ private: // ============================================ MOVE VALIDATION HELPERS
         ChessSquare current = move.get_src() + offset;
         const ChessSquare dst = move.get_dst();
         while (current != dst) {
-            if (!is_empty(current)) { return false; }
+            if (!board.is_empty(current)) { return false; }
             current += offset;
         }
         return true;
@@ -327,6 +268,9 @@ public: // ===================================================== MOVE VALIDATION
         const ChessPiece target = (*this)[move.get_dst()];
         const PieceColor target_color = target.get_color();
         ensure(color != target_color);
+
+        // Since chess ends at checkmate, kings are never actually captured;
+        ensure(target.get_type() != PieceType::KING);
 
         const bool is_cap =
             (target_color != PieceColor::NONE) || is_valid_en_passant(move);
@@ -363,7 +307,7 @@ public: // ===================================================== MOVE VALIDATION
             case PieceType::PAWN:
                 // Pawns move diagonally when and only when they capture.
                 ensure(move.is_diagonal() == is_cap);
-                const coord_t direction = pawn_direction(color);
+                const coord_t direction = ChessBoard::pawn_direction(color);
                 // Pawns either move one or two squares at a time.
                 if (move.get_dst_rank() ==
                     move.get_src_rank() + 2 * direction) {
@@ -371,19 +315,23 @@ public: // ===================================================== MOVE VALIDATION
                     ensure(move.get_src_file() == move.get_dst_file());
                     // Double-step moves are only possible from a pawn's
                     // home rank.
-                    ensure(move.get_src_rank() == pawn_origin_rank(color));
+                    ensure(
+                        move.get_src_rank() ==
+                        ChessBoard::pawn_origin_rank(color)
+                    );
                     // Both the square being moved through and the destination
                     // square must be empty.
-                    ensure(is_empty(move.get_src() + ChessOffset{0, direction})
-                    );
-                    ensure(is_empty(move.get_dst()));
+                    ensure(board.is_empty(
+                        move.get_src() + ChessOffset{0, direction}
+                    ));
+                    ensure(board.is_empty(move.get_dst()));
                 } else {
                     ensure(
                         move.get_dst_rank() == move.get_src_rank() + direction
                     );
                     ensure(move.distance() == 1);
                 }
-                if (move.get_dst_rank() == promotion_rank(color)) {
+                if (move.get_dst_rank() == ChessBoard::promotion_rank(color)) {
                     ensure(
                         move.get_promotion_type() == PieceType::QUEEN ||
                         move.get_promotion_type() == PieceType::ROOK ||
@@ -495,192 +443,20 @@ public: // ====================================================== MOVE EXECUTION
         }
     }
 
-private: // ============================================= ATTACK TESTING HELPERS
-
-    [[nodiscard]] constexpr bool
-    has_piece(ChessSquare square, ChessPiece piece) const noexcept {
-        return square.in_bounds() && (*this)[square] == piece;
-    }
-
-    [[nodiscard]] constexpr bool
-    is_attacked_by_king(PieceColor color, ChessSquare square) const noexcept {
-        const ChessPiece king = {color, PieceType::KING};
-        return has_piece(square + ChessOffset{-1, -1}, king) ||
-               has_piece(square + ChessOffset{-1, 0}, king) ||
-               has_piece(square + ChessOffset{-1, +1}, king) ||
-               has_piece(square + ChessOffset{0, -1}, king) ||
-               has_piece(square + ChessOffset{0, +1}, king) ||
-               has_piece(square + ChessOffset{+1, -1}, king) ||
-               has_piece(square + ChessOffset{+1, 0}, king) ||
-               has_piece(square + ChessOffset{+1, +1}, king);
-    }
-
-    [[nodiscard]] constexpr int
-    count_king_attacks(PieceColor color, ChessSquare square) const noexcept {
-        const ChessPiece king = {color, PieceType::KING};
-        int result = 0;
-        if (has_piece(square + ChessOffset{-1, -1}, king)) { ++result; }
-        if (has_piece(square + ChessOffset{-1, 0}, king)) { ++result; }
-        if (has_piece(square + ChessOffset{-1, +1}, king)) { ++result; }
-        if (has_piece(square + ChessOffset{0, -1}, king)) { ++result; }
-        if (has_piece(square + ChessOffset{0, +1}, king)) { ++result; }
-        if (has_piece(square + ChessOffset{+1, -1}, king)) { ++result; }
-        if (has_piece(square + ChessOffset{+1, 0}, king)) { ++result; }
-        if (has_piece(square + ChessOffset{+1, +1}, king)) { ++result; }
-        return result;
-    }
-
-    [[nodiscard]] constexpr bool
-    is_attacked_by_knight(PieceColor color, ChessSquare square) const noexcept {
-        const ChessPiece knight = {color, PieceType::KNIGHT};
-        return has_piece(square + ChessOffset{-2, -1}, knight) ||
-               has_piece(square + ChessOffset{-2, +1}, knight) ||
-               has_piece(square + ChessOffset{-1, -2}, knight) ||
-               has_piece(square + ChessOffset{-1, +2}, knight) ||
-               has_piece(square + ChessOffset{+1, -2}, knight) ||
-               has_piece(square + ChessOffset{+1, +2}, knight) ||
-               has_piece(square + ChessOffset{+2, -1}, knight) ||
-               has_piece(square + ChessOffset{+2, +1}, knight);
-    }
-
-    [[nodiscard]] constexpr int
-    count_knight_attacks(PieceColor color, ChessSquare square) const noexcept {
-        const ChessPiece knight = {color, PieceType::KNIGHT};
-        int result = 0;
-        if (has_piece(square + ChessOffset{-2, -1}, knight)) { ++result; }
-        if (has_piece(square + ChessOffset{-2, +1}, knight)) { ++result; }
-        if (has_piece(square + ChessOffset{-1, -2}, knight)) { ++result; }
-        if (has_piece(square + ChessOffset{-1, +2}, knight)) { ++result; }
-        if (has_piece(square + ChessOffset{+1, -2}, knight)) { ++result; }
-        if (has_piece(square + ChessOffset{+1, +2}, knight)) { ++result; }
-        if (has_piece(square + ChessOffset{+2, -1}, knight)) { ++result; }
-        if (has_piece(square + ChessOffset{+2, +1}, knight)) { ++result; }
-        return result;
-    }
-
-    [[nodiscard]] constexpr bool
-    is_attacked_by_pawn(PieceColor color, ChessSquare square) const noexcept {
-        const ChessPiece pawn = {color, PieceType::PAWN};
-        const coord_t direction = pawn_direction(color);
-        return has_piece(square + ChessOffset{-1, -direction}, pawn) ||
-               has_piece(square + ChessOffset{+1, -direction}, pawn);
-    }
-
-    [[nodiscard]] constexpr bool
-    count_pawn_attacks(PieceColor color, ChessSquare square) const noexcept {
-        const ChessPiece pawn = {color, PieceType::PAWN};
-        const coord_t direction = pawn_direction(color);
-        return has_piece(square + ChessOffset{-1, -direction}, pawn) ||
-               has_piece(square + ChessOffset{+1, -direction}, pawn);
-    }
-
-    [[nodiscard]] constexpr ChessPiece find_slider(
-        PieceColor color, ChessSquare square, ChessOffset offset
-    ) const noexcept {
-        ChessSquare current = square + offset;
-        while (is_empty(current)) { current += offset; }
-        if (current.in_bounds()) {
-            const ChessPiece piece = (*this)[current];
-            if (piece.get_color() == color) { return piece; }
-        }
-        return EMPTY_SQUARE;
-    }
-
-    [[nodiscard]] constexpr bool is_attacked_orthogonally(
-        PieceColor color, ChessSquare square
-    ) const noexcept {
-        using enum PieceType;
-        const ChessPiece a = find_slider(color, square, {-1, 0});
-        if (a.get_type() == QUEEN || a.get_type() == ROOK) { return true; }
-        const ChessPiece b = find_slider(color, square, {0, -1});
-        if (b.get_type() == QUEEN || b.get_type() == ROOK) { return true; }
-        const ChessPiece c = find_slider(color, square, {0, +1});
-        if (c.get_type() == QUEEN || c.get_type() == ROOK) { return true; }
-        const ChessPiece d = find_slider(color, square, {+1, 0});
-        if (d.get_type() == QUEEN || d.get_type() == ROOK) { return true; }
-        return false;
-    }
-
-    [[nodiscard]] constexpr int count_orthogonal_attacks(
-        PieceColor color, ChessSquare square
-    ) const noexcept {
-        using enum PieceType;
-        int result = 0;
-        const ChessPiece a = find_slider(color, square, {-1, 0});
-        if (a.get_type() == QUEEN || a.get_type() == ROOK) { ++result; }
-        const ChessPiece b = find_slider(color, square, {0, -1});
-        if (b.get_type() == QUEEN || b.get_type() == ROOK) { ++result; }
-        const ChessPiece c = find_slider(color, square, {0, +1});
-        if (c.get_type() == QUEEN || c.get_type() == ROOK) { ++result; }
-        const ChessPiece d = find_slider(color, square, {+1, 0});
-        if (d.get_type() == QUEEN || d.get_type() == ROOK) { ++result; }
-        return result;
-    }
-
-    [[nodiscard]] constexpr bool is_attacked_diagonally(
-        PieceColor color, ChessSquare square
-    ) const noexcept {
-        using enum PieceType;
-        const ChessPiece a = find_slider(color, square, {-1, -1});
-        if (a.get_type() == QUEEN || a.get_type() == BISHOP) { return true; }
-        const ChessPiece b = find_slider(color, square, {-1, +1});
-        if (b.get_type() == QUEEN || b.get_type() == BISHOP) { return true; }
-        const ChessPiece c = find_slider(color, square, {+1, -1});
-        if (c.get_type() == QUEEN || c.get_type() == BISHOP) { return true; }
-        const ChessPiece d = find_slider(color, square, {+1, +1});
-        if (d.get_type() == QUEEN || d.get_type() == BISHOP) { return true; }
-        return false;
-    }
-
-    [[nodiscard]] constexpr int count_diagonal_attacks(
-        PieceColor color, ChessSquare square
-    ) const noexcept {
-        using enum PieceType;
-        int result = 0;
-        const ChessPiece a = find_slider(color, square, {-1, -1});
-        if (a.get_type() == QUEEN || a.get_type() == BISHOP) { ++result; }
-        const ChessPiece b = find_slider(color, square, {-1, +1});
-        if (b.get_type() == QUEEN || b.get_type() == BISHOP) { ++result; }
-        const ChessPiece c = find_slider(color, square, {+1, -1});
-        if (c.get_type() == QUEEN || c.get_type() == BISHOP) { ++result; }
-        const ChessPiece d = find_slider(color, square, {+1, +1});
-        if (d.get_type() == QUEEN || d.get_type() == BISHOP) { ++result; }
-        return result;
-    }
-
-public: // ====================================================== ATTACK TESTING
-
-    [[nodiscard]] constexpr bool
-    is_attacked_by(PieceColor color, ChessSquare square) const noexcept {
-        assert(color != PieceColor::NONE);
-        assert(square.in_bounds());
-        // TODO: optimal ordering of branches
-        return is_attacked_by_king(color, square) ||
-               is_attacked_orthogonally(color, square) ||
-               is_attacked_diagonally(color, square) ||
-               is_attacked_by_knight(color, square) ||
-               is_attacked_by_pawn(color, square);
-    }
-
-    [[nodiscard]] constexpr int
-    count_attacks_by(PieceColor color, ChessSquare square) const noexcept {
-        assert(color != PieceColor::NONE);
-        assert(square.in_bounds());
-        return count_king_attacks(color, square) +
-               count_orthogonal_attacks(color, square) +
-               count_diagonal_attacks(color, square) +
-               count_knight_attacks(color, square) +
-               count_pawn_attacks(color, square);
-    }
+public: // ======================================================= CHECK TESTING
 
     [[nodiscard]] constexpr bool in_check(PieceColor color) const noexcept {
         assert(color != PieceColor::NONE);
         switch (color) {
             case PieceColor::NONE: __builtin_unreachable();
             case PieceColor::WHITE:
-                return is_attacked_by(PieceColor::BLACK, white_king_location);
+                return board.is_attacked_by(
+                    PieceColor::BLACK, white_king_location
+                );
             case PieceColor::BLACK:
-                return is_attacked_by(PieceColor::WHITE, black_king_location);
+                return board.is_attacked_by(
+                    PieceColor::WHITE, black_king_location
+                );
         }
         __builtin_unreachable();
     }
@@ -711,125 +487,159 @@ public: // ====================================================== ATTACK TESTING
         return is_valid(move) && !puts_self_in_check(move);
     }
 
-public: // ===================================================== MOVE GENERATION
+private: // ============================================ MOVE GENERATION HELPERS
 
-    constexpr void push_if_legal(std::vector<ChessMove> &moves, ChessMove move)
-        const noexcept {
-        assert(is_valid(move));
-        if (is_legal(move)) { moves.push_back(move); }
+    [[nodiscard]] constexpr bool
+    is_valid_dst(PieceColor moving_color, ChessSquare square) const noexcept {
+        if (!square.in_bounds()) { return false; }
+        const ChessPiece target = (*this)[square];
+        const PieceColor target_color = target.get_color();
+        const PieceType target_type = target.get_type();
+        return (target_color != moving_color) &&
+               (target_type != PieceType::KING);
     }
 
-    constexpr void push_leaper_move(
-        std::vector<ChessMove> &moves, ChessSquare src, ChessOffset offset
-    ) const noexcept {
+    [[nodiscard]] constexpr bool
+    is_valid_cap(PieceColor moving_color, ChessSquare square) const noexcept {
+        if (!square.in_bounds()) { return false; }
+        const ChessPiece target = (*this)[square];
+        const PieceColor target_color = target.get_color();
+        const PieceType target_type = target.get_type();
+        return (target_color != moving_color) &&
+               (target_color != PieceColor::NONE) &&
+               (target_type != PieceType::KING);
+    }
+
+    template <typename F>
+    constexpr void visit_leaper_move(
+        PieceColor moving_color, ChessSquare src, ChessOffset offset, const F &f
+    ) const {
         const ChessSquare dst = src + offset;
-        if (is_valid_dst(to_move, dst)) { push_if_legal(moves, {src, dst}); }
+        if (is_valid_dst(moving_color, dst)) { f(ChessMove{src, dst}); }
     }
 
-    constexpr void push_slider_moves(
-        std::vector<ChessMove> &moves, ChessSquare src, ChessOffset offset
-    ) const noexcept {
+    template <typename F>
+    constexpr void visit_slider_moves(
+        PieceColor moving_color, ChessSquare src, ChessOffset offset, const F &f
+    ) const {
         ChessSquare dst = src + offset;
-        while (is_empty(dst)) {
-            push_if_legal(moves, {src, dst});
+        while (board.is_empty(dst)) {
+            f(ChessMove{src, dst});
             dst += offset;
         }
-        if (is_valid_dst(to_move, dst)) { push_if_legal(moves, {src, dst}); }
+        if (is_valid_dst(moving_color, dst)) { f(ChessMove{src, dst}); }
     }
 
-    constexpr void push_promotion_moves(
-        std::vector<ChessMove> &moves, ChessSquare src, ChessSquare dst
-    ) const noexcept {
-        using enum PieceType;
-        if (dst.rank == promotion_rank(to_move)) {
-            push_if_legal(moves, {src, dst, QUEEN});
-            push_if_legal(moves, {src, dst, ROOK});
-            push_if_legal(moves, {src, dst, BISHOP});
-            push_if_legal(moves, {src, dst, KNIGHT});
+    template <typename F>
+    constexpr void visit_promotion_moves(
+        PieceColor moving_color, ChessSquare src, ChessSquare dst, const F &f
+    ) const {
+        if (dst.rank == ChessBoard::promotion_rank(moving_color)) {
+            f(ChessMove{src, dst, PieceType::QUEEN});
+            f(ChessMove{src, dst, PieceType::ROOK});
+            f(ChessMove{src, dst, PieceType::BISHOP});
+            f(ChessMove{src, dst, PieceType::KNIGHT});
         } else {
-            push_if_legal(moves, {src, dst});
+            f(ChessMove{src, dst});
         }
     }
 
-    constexpr void push_pawn_moves(
-        std::vector<ChessMove> &moves, ChessSquare src
-    ) const noexcept {
-        const coord_t direction = pawn_direction(to_move);
+    template <typename F>
+    constexpr void visit_pawn_moves(
+        PieceColor moving_color, ChessSquare src, const F &f
+    ) const {
+        const coord_t direction = ChessBoard::pawn_direction(moving_color);
         const ChessSquare dst_move = src + ChessOffset{0, direction};
-        if (is_empty(dst_move)) {
-            push_promotion_moves(moves, src, dst_move);
-            if (src.rank == pawn_origin_rank(to_move)) {
+        if (board.is_empty(dst_move)) {
+            visit_promotion_moves(moving_color, src, dst_move, f);
+            if (src.rank == ChessBoard::pawn_origin_rank(moving_color)) {
                 const ChessSquare dst_double_move =
                     dst_move + ChessOffset{0, direction};
-                if (is_empty(dst_double_move)) {
+                if (board.is_empty(dst_double_move)) {
                     // no promotion possible on initial double-step move
-                    push_if_legal(moves, {src, dst_double_move});
+                    f(ChessMove{src, dst_double_move});
                 }
             }
         }
         const ChessSquare dst_capture_l = src + ChessOffset{-1, direction};
-        if (is_valid_cap(to_move, dst_capture_l)) {
-            push_promotion_moves(moves, src, dst_capture_l);
+        if (is_valid_cap(moving_color, dst_capture_l)) {
+            visit_promotion_moves(moving_color, src, dst_capture_l, f);
         }
         const ChessSquare dst_capture_r = src + ChessOffset{+1, direction};
-        if (is_valid_cap(to_move, dst_capture_r)) {
-            push_promotion_moves(moves, src, dst_capture_r);
+        if (is_valid_cap(moving_color, dst_capture_r)) {
+            visit_promotion_moves(moving_color, src, dst_capture_r, f);
         }
-        const ChessSquare dst_ep = en_passant_square();
-        if (dst_ep.in_bounds() &&
-            (dst_capture_l == dst_ep || dst_capture_r == dst_ep)) {
-            push_if_legal(moves, {src, dst_ep});
+        if (moving_color == to_move) {
+            const ChessSquare dst_ep = en_passant_square();
+            if (dst_ep.in_bounds() &&
+                (dst_capture_l == dst_ep || dst_capture_r == dst_ep)) {
+                // no promotion possible on en passant
+                f(ChessMove{src, dst_ep});
+            }
         }
     }
 
-    constexpr void push_castling_moves(std::vector<ChessMove> &moves
-    ) const noexcept {
-        if (to_move == PieceColor::WHITE) {
+    template <typename F>
+    constexpr void
+    visit_castling_moves(PieceColor moving_color, const F &f) const {
+        if (moving_color == PieceColor::WHITE) {
             if (castling_rights.white_can_short_castle()) {
-                assert(board[4][0] == WHITE_KING);
-                assert(board[7][0] == WHITE_ROOK);
-                if (board[5][0] == EMPTY_SQUARE &&
-                    board[6][0] == EMPTY_SQUARE &&
-                    !is_attacked_by(PieceColor::BLACK, {4, 0}) &&
-                    !is_attacked_by(PieceColor::BLACK, {5, 0}) &&
-                    !is_attacked_by(PieceColor::BLACK, {6, 0})) {
-                    moves.emplace_back(ChessSquare{4, 0}, ChessSquare{6, 0});
+                assert(board(4, 0) == WHITE_KING);
+                assert(board(7, 0) == WHITE_ROOK);
+                if (board(5, 0) == EMPTY_SQUARE &&
+                    board(6, 0) == EMPTY_SQUARE &&
+                    !board.is_attacked_by(PieceColor::BLACK, {4, 0}) &&
+                    !board.is_attacked_by(PieceColor::BLACK, {5, 0}) &&
+                    !board.is_attacked_by(PieceColor::BLACK, {6, 0})) {
+                    f(ChessMove{
+                        ChessSquare{4, 0},
+                        ChessSquare{6, 0}
+                    });
                 }
             }
             if (castling_rights.white_can_long_castle()) {
-                assert(board[0][0] == WHITE_ROOK);
-                assert(board[4][0] == WHITE_KING);
-                if (board[1][0] == EMPTY_SQUARE &&
-                    board[2][0] == EMPTY_SQUARE &&
-                    board[3][0] == EMPTY_SQUARE &&
-                    !is_attacked_by(PieceColor::BLACK, {2, 0}) &&
-                    !is_attacked_by(PieceColor::BLACK, {3, 0}) &&
-                    !is_attacked_by(PieceColor::BLACK, {4, 0})) {
-                    moves.emplace_back(ChessSquare{4, 0}, ChessSquare{2, 0});
+                assert(board(0, 0) == WHITE_ROOK);
+                assert(board(4, 0) == WHITE_KING);
+                if (board(1, 0) == EMPTY_SQUARE &&
+                    board(2, 0) == EMPTY_SQUARE &&
+                    board(3, 0) == EMPTY_SQUARE &&
+                    !board.is_attacked_by(PieceColor::BLACK, {2, 0}) &&
+                    !board.is_attacked_by(PieceColor::BLACK, {3, 0}) &&
+                    !board.is_attacked_by(PieceColor::BLACK, {4, 0})) {
+                    f(ChessMove{
+                        ChessSquare{4, 0},
+                        ChessSquare{2, 0}
+                    });
                 }
             }
-        } else if (to_move == PieceColor::BLACK) {
+        } else if (moving_color == PieceColor::BLACK) {
             if (castling_rights.black_can_short_castle()) {
-                assert(board[4][7] == BLACK_KING);
-                assert(board[7][7] == BLACK_ROOK);
-                if (board[5][7] == EMPTY_SQUARE &&
-                    board[6][7] == EMPTY_SQUARE &&
-                    !is_attacked_by(PieceColor::WHITE, {4, 7}) &&
-                    !is_attacked_by(PieceColor::WHITE, {5, 7}) &&
-                    !is_attacked_by(PieceColor::WHITE, {6, 7})) {
-                    moves.emplace_back(ChessSquare{4, 7}, ChessSquare{6, 7});
+                assert(board(4, 7) == BLACK_KING);
+                assert(board(7, 7) == BLACK_ROOK);
+                if (board(5, 7) == EMPTY_SQUARE &&
+                    board(6, 7) == EMPTY_SQUARE &&
+                    !board.is_attacked_by(PieceColor::WHITE, {4, 7}) &&
+                    !board.is_attacked_by(PieceColor::WHITE, {5, 7}) &&
+                    !board.is_attacked_by(PieceColor::WHITE, {6, 7})) {
+                    f(ChessMove{
+                        ChessSquare{4, 7},
+                        ChessSquare{6, 7}
+                    });
                 }
             }
             if (castling_rights.black_can_long_castle()) {
-                assert(board[0][7] == BLACK_ROOK);
-                assert(board[4][7] == BLACK_KING);
-                if (board[1][7] == EMPTY_SQUARE &&
-                    board[2][7] == EMPTY_SQUARE &&
-                    board[3][7] == EMPTY_SQUARE &&
-                    !is_attacked_by(PieceColor::WHITE, {2, 7}) &&
-                    !is_attacked_by(PieceColor::WHITE, {3, 7}) &&
-                    !is_attacked_by(PieceColor::WHITE, {4, 7})) {
-                    moves.emplace_back(ChessSquare{4, 7}, ChessSquare{2, 7});
+                assert(board(0, 7) == BLACK_ROOK);
+                assert(board(4, 7) == BLACK_KING);
+                if (board(1, 7) == EMPTY_SQUARE &&
+                    board(2, 7) == EMPTY_SQUARE &&
+                    board(3, 7) == EMPTY_SQUARE &&
+                    !board.is_attacked_by(PieceColor::WHITE, {2, 7}) &&
+                    !board.is_attacked_by(PieceColor::WHITE, {3, 7}) &&
+                    !board.is_attacked_by(PieceColor::WHITE, {4, 7})) {
+                    f(ChessMove{
+                        ChessSquare{4, 7},
+                        ChessSquare{2, 7}
+                    });
                 }
             }
         } else {
@@ -837,74 +647,109 @@ public: // ===================================================== MOVE GENERATION
         }
     }
 
-    constexpr void push_legal_moves(
-        std::vector<ChessMove> &moves, ChessSquare src
-    ) const noexcept {
+public: // ===================================================== MOVE GENERATION
+
+    template <typename F>
+    constexpr void
+    visit_moves(PieceColor moving_color, ChessSquare src, const F &f) const {
         assert(src.in_bounds());
         const ChessPiece piece = (*this)[src];
-        assert(piece.get_color() == to_move);
+        assert(piece.get_color() == moving_color);
         assert(piece.get_type() != PieceType::NONE);
         switch (piece.get_type()) {
             case PieceType::NONE: __builtin_unreachable();
             case PieceType::KING:
-                push_leaper_move(moves, src, {-1, -1});
-                push_leaper_move(moves, src, {-1, 0});
-                push_leaper_move(moves, src, {-1, +1});
-                push_leaper_move(moves, src, {0, -1});
-                push_leaper_move(moves, src, {0, +1});
-                push_leaper_move(moves, src, {+1, -1});
-                push_leaper_move(moves, src, {+1, 0});
-                push_leaper_move(moves, src, {+1, +1});
-                push_castling_moves(moves);
+                visit_leaper_move(moving_color, src, {-1, -1}, f);
+                visit_leaper_move(moving_color, src, {-1, 0}, f);
+                visit_leaper_move(moving_color, src, {-1, +1}, f);
+                visit_leaper_move(moving_color, src, {0, -1}, f);
+                visit_leaper_move(moving_color, src, {0, +1}, f);
+                visit_leaper_move(moving_color, src, {+1, -1}, f);
+                visit_leaper_move(moving_color, src, {+1, 0}, f);
+                visit_leaper_move(moving_color, src, {+1, +1}, f);
+                visit_castling_moves(moving_color, f);
                 break;
             case PieceType::QUEEN:
-                push_slider_moves(moves, src, {-1, -1});
-                push_slider_moves(moves, src, {-1, 0});
-                push_slider_moves(moves, src, {-1, +1});
-                push_slider_moves(moves, src, {0, -1});
-                push_slider_moves(moves, src, {0, +1});
-                push_slider_moves(moves, src, {+1, -1});
-                push_slider_moves(moves, src, {+1, 0});
-                push_slider_moves(moves, src, {+1, +1});
+                visit_slider_moves(moving_color, src, {-1, -1}, f);
+                visit_slider_moves(moving_color, src, {-1, 0}, f);
+                visit_slider_moves(moving_color, src, {-1, +1}, f);
+                visit_slider_moves(moving_color, src, {0, -1}, f);
+                visit_slider_moves(moving_color, src, {0, +1}, f);
+                visit_slider_moves(moving_color, src, {+1, -1}, f);
+                visit_slider_moves(moving_color, src, {+1, 0}, f);
+                visit_slider_moves(moving_color, src, {+1, +1}, f);
                 break;
             case PieceType::ROOK:
-                push_slider_moves(moves, src, {-1, 0});
-                push_slider_moves(moves, src, {0, -1});
-                push_slider_moves(moves, src, {0, +1});
-                push_slider_moves(moves, src, {+1, 0});
+                visit_slider_moves(moving_color, src, {-1, 0}, f);
+                visit_slider_moves(moving_color, src, {0, -1}, f);
+                visit_slider_moves(moving_color, src, {0, +1}, f);
+                visit_slider_moves(moving_color, src, {+1, 0}, f);
                 break;
             case PieceType::BISHOP:
-                push_slider_moves(moves, src, {-1, -1});
-                push_slider_moves(moves, src, {-1, +1});
-                push_slider_moves(moves, src, {+1, -1});
-                push_slider_moves(moves, src, {+1, +1});
+                visit_slider_moves(moving_color, src, {-1, -1}, f);
+                visit_slider_moves(moving_color, src, {-1, +1}, f);
+                visit_slider_moves(moving_color, src, {+1, -1}, f);
+                visit_slider_moves(moving_color, src, {+1, +1}, f);
                 break;
             case PieceType::KNIGHT:
-                push_leaper_move(moves, src, {-2, -1});
-                push_leaper_move(moves, src, {-2, +1});
-                push_leaper_move(moves, src, {-1, -2});
-                push_leaper_move(moves, src, {-1, +2});
-                push_leaper_move(moves, src, {+1, -2});
-                push_leaper_move(moves, src, {+1, +2});
-                push_leaper_move(moves, src, {+2, -1});
-                push_leaper_move(moves, src, {+2, +1});
+                visit_leaper_move(moving_color, src, {-2, -1}, f);
+                visit_leaper_move(moving_color, src, {-2, +1}, f);
+                visit_leaper_move(moving_color, src, {-1, -2}, f);
+                visit_leaper_move(moving_color, src, {-1, +2}, f);
+                visit_leaper_move(moving_color, src, {+1, -2}, f);
+                visit_leaper_move(moving_color, src, {+1, +2}, f);
+                visit_leaper_move(moving_color, src, {+2, -1}, f);
+                visit_leaper_move(moving_color, src, {+2, +1}, f);
                 break;
-            case PieceType::PAWN: push_pawn_moves(moves, src); break;
+            case PieceType::PAWN: visit_pawn_moves(moving_color, src, f); break;
         }
     }
 
-    [[nodiscard]] std::vector<ChessMove> get_legal_moves() const noexcept {
+    [[nodiscard]] std::vector<ChessMove> get_valid_moves(PieceColor moving_color
+    ) const noexcept {
         std::vector<ChessMove> result;
         for (coord_t src_file = 0; src_file < NUM_FILES; ++src_file) {
             for (coord_t src_rank = 0; src_rank < NUM_RANKS; ++src_rank) {
-                const ChessPiece &piece = (*this)(src_file, src_rank);
-                if (piece.get_color() == to_move) {
-                    push_legal_moves(result, {src_file, src_rank});
+                if ((*this)(src_file, src_rank).get_color() == moving_color) {
+                    visit_moves(
+                        moving_color,
+                        {src_file, src_rank},
+                        [&](ChessMove move) { result.push_back(move); }
+                    );
                 }
             }
         }
         return result;
     }
+
+    [[nodiscard]] std::vector<ChessMove> get_legal_moves(PieceColor moving_color
+    ) const noexcept {
+        std::vector<ChessMove> result;
+        for (coord_t src_file = 0; src_file < NUM_FILES; ++src_file) {
+            for (coord_t src_rank = 0; src_rank < NUM_RANKS; ++src_rank) {
+                if ((*this)(src_file, src_rank).get_color() == moving_color) {
+                    visit_moves(
+                        moving_color,
+                        {src_file, src_rank},
+                        [&](ChessMove move) {
+                            if (is_legal(move)) { result.push_back(move); }
+                        }
+                    );
+                }
+            }
+        }
+        return result;
+    }
+
+    [[nodiscard]] std::vector<ChessMove> get_valid_moves() const noexcept {
+        return get_valid_moves(to_move);
+    }
+
+    [[nodiscard]] std::vector<ChessMove> get_legal_moves() const noexcept {
+        return get_legal_moves(to_move);
+    }
+
+    [[nodiscard]] bool check_consistency() const noexcept;
 
 public: // ======================================================= CHECK TESTING
 

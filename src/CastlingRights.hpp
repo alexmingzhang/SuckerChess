@@ -1,6 +1,7 @@
 #ifndef SUCKER_CHESS_CASTLING_RIGHTS_HPP
 #define SUCKER_CHESS_CASTLING_RIGHTS_HPP
 
+#include <cassert> // for assert
 #include <compare> // for operator<=>
 #include <cstdint> // for std::uint8_t
 #include <ostream> // for std::ostream
@@ -52,25 +53,29 @@ public: // =========================================================== ACCESSORS
     }
 
     [[nodiscard]] constexpr bool black_can_long_castle() const noexcept {
-        return (data & WHITE_SHORT) != 0;
+        return (data & BLACK_LONG) != 0;
     }
 
 public: // ============================================================ MUTATORS
 
     constexpr void disallow_white_short_castle() noexcept {
         data &= ~WHITE_SHORT;
+        assert(!white_can_short_castle());
     }
 
     constexpr void disallow_white_long_castle() noexcept {
         data &= ~WHITE_LONG;
+        assert(!white_can_long_castle());
     }
 
     constexpr void disallow_black_short_castle() noexcept {
         data &= ~BLACK_SHORT;
+        assert(!black_can_short_castle());
     }
 
     constexpr void disallow_black_long_castle() noexcept {
         data &= ~BLACK_LONG;
+        assert(!black_can_long_castle());
     }
 
 }; // class CastlingRights
