@@ -50,12 +50,14 @@ static void self_test() {
 
 
 static void benchmark(unsigned long num_games) {
-    ChessEngine *const white = new Engine::Random;
-    ChessEngine *const black = new Engine::Random;
+    ChessEngine *const white = new Engine::Random();
+    ChessEngine *const black = new Engine::Random();
     for (unsigned long i = 0; i < num_games; ++i) {
         ChessGame game;
         game.run(white, black, false);
     }
+    delete white;
+    delete black;
 }
 
 

@@ -1,11 +1,10 @@
 #ifndef SUCKER_CHESS_CHESS_POSITION_HPP
 #define SUCKER_CHESS_CHESS_POSITION_HPP
 
-#include <cassert>  // for assert
-#include <optional> // for std::optional
-#include <ostream>  // for std::ostream
-#include <string>   // for std::string
-#include <vector>   // for std::vector
+#include <cassert> // for assert
+#include <ostream> // for std::ostream
+#include <string>  // for std::string
+#include <vector>  // for std::vector
 
 #include "CastlingRights.hpp"
 #include "ChessBoard.hpp"
@@ -410,6 +409,14 @@ public: // ====================================================== MOVE EXECUTION
     [[nodiscard]] constexpr bool is_capture(ChessMove move) const noexcept {
         return ((*this)[move.get_dst()].get_color() != PieceColor::NONE) ||
                is_en_passant(move);
+    }
+
+    [[nodiscard]] constexpr bool is_capture_or_pawn_move(ChessMove move
+    ) const noexcept {
+        const ChessPiece piece = (*this)[move.get_src()];
+        const ChessPiece target = (*this)[move.get_dst()];
+        return (piece.get_type() == PieceType::PAWN) ||
+               (target.get_color() != PieceColor::NONE);
     }
 
     constexpr void make_move(ChessMove move) noexcept {
@@ -832,11 +839,19 @@ public: // ============================================================= FEN I/O
 
     void load_fen(const std::string &);
 
-    [[nodiscard]] std::string get_fen() const;
+    [[nodiscard]] std::string get_fen() const noexcept;
 
 public: // ========================================================== EVALUATION
 
-    [[nodiscard]] int get_material_advantage() const;
+    [[nodiscard]] constexpr int get_material_advantage() const noexcept {
+        int result = 0;
+        for (coord_t file = 0; file < NUM_FILES; ++file) {
+            for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
+                result += (*this)(file, rank).material_value();
+            }
+        }
+        return result;
+    }
 
 }; // class ChessPosition
 

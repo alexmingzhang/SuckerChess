@@ -12,25 +12,26 @@
 
 GameStatus ChessGame::get_status() const {
 
+    using enum PieceColor;
     using enum GameStatus;
 
     // before anything else, check for threefold repetition
     int count = 0;
     for (const ChessPosition &pos : pos_history) {
-        if (pos == current_pos) { ++count; }
+        if (current_pos == pos) { ++count; }
         if (count >= 2) { return DRAWN_BY_REPETITION; }
     }
 
     // check for game-end conditions
     if (current_pos.checkmated()) {
         switch (current_pos.get_color_to_move()) {
-            case PieceColor::NONE: __builtin_unreachable();
-            case PieceColor::WHITE: return BLACK_WON_BY_CHECKMATE;
-            case PieceColor::BLACK: return WHITE_WON_BY_CHECKMATE;
+            case NONE: __builtin_unreachable();
+            case WHITE: return BLACK_WON_BY_CHECKMATE;
+            case BLACK: return WHITE_WON_BY_CHECKMATE;
         }
     } else if (current_pos.stalemated()) {
         return DRAWN_BY_STALEMATE;
-    } else if (current_pos.get_board().has_insufficient_material()) {
+    } else if (current_pos.has_insufficient_material()) {
         return DRAWN_BY_INSUFFICIENT_MATERIAL;
     } else if (half_move_clock >= 100) {
         return DRAWN_BY_50_MOVE_RULE;
@@ -48,12 +49,11 @@ void ChessGame::make_move(const ChessMove &move) {
     }
 
     // save current state in history vectors
-    pos_history.push_back(current_pos);
+    pos_history.push_back(current_pos.get());
     move_history.push_back(move);
 
     // reset half-move clock on captures and pawn moves
-    if (current_pos.is_capture(move) ||
-        current_pos[move.get_src()].get_type() == PieceType::PAWN) {
+    if (current_pos.is_capture_or_pawn_move(move)) {
         half_move_clock = 0;
     } else {
         ++half_move_clock;
@@ -72,17 +72,14 @@ void ChessGame::make_move(const ChessMove &move) {
 }
 
 
-ChessMove ChessGame::get_console_move(const std::vector<ChessMove> &legal_moves
-) {
+ChessMove ChessGame::get_console_move() {
 
+    const std::vector<ChessMove> &legal_moves = current_pos.get_legal_moves();
     std::vector<std::string> base_names;
     std::vector<std::string> suffixed_names;
     for (const ChessMove &move : legal_moves) {
-        base_names.push_back(current_pos.get_move_name(legal_moves, move, false)
-        );
-        suffixed_names.push_back(
-            current_pos.get_move_name(legal_moves, move, true)
-        );
+        base_names.push_back(current_pos.get_move_name(move, false));
+        suffixed_names.push_back(current_pos.get_move_name(move, true));
     }
 
     while (true) {
@@ -141,10 +138,11 @@ ChessGame::run(ChessEngine *white, ChessEngine *black, bool verbose) {
 
         // use if statement to avoid unnecessary evaluation of get_fen()
         if (verbose) {
-            std::cout << current_pos << current_pos.get_fen() << std::endl;
+            std::cout << current_pos.get() << current_pos.get_fen()
+                      << std::endl;
         }
 
-        assert(current_pos.check_consistency());
+        assert(current_pos.get().check_consistency());
 
         if (current_status != IN_PROGRESS) {
             switch (current_status) {
@@ -186,34 +184,25 @@ ChessGame::run(ChessEngine *white, ChessEngine *black, bool verbose) {
             }
         }
 
+        const std::vector<ChessMove> &legal_moves =
+            current_pos.get_legal_moves();
         ChessEngine *const current_engine =
             current_pos.get_color_to_move() == PieceColor::WHITE ? white
                                                                  : black;
-        const std::vector<ChessMove> legal_moves =
-            current_pos.get_legal_moves();
-
         if (current_engine == nullptr) {
-            const ChessMove chosen_move = get_console_move(legal_moves);
+            const ChessMove chosen_move = get_console_move();
             if (chosen_move != NULL_MOVE) {
-                assert(
-                    std::find(
-                        legal_moves.begin(), legal_moves.end(), chosen_move
-                    ) != legal_moves.end()
-                );
+                assert(current_pos.get().is_legal(chosen_move));
                 make_move(chosen_move);
             }
         } else {
             const ChessMove chosen_move = current_engine->pick_move(
-                current_pos, legal_moves, pos_history, move_history
+                current_pos.get(), legal_moves, pos_history, move_history
             );
-            assert(
-                std::find(
-                    legal_moves.begin(), legal_moves.end(), chosen_move
-                ) != legal_moves.end()
-            );
+            assert(current_pos.get().is_legal(chosen_move));
             if (verbose) {
                 std::cout << "Chosen move: "
-                          << current_pos.get_move_name(legal_moves, chosen_move)
+                          << current_pos.get_move_name(chosen_move, true)
                           << std::endl;
             }
             make_move(chosen_move);
@@ -265,6 +254,7 @@ std::string ChessGame::get_PGN() const {
     PGN << get_PGN_move_text();
     return PGN.str();
 }
+
 
 std::string ChessGame::get_full_PGN(
     const std::string &event_name,

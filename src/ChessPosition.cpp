@@ -271,7 +271,7 @@ static constexpr char fen_char(PieceColor color) noexcept {
 }
 
 
-std::string ChessPosition::get_fen() const {
+std::string ChessPosition::get_fen() const noexcept {
     std::ostringstream fen;
     fen << board << ' ' << fen_char(to_move) << ' ' << castling_rights << ' ';
     if (en_passant_square().in_bounds()) {
@@ -280,15 +280,4 @@ std::string ChessPosition::get_fen() const {
         fen << '-';
     }
     return fen.str();
-}
-
-
-int ChessPosition::get_material_advantage() const {
-    int result = 0;
-    for (coord_t file = 0; file < NUM_FILES; ++file) {
-        for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
-            result += (*this)(file, rank).material_value();
-        }
-    }
-    return result;
 }
