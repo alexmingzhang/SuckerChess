@@ -86,7 +86,7 @@ PieceColor
 ChessGame::run(ChessEngine *white, ChessEngine *black, bool verbose) {
     while (true) {
 
-        println(verbose, current_pos);
+        print(verbose, current_pos);
         println(verbose, current_pos.get_fen());
         assert(current_pos.check_consistency());
 

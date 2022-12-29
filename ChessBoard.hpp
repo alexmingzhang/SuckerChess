@@ -78,6 +78,32 @@ public: // ======================================================= STATE TESTING
 
     [[nodiscard]] ChessSquare find_unique_piece(ChessPiece piece) const;
 
+    [[nodiscard]] constexpr int count(ChessPiece piece) const noexcept {
+        int result = 0;
+        for (coord_t file = 0; file < NUM_FILES; ++file) {
+            for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
+                if ((*this)(file, rank) == piece) { ++result; }
+            }
+        }
+        return result;
+    }
+
+    [[nodiscard]] constexpr bool has_insufficient_material() const noexcept {
+        // If either side has a queen, rook, or pawn,
+        // then checkmate is possible.
+        if (count(WHITE_QUEEN) != 0) { return false; }
+        if (count(WHITE_ROOK) != 0) { return false; }
+        if (count(WHITE_PAWN) != 0) { return false; }
+        if (count(BLACK_QUEEN) != 0) { return false; }
+        if (count(BLACK_ROOK) != 0) { return false; }
+        if (count(BLACK_PAWN) != 0) { return false; }
+        // If there is only one minor piece remaining on the board,
+        // then checkmate is impossible.
+        const int white_piece_count = count(WHITE_BISHOP) + count(WHITE_KNIGHT);
+        const int black_piece_count = count(BLACK_BISHOP) + count(BLACK_KNIGHT);
+        return (white_piece_count + black_piece_count <= 1);
+    }
+
 public: // ====================================================== PAWN UTILITIES
 
     [[nodiscard]] static constexpr coord_t pawn_direction(PieceColor color

@@ -1,50 +1,49 @@
-#include <algorithm>
-#include <cstddef>
-#include <iomanip>
 #include <iostream>
-#include <string>
 
-#include "ChessEngine.hpp"
-#include "ChessGame.hpp"
-#include "ChessTournament.hpp"
+#include "ChessPosition.hpp"
+#include "Utilities.hpp"
 
-int main() {
-    //    ChessGame game;
-    //    game.run(nullptr, pref_engine, true);
-    //    std::cout << game.get_PGN() << std::endl;
-    //    return 0;
-    auto flm_player = new ChessPlayer("FLM", new Engine::FirstLegalMove());
-    ChessPlayer *random_player =
-        new ChessPlayer("Random", new Engine::Random());
-    ChessPlayer *lazy_player = new ChessPlayer("Lazy", new Engine::Lazy());
-    ChessPlayer *energetic_player =
-        new ChessPlayer("Energetic", new Engine::Lazy());
 
-    ChessPlayer *cccp_player = new ChessPlayer("CCCP", new Engine::CCCP());
-    ChessPlayer *reducer_player =
-        new ChessPlayer("Reducer", new Engine::Reducer());
-
-    Engine::Preference *pref_engine = new Engine::Preference();
-    pref_engine->add_preference(std::make_unique<Preference::MateInOne>());
-    pref_engine->add_preference(std::make_unique<Preference::Swarm>());
-
-    Engine::Preference *pref_engine_2 = new Engine::Preference();
-    pref_engine_2->add_preference(std::make_unique<Preference::MateInOne>());
-
-    ChessTournament tourney("SuckerChess Tournament");
-    tourney.add_player(flm_player);
-    tourney.add_player(random_player);
-    tourney.add_player(lazy_player);
-    tourney.add_player(energetic_player);
-    tourney.add_player(cccp_player);
-    tourney.add_player(reducer_player);
-    tourney.add_player(new ChessPlayer("Pref", pref_engine));
-    tourney.add_player(new ChessPlayer("Pref2", pref_engine_2));
-
-    tourney.run(100, 10);
-    tourney.sort_players_by_elo();
-
-    tourney.print_info();
-
-    return 0;
+static void self_test() {
+    auto rng = properly_seeded_random_engine();
+    std::size_t count = 0;
+    while (true) {
+        ChessPosition pos;
+        while (true) {
+            if (!pos.check_consistency()) {
+                std::cerr << "ERROR: Inconsistent chess position found."
+                          << std::endl;
+                std::cerr << pos << std::endl;
+                std::cerr << pos.get_fen() << std::endl;
+                return;
+            }
+            if (pos.get_board().has_insufficient_material()) { break; }
+            const auto moves = pos.get_legal_moves();
+            if (moves.empty()) { break; }
+            const auto chosen_move = random_choice(rng, moves);
+            if (!pos.is_valid(chosen_move)) {
+                std::cerr << "ERROR: Invalid chess move found." << std::endl;
+                std::cerr << pos << std::endl;
+                std::cerr << pos.get_fen() << std::endl;
+                std::cerr << chosen_move << std::endl;
+                return;
+            }
+            if (!pos.is_legal(chosen_move)) {
+                std::cerr << "ERROR: Illegal chess move found." << std::endl;
+                std::cerr << pos << std::endl;
+                std::cerr << pos.get_fen() << std::endl;
+                std::cerr << chosen_move << std::endl;
+                return;
+            }
+            pos.make_move(random_choice(rng, moves));
+        }
+        ++count;
+        std::cout << "Completed " << count
+                  << ((count == 1) ? " random self-test game."
+                                   : " random self-test games.")
+                  << std::endl;
+    }
 }
+
+
+int main() { self_test(); }

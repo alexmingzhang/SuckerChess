@@ -43,8 +43,8 @@ public: // ======================================================== CONSTRUCTORS
 
 public: // =========================================================== ACCESSORS
 
-    [[nodiscard]] constexpr PieceColor get_color_to_move() const noexcept {
-        return to_move;
+    [[nodiscard]] constexpr const ChessBoard &get_board() const noexcept {
+        return board;
     }
 
     [[nodiscard]] constexpr ChessSquare
@@ -75,6 +75,10 @@ public: // =========================================================== ACCESSORS
             case PieceColor::BLACK: return white_king_location;
         }
         __builtin_unreachable();
+    }
+
+    [[nodiscard]] constexpr PieceColor get_color_to_move() const noexcept {
+        return to_move;
     }
 
     [[nodiscard]] constexpr bool can_short_castle(PieceColor color

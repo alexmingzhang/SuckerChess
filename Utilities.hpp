@@ -8,6 +8,12 @@
 
 
 template <typename T>
+void print(bool verbose, const T &obj) {
+    if (verbose) { std::cout << obj; }
+}
+
+
+template <typename T>
 void println(bool verbose, const T &obj) {
     if (verbose) { std::cout << obj << std::endl; }
 }
