@@ -1,10 +1,11 @@
 #ifndef SUCKER_CHESS_CHESS_TOURNAMENT_HPP
 #define SUCKER_CHESS_CHESS_TOURNAMENT_HPP
 
+#include <memory> // for std::unique_ptr
 #include <string> // for std::string
+#include <utility>
 #include <vector> // for std::vector
 
-#include "ChessEngine.hpp"
 #include "ChessGame.hpp"
 #include "ChessPlayer.hpp"
 
@@ -12,36 +13,49 @@
 class ChessTournament {
 
     std::string name;
-    std::vector<ChessPlayer *> players;
+    std::vector<std::unique_ptr<ChessPlayer>> players;
     std::vector<ChessGame> game_history;
     std::size_t current_round;
-    std::size_t current_game_index;
 
-public:
+public: // ======================================================== CONSTRUCTORS
 
     explicit ChessTournament()
         : name("SuckerChess Tournament")
         , players()
         , game_history()
-        , current_round(0)
-        , current_game_index(0) {}
+        , current_round(0) {}
 
     explicit ChessTournament(std::string n)
         : name(std::move(n))
         , players()
         , game_history()
-        , current_round(0)
-        , current_game_index(0) {}
+        , current_round(0) {}
 
-    [[nodiscard]] const std::string &get_name() const;
+public: // =========================================================== ACCESSORS
 
-    [[nodiscard]] const std::vector<ChessPlayer *> &get_players() const;
+    [[nodiscard]] constexpr const std::string &get_name() const noexcept {
+        return name;
+    }
 
-    [[nodiscard]] const std::vector<ChessGame> &get_game_history() const;
+    [[nodiscard]] constexpr const std::vector<std::unique_ptr<ChessPlayer>> &
+    get_players() const noexcept {
+        return players;
+    }
 
-    void add_player(ChessPlayer *);
+    [[nodiscard]] constexpr const std::vector<ChessGame> &
+    get_game_history() const noexcept {
+        return game_history;
+    }
+
+public: // ============================================================ MUTATORS
+
+    void add_player(std::unique_ptr<ChessPlayer> &&player) noexcept {
+        players.push_back(std::move(player));
+    }
 
     void sort_players_by_elo();
+
+public: // =====================================================================
 
     void run(int num_rounds, int print_frequency);
 

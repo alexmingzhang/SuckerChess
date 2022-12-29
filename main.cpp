@@ -1,7 +1,10 @@
 #include <iostream>
 
+#include "src/ChessEngine.hpp"
 #include "src/ChessGame.hpp"
+#include "src/ChessPlayer.hpp"
 #include "src/ChessPosition.hpp"
+#include "src/ChessTournament.hpp"
 #include "src/Utilities.hpp"
 
 
@@ -49,10 +52,10 @@ static void self_test() {
 }
 
 
-static void benchmark(unsigned long num_games) {
+static void benchmark(unsigned long long num_games) {
     ChessEngine *const white = new Engine::Random();
     ChessEngine *const black = new Engine::Random();
-    for (unsigned long i = 0; i < num_games; ++i) {
+    for (unsigned long long i = 0; i < num_games; ++i) {
         ChessGame game;
         game.run(white, black, false);
     }
@@ -61,4 +64,16 @@ static void benchmark(unsigned long num_games) {
 }
 
 
-int main() { benchmark(1000); }
+static void tournament() {
+    ChessTournament tournament;
+    tournament.add_player(
+        std::make_unique<ChessPlayer>("CCCP", std::make_unique<Engine::CCCP>())
+    );
+    tournament.add_player(std::make_unique<ChessPlayer>(
+        "Random", std::make_unique<Engine::Random>()
+    ));
+    tournament.run(100, -1);
+}
+
+
+int main() { tournament(); }
