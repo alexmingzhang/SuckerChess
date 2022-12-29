@@ -9,13 +9,15 @@
 
 namespace Preference {
 
+#define DEFINE_PREFERENCE(NAME)                                                \
+    std::vector<ChessMove> NAME::pick_preferred_moves(                         \
+        [[maybe_unused]] const ChessPosition &current_pos,                     \
+        [[maybe_unused]] const std::vector<ChessMove> &allowed_moves,          \
+        [[maybe_unused]] const std::vector<ChessPosition> &pos_history,        \
+        [[maybe_unused]] const std::vector<ChessMove> &move_history            \
+    )
 
-std::vector<ChessMove> MateInOne::pick_preferred_moves(
-    const ChessPosition &current_pos,
-    const std::vector<ChessMove> &allowed_moves,
-    [[maybe_unused]] const std::vector<ChessPosition> &pos_history,
-    [[maybe_unused]] const std::vector<ChessMove> &move_history
-) {
+DEFINE_PREFERENCE(MateInOne) {
     return maximal_elements(allowed_moves, [&](ChessMove move) {
         ChessPosition copy = current_pos;
         copy.make_move(move);
@@ -23,37 +25,31 @@ std::vector<ChessMove> MateInOne::pick_preferred_moves(
     });
 }
 
-
-std::vector<ChessMove> Check::pick_preferred_moves(
-    const ChessPosition &current_pos,
-    const std::vector<ChessMove> &allowed_moves,
-    [[maybe_unused]] const std::vector<ChessPosition> &pos_history,
-    [[maybe_unused]] const std::vector<ChessMove> &move_history
-) {
+DEFINE_PREFERENCE(Check) {
     return maximal_elements(allowed_moves, [&](ChessMove move) {
         return current_pos.puts_opponent_in_check(move);
     });
 }
 
-
-std::vector<ChessMove> Capture::pick_preferred_moves(
-    const ChessPosition &current_pos,
-    const std::vector<ChessMove> &allowed_moves,
-    [[maybe_unused]] const std::vector<ChessPosition> &pos_history,
-    [[maybe_unused]] const std::vector<ChessMove> &move_history
-) {
+DEFINE_PREFERENCE(Capture) {
     return maximal_elements(allowed_moves, [&](ChessMove move) {
         return current_pos.is_capture(move);
     });
 }
 
+DEFINE_PREFERENCE(First) { return {*allowed_moves.begin()}; }
 
-std::vector<ChessMove> Swarm::pick_preferred_moves(
-    const ChessPosition &current_pos,
-    const std::vector<ChessMove> &allowed_moves,
-    [[maybe_unused]] const std::vector<ChessPosition> &pos_history,
-    [[maybe_unused]] const std::vector<ChessMove> &move_history
-) {
+DEFINE_PREFERENCE(Last) { return {*allowed_moves.rbegin()}; }
+
+DEFINE_PREFERENCE(Reduce) {
+    return minimal_elements(allowed_moves, [&](ChessMove move) {
+        ChessPosition copy = current_pos;
+        copy.make_move(move);
+        return copy.get_legal_moves().size();
+    });
+}
+
+DEFINE_PREFERENCE(Swarm) {
     const ChessSquare enemy_king_location =
         current_pos.get_enemy_king_location(current_pos.get_color_to_move());
     return minimal_elements(allowed_moves, [&](ChessMove move) {
@@ -62,13 +58,7 @@ std::vector<ChessMove> Swarm::pick_preferred_moves(
     });
 }
 
-
-std::vector<ChessMove> Huddle::pick_preferred_moves(
-    const ChessPosition &current_pos,
-    const std::vector<ChessMove> &allowed_moves,
-    [[maybe_unused]] const std::vector<ChessPosition> &pos_history,
-    [[maybe_unused]] const std::vector<ChessMove> &move_history
-) {
+DEFINE_PREFERENCE(Huddle) {
     const ChessSquare king_location =
         current_pos.get_king_location(current_pos.get_color_to_move());
     return minimal_elements(allowed_moves, [&](ChessMove move) {
@@ -77,6 +67,77 @@ std::vector<ChessMove> Huddle::pick_preferred_moves(
     });
 }
 
+DEFINE_PREFERENCE(Energetic) {
+    return maximal_elements(allowed_moves, [&](ChessMove move) {
+        return move.distance();
+    });
+}
+
+DEFINE_PREFERENCE(Lazy) {
+    return minimal_elements(allowed_moves, [&](ChessMove move) {
+        return move.distance();
+    });
+}
+
+DEFINE_PREFERENCE(Coordinated) {
+    return maximal_elements(allowed_moves, [&](ChessMove move) {
+        const PieceColor self = current_pos.get_color_to_move();
+        ChessPosition copy = current_pos;
+        copy.make_move(move);
+        int result = 0;
+        for (coord_t file = 0; file < NUM_FILES; ++file) {
+            for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
+                ChessSquare square = {file, rank};
+                if (copy.get_board().is_attacked_by(self, square)) { ++result; }
+            }
+        }
+        return result;
+    });
+}
+
+DEFINE_PREFERENCE(Blockade) {
+    return minimal_elements(allowed_moves, [&](ChessMove move) {
+        ChessPosition copy = current_pos;
+        copy.make_move(move);
+        const PieceColor enemy = copy.get_color_to_move();
+        int result = 0;
+        for (coord_t file = 0; file < NUM_FILES; ++file) {
+            for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
+                ChessSquare square = {file, rank};
+                if (copy.get_board().is_attacked_by(enemy, square)) {
+                    ++result;
+                }
+            }
+        }
+        return result;
+    });
+}
+
+DEFINE_PREFERENCE(Defender) {
+    return maximal_elements(allowed_moves, [&](ChessMove move) {
+        const PieceColor self = current_pos.get_color_to_move();
+        return current_pos.get_board().is_attacked_by(self, move.get_dst());
+    });
+}
+
+DEFINE_PREFERENCE(Outpost) {
+    return minimal_elements(allowed_moves, [&](ChessMove move) {
+        const PieceColor self = current_pos.get_color_to_move();
+        const PieceColor enemy =
+            (self == PieceColor::WHITE) ? PieceColor::BLACK : PieceColor::WHITE;
+        return current_pos.get_board().is_attacked_by(enemy, move.get_dst());
+    });
+}
+
+DEFINE_PREFERENCE(Gambit) {
+    return maximal_elements(allowed_moves, [&](ChessMove move) {
+        const PieceColor self = current_pos.get_color_to_move();
+        const PieceColor enemy =
+            (self == PieceColor::WHITE) ? PieceColor::BLACK : PieceColor::WHITE;
+        return current_pos.get_board().is_attacked_by(self, move.get_dst()) &&
+               current_pos.get_board().is_attacked_by(enemy, move.get_dst());
+    });
+}
 
 } // namespace Preference
 
@@ -89,7 +150,7 @@ Preference::Preference()
     , preferences() {}
 
 
-void Preference::add_preference(std::unique_ptr<ChessPreference> &&pref) {
+void Preference::add(std::unique_ptr<ChessPreference> &&pref) {
     preferences.push_back(std::move(pref));
 }
 
@@ -113,92 +174,6 @@ ChessMove Preference::pick_move(
     } else {
         return random_choice(rng, allowed_moves);
     }
-}
-
-
-ChessMove FirstLegalMove::pick_move(
-    [[maybe_unused]] const ChessPosition &current_pos,
-    const std::vector<ChessMove> &legal_moves,
-    [[maybe_unused]] const std::vector<ChessPosition> &pos_history,
-    [[maybe_unused]] const std::vector<ChessMove> &move_history
-) {
-    return legal_moves[0];
-}
-
-
-Random::Random()
-    : rng(properly_seeded_random_engine()) {}
-
-
-ChessMove Random::pick_move(
-    [[maybe_unused]] const ChessPosition &current_pos,
-    const std::vector<ChessMove> &legal_moves,
-    [[maybe_unused]] const std::vector<ChessPosition> &pos_history,
-    [[maybe_unused]] const std::vector<ChessMove> &move_history
-) {
-    return random_choice(rng, legal_moves);
-}
-
-
-Lazy::Lazy()
-    : rng(properly_seeded_random_engine()) {}
-
-
-ChessMove Lazy::pick_move(
-    [[maybe_unused]] const ChessPosition &current_pos,
-    const std::vector<ChessMove> &legal_moves,
-    [[maybe_unused]] const std::vector<ChessPosition> &pos_history,
-    [[maybe_unused]] const std::vector<ChessMove> &move_history
-) {
-    return random_choice(
-        rng,
-        minimal_elements(
-            legal_moves, [&](ChessMove move) { return move.distance(); }
-        )
-    );
-}
-
-
-Energetic::Energetic()
-    : rng(properly_seeded_random_engine()) {}
-
-
-ChessMove Energetic::pick_move(
-    [[maybe_unused]] const ChessPosition &current_pos,
-    const std::vector<ChessMove> &legal_moves,
-    [[maybe_unused]] const std::vector<ChessPosition> &pos_history,
-    [[maybe_unused]] const std::vector<ChessMove> &move_history
-) {
-    return random_choice(
-        rng,
-        maximal_elements(
-            legal_moves, [&](ChessMove move) { return move.distance(); }
-        )
-    );
-}
-
-
-Reducer::Reducer()
-    : rng(properly_seeded_random_engine()) {}
-
-
-ChessMove Reducer::pick_move(
-    const ChessPosition &current_pos,
-    const std::vector<ChessMove> &legal_moves,
-    [[maybe_unused]] const std::vector<ChessPosition> &pos_history,
-    [[maybe_unused]] const std::vector<ChessMove> &move_history
-) {
-    return random_choice(
-        rng,
-        minimal_elements(
-            legal_moves,
-            [&](ChessMove move) {
-                ChessPosition copy = current_pos;
-                copy.make_move(move);
-                return copy.get_legal_moves().size();
-            }
-        )
-    );
 }
 
 
