@@ -1,5 +1,6 @@
 #include "ChessEngine.hpp"
 
+#include <cassert> // for assert
 #include <cmath>   // for std::abs
 #include <utility> // for std::move
 
@@ -217,9 +218,7 @@ ChessMove CCCP::pick_move(
     std::vector<ChessMove> push_moves;
 
     ChessSquare enemy_king_square =
-        current_pos.get_color_to_move() == PieceColor::WHITE
-            ? current_pos.get_black_king_location()
-            : current_pos.get_white_king_location();
+        current_pos.get_enemy_king_location(current_pos.get_color_to_move());
 
     for (const ChessMove move : legal_moves) {
         ChessPosition copy = current_pos;
@@ -256,7 +255,9 @@ ChessMove CCCP::pick_move(
                     capture_move_material_advantage;
                 best_capture_move = move;
             }
-        } else if (best_capture_move == NULL_MOVE && move.get_dst().distance(enemy_king_square) < move.get_src().distance(enemy_king_square)) {
+        } else if ((best_capture_move == NULL_MOVE) &&
+                   (move.get_dst().distance(enemy_king_square) <
+                    move.get_src().distance(enemy_king_square))) {
             push_moves.push_back(move);
         }
     }

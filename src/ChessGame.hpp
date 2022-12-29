@@ -16,9 +16,9 @@ enum class GameStatus : std::uint8_t {
     WHITE_WON_BY_CHECKMATE,
     BLACK_WON_BY_CHECKMATE,
     DRAWN_BY_STALEMATE,
+    DRAWN_BY_INSUFFICIENT_MATERIAL,
     DRAWN_BY_REPETITION,
     DRAWN_BY_50_MOVE_RULE,
-    DRAWN_BY_INSUFFICIENT_MATERIAL,
 }; // enum class GameStatus
 
 
@@ -41,17 +41,17 @@ public:
         , half_move_clock(0)
         , full_move_count(1) {}
 
-    void make_move(const ChessMove &move);
+    [[nodiscard]] GameStatus get_status() const;
 
-    [[nodiscard]] bool drawn() const;
+    void make_move(const ChessMove &move);
 
     ChessMove get_console_move(const std::vector<ChessMove> &legal_moves);
 
     PieceColor run(ChessEngine *white, ChessEngine *black, bool verbose = true);
 
-    std::string get_PGN() const;
+    [[nodiscard]] std::string get_PGN() const;
 
-    std::string get_full_PGN(
+    [[nodiscard]] std::string get_full_PGN(
         const std::string &event_name,
         int num_round,
         const std::string &white_name,
@@ -60,8 +60,8 @@ public:
 
 private:
 
-    std::string get_PGN_result() const;
-    std::string get_PGN_move_text() const;
+    [[nodiscard]] std::string get_PGN_result() const;
+    [[nodiscard]] std::string get_PGN_move_text() const;
 
 }; // class ChessGame
 

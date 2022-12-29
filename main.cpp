@@ -11,7 +11,7 @@ static void self_test() {
         ChessPosition pos;
         while (true) {
             if (!pos.check_consistency()) {
-                std::cerr << "ERROR: Inconsistent chess position found."
+                std::cerr << "FATAL ERROR: Inconsistent chess position found."
                           << std::endl;
                 std::cerr << pos << std::endl;
                 std::cerr << pos.get_fen() << std::endl;
@@ -22,14 +22,16 @@ static void self_test() {
             if (moves.empty()) { break; }
             const auto chosen_move = random_choice(rng, moves);
             if (!pos.is_valid(chosen_move)) {
-                std::cerr << "ERROR: Invalid chess move found." << std::endl;
+                std::cerr << "FATAL ERROR: Invalid chess move found."
+                          << std::endl;
                 std::cerr << pos << std::endl;
                 std::cerr << pos.get_fen() << std::endl;
                 std::cerr << chosen_move << std::endl;
                 return;
             }
             if (!pos.is_legal(chosen_move)) {
-                std::cerr << "ERROR: Illegal chess move found." << std::endl;
+                std::cerr << "FATAL ERROR: Illegal chess move found."
+                          << std::endl;
                 std::cerr << pos << std::endl;
                 std::cerr << pos.get_fen() << std::endl;
                 std::cerr << chosen_move << std::endl;
