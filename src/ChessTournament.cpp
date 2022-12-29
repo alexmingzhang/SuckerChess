@@ -57,28 +57,22 @@ void ChessTournament::run(long long num_rounds, long long print_frequency) {
 void ChessTournament::print_info() const {
     std::cout << name << " (round " << current_round << ", game "
               << game_history.size() << ") \n";
-    std::cout << "    Engine      ELO       Wins (W/B)  Draws   Losses (W/B)\n";
-
-    auto concat_stats = [](unsigned long long a, unsigned long long b) {
-        std::ostringstream result;
-        result << a << "/" << b;
-        return result.str();
-    };
-
+    std::cout
+        << "      Engine   :   ELO   :   W (w/b)   :   D   :   L (w/b)  \n";
     for (std::size_t i = 0; i < players.size(); ++i) {
         const ChessPlayer &p = *players[i];
-        std::cout << std::right << std::setw(2) << i + 1 << ". " << std::left
-                  << std::setw(12) << p.get_name() << std::setw(10)
-                  << std::fixed << std::setprecision(2) << p.get_elo()
-                  << std::setw(12)
-                  << concat_stats(
-                         p.get_num_wins_as_white(), p.get_num_wins_as_black()
-                     )
-                  << std::setw(8) << p.get_num_draws() << std::setw(12)
-                  << concat_stats(
-                         p.get_num_losses_as_white(),
-                         p.get_num_losses_as_black()
-                     )
-                  << '\n';
+        std::cout << std::right << std::setw(4) << i + 1 << ". ";
+        std::cout << std::left << std::setw(8) << p.get_name() << " : ";
+        std::cout << std::right << std::setw(7) << std::fixed
+                  << std::setprecision(2) << p.get_elo() << " : ";
+        std::cout << std::right << std::setw(5) << p.get_num_wins_as_white()
+                  << '/' << std::left << std::setw(5)
+                  << p.get_num_wins_as_black() << " : ";
+        std::cout << std::right << std::setw(5) << p.get_num_draws() << " : ";
+        std::cout << std::right << std::setw(5) << p.get_num_losses_as_white()
+                  << '/' << std::left << std::setw(5)
+                  << p.get_num_losses_as_black();
+        std::cout << '\n';
     }
+    std::cout << std::flush;
 }
