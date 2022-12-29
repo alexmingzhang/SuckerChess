@@ -6,8 +6,8 @@
 #include <string>  // for std::string
 #include <vector>  // for std::vector
 
-#include "ChessBoard.hpp"
 #include "src/CastlingRights.hpp"
+#include "src/ChessBoard.hpp"
 #include "src/ChessMove.hpp"
 #include "src/ChessPiece.hpp"
 
@@ -709,14 +709,14 @@ public: // ===================================================== MOVE GENERATION
         }
     }
 
-    [[nodiscard]] std::vector<ChessMove> get_valid_moves(PieceColor moving_color
+    [[nodiscard]] std::vector<ChessMove> get_valid_moves(PieceColor color
     ) const noexcept {
         std::vector<ChessMove> result;
         for (coord_t src_file = 0; src_file < NUM_FILES; ++src_file) {
             for (coord_t src_rank = 0; src_rank < NUM_RANKS; ++src_rank) {
-                if ((*this)(src_file, src_rank).get_color() == moving_color) {
+                if ((*this)(src_file, src_rank).get_color() == color) {
                     visit_moves(
-                        moving_color,
+                        color,
                         {src_file, src_rank},
                         [&](ChessMove move) { result.push_back(move); }
                     );
@@ -726,14 +726,14 @@ public: // ===================================================== MOVE GENERATION
         return result;
     }
 
-    [[nodiscard]] std::vector<ChessMove> get_legal_moves(PieceColor moving_color
+    [[nodiscard]] std::vector<ChessMove> get_legal_moves(PieceColor color
     ) const noexcept {
         std::vector<ChessMove> result;
         for (coord_t src_file = 0; src_file < NUM_FILES; ++src_file) {
             for (coord_t src_rank = 0; src_rank < NUM_RANKS; ++src_rank) {
-                if ((*this)(src_file, src_rank).get_color() == moving_color) {
+                if ((*this)(src_file, src_rank).get_color() == color) {
                     visit_moves(
-                        moving_color,
+                        color,
                         {src_file, src_rank},
                         [&](ChessMove move) {
                             if (is_legal(move)) { result.push_back(move); }
@@ -755,15 +755,19 @@ public: // ===================================================== MOVE GENERATION
 
     [[nodiscard]] bool check_consistency() const noexcept;
 
-public: // ======================================================= CHECK TESTING
+public: // ======================================================== MATE TESTING
 
-    [[nodiscard]] bool checkmated() const {
-        return in_check(to_move) && get_legal_moves().empty();
+    [[nodiscard]] bool checkmated(PieceColor color) const {
+        return in_check(color) && get_legal_moves(color).empty();
     }
 
-    [[nodiscard]] bool stalemated() const {
-        return !in_check(to_move) && get_legal_moves().empty();
+    [[nodiscard]] bool checkmated() const { return checkmated(to_move); }
+
+    [[nodiscard]] bool stalemated(PieceColor color) const {
+        return !in_check(color) && get_legal_moves(color).empty();
     }
+
+    [[nodiscard]] bool stalemated() const { return stalemated(to_move); }
 
 public: // ============================================================ PRINTING
 
@@ -775,11 +779,13 @@ public: // ============================================================ PRINTING
 
     friend std::ostream &operator<<(std::ostream &os, const ChessPosition &b);
 
-public: // ================================================================ MISC
+public: // ============================================================= FEN I/O
 
     void load_fen(const std::string &);
 
     [[nodiscard]] std::string get_fen() const;
+
+public: // ========================================================== EVALUATION
 
     [[nodiscard]] int get_material_advantage() const;
 

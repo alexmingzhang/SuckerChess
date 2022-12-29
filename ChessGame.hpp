@@ -18,6 +18,7 @@ enum class GameStatus : std::uint8_t {
     DRAWN_BY_STALEMATE,
     DRAWN_BY_REPETITION,
     DRAWN_BY_50_MOVE_RULE,
+    DRAWN_BY_INSUFFICIENT_MATERIAL,
 }; // enum class GameStatus
 
 

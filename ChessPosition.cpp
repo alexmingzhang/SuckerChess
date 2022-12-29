@@ -281,11 +281,11 @@ std::string ChessPosition::get_fen() const {
 
 
 int ChessPosition::get_material_advantage() const {
-    int material_advantage = 0;
+    int result = 0;
     for (coord_t file = 0; file < NUM_FILES; ++file) {
         for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
-            material_advantage += (*this)(file, rank).material_value();
+            result += (*this)(file, rank).material_value();
         }
     }
-    return material_advantage;
+    return result;
 }

@@ -23,4 +23,4 @@ add_executable(SuckerChess main.cpp
         ChessGame.cpp ChessGame.hpp
         ChessPlayer.cpp ChessPlayer.hpp
         ChessTournament.cpp ChessTournament.hpp
-        Utilities.cpp Utilities.hpp src/CastlingRights.cpp src/CastlingRights.hpp ChessBoard.cpp ChessBoard.hpp)
+        Utilities.cpp Utilities.hpp src/CastlingRights.cpp src/CastlingRights.hpp src/ChessBoard.cpp src/ChessBoard.hpp)

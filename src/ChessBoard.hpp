@@ -7,8 +7,8 @@
 #include <ostream> // for std::ostream
 #include <string>  // for std::string
 
-#include "src/ChessMove.hpp"
-#include "src/ChessPiece.hpp"
+#include "ChessMove.hpp"
+#include "ChessPiece.hpp"
 
 
 class ChessBoard {
