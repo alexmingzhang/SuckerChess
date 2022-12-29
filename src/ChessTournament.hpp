@@ -1,10 +1,10 @@
 #ifndef SUCKER_CHESS_CHESS_TOURNAMENT_HPP
 #define SUCKER_CHESS_CHESS_TOURNAMENT_HPP
 
-#include <memory> // for std::unique_ptr
-#include <string> // for std::string
-#include <utility>
-#include <vector> // for std::vector
+#include <memory>  // for std::unique_ptr
+#include <string>  // for std::string
+#include <utility> // for std::move
+#include <vector>  // for std::vector
 
 #include "ChessGame.hpp"
 #include "ChessPlayer.hpp"
@@ -15,7 +15,7 @@ class ChessTournament {
     std::string name;
     std::vector<std::unique_ptr<ChessPlayer>> players;
     std::vector<ChessGame> game_history;
-    std::size_t current_round;
+    long long current_round;
 
 public: // ======================================================== CONSTRUCTORS
 
@@ -57,7 +57,7 @@ public: // ============================================================ MUTATORS
 
 public: // =====================================================================
 
-    void run(int num_rounds, int print_frequency);
+    void run(long long num_rounds, long long print_frequency);
 
     void print_info() const;
 

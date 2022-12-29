@@ -8,7 +8,7 @@
 #include "src/Utilities.hpp"
 
 
-static void self_test() {
+[[maybe_unused]] static void self_test() {
     auto rng = properly_seeded_random_engine();
     std::size_t count = 0;
     while (true) {
@@ -52,7 +52,7 @@ static void self_test() {
 }
 
 
-static void benchmark(unsigned long long num_games) {
+[[maybe_unused]] static void benchmark(unsigned long long num_games) {
     ChessEngine *const white = new Engine::Random();
     ChessEngine *const black = new Engine::Random();
     for (unsigned long long i = 0; i < num_games; ++i) {
@@ -64,7 +64,7 @@ static void benchmark(unsigned long long num_games) {
 }
 
 
-static void tournament() {
+[[maybe_unused]] static void tournament() {
     ChessTournament tournament;
     tournament.add_player(
         std::make_unique<ChessPlayer>("CCCP", std::make_unique<Engine::CCCP>())
