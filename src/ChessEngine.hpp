@@ -1,9 +1,10 @@
 #ifndef SUCKER_CHESS_CHESS_ENGINE_HPP
 #define SUCKER_CHESS_CHESS_ENGINE_HPP
 
-#include <memory> // for std::unique_ptr
-#include <random> // for std::mt19937
-#include <vector> // for std::vector
+#include <memory>  // for std::unique_ptr
+#include <random>  // for std::mt19937
+#include <utility> // for std::forward
+#include <vector>  // for std::vector
 
 #include "ChessMove.hpp"
 #include "ChessPosition.hpp"
@@ -25,20 +26,29 @@ public:
 }; // class ChessPreference
 
 
-class ChessEngine {
+enum class PreferenceToken {
 
-public:
+    MATE_IN_ONE,
+    CHECK,
+    CAPTURE,
 
-    virtual ~ChessEngine() noexcept = default;
+    FIRST, // first available move
+    LAST,  // last available move
 
-    virtual ChessMove pick_move(
-        const ChessPosition &current_pos,
-        const std::vector<ChessMove> &legal_moves,
-        const std::vector<ChessPosition> &pos_history,
-        const std::vector<ChessMove> &move_history
-    ) = 0;
+    REDUCE, // minimize available moves for opponent
 
-}; // class ChessEngine
+    SWARM,     // moves pieces toward enemy king
+    HUDDLE,    // moves pieces toward own king
+    ENERGETIC, // makes long moves
+    LAZY,      // makes short moves
+
+    COORDINATED, // maximizes number of squares attacked by self
+    BLOCKADE,    // minimizes number of squares attacked by opponent
+    DEFENDER,    // moves pieces to squares attacked by self
+    OUTPOST,     // moves pieces to squares which are not attacked by opponent
+    GAMBIT,      // moves pieces to squares attacked by both self and opponent
+
+}; // enum class PreferenceToken
 
 
 namespace Preference {
@@ -74,6 +84,22 @@ DECLARE_PREFERENCE(Gambit);
 } // namespace Preference
 
 
+class ChessEngine {
+
+public:
+
+    virtual ~ChessEngine() noexcept = default;
+
+    virtual ChessMove pick_move(
+        const ChessPosition &current_pos,
+        const std::vector<ChessMove> &legal_moves,
+        const std::vector<ChessPosition> &pos_history,
+        const std::vector<ChessMove> &move_history
+    ) = 0;
+
+}; // class ChessEngine
+
+
 namespace Engine {
 
 
@@ -86,11 +112,11 @@ public:
 
     Preference();
 
-    void add(std::unique_ptr<ChessPreference> &&pref);
+    void add_preference(std::unique_ptr<ChessPreference> &&pref);
 
-    template <typename T>
-    void add() {
-        add(std::make_unique<T>());
+    template <typename T, typename... Args>
+    void add_preference(Args &&...args) {
+        add_preference(std::make_unique<T>(std::forward<Args>(args)...));
     }
 
     ChessMove pick_move(

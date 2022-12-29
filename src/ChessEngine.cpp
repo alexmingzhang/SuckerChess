@@ -150,7 +150,7 @@ Preference::Preference()
     , preferences() {}
 
 
-void Preference::add(std::unique_ptr<ChessPreference> &&pref) {
+void Preference::add_preference(std::unique_ptr<ChessPreference> &&pref) {
     preferences.push_back(std::move(pref));
 }
 
