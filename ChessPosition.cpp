@@ -211,168 +211,87 @@ std::ostream &operator<<(std::ostream &os, const ChessPosition &pos) {
 }
 
 
-// static constexpr std::array<char, 20> FEN_BOARD_CHARACTERS = {
-//     'K', 'Q', 'R', 'B', 'N', 'P',           // white pieces
-//     'k', 'q', 'r', 'b', 'n', 'p',           // black pieces
-//     '1', '2', '3', '4', '5', '6', '7', '8', // empty squares
-// };
-
-
 void ChessPosition::load_fen(const std::string &fen_string) {
     std::istringstream fen(fen_string);
 
-    { // Determine piece placement
-        std::string piece_placement;
-        fen >> piece_placement;
+    std::string fen_board_str;
+    fen >> fen_board_str;
+    board = ChessBoard(fen_board_str);
+    white_king_location = board.find_unique_piece(WHITE_KING);
+    black_king_location = board.find_unique_piece(BLACK_KING);
 
-        coord_t file = 0;
-        coord_t rank = NUM_RANKS - 1;
-        [[maybe_unused]] bool white_king_found = false;
-        [[maybe_unused]] bool black_king_found = false;
-        for (const char c : piece_placement) {
-            if (c >= '1' && c <= '8') {
-                for (coord_t j = 0; j < c - '0'; ++j) {
-                    (*this)(file + j, rank) = EMPTY_SQUARE;
-                }
-                file += c - '0';
-            } else if (c == '/') {
-                file = 0;
-                rank--;
-            } else {
-                switch (c) {
-                    case 'K':
-                        assert(!white_king_found);
-                        white_king_found = true;
-                        white_king_location = {file, rank};
-                        (*this)(file++, rank) = WHITE_KING;
-                        break;
-                    case 'Q': (*this)(file++, rank) = WHITE_QUEEN; break;
-                    case 'R': (*this)(file++, rank) = WHITE_ROOK; break;
-                    case 'B': (*this)(file++, rank) = WHITE_BISHOP; break;
-                    case 'N': (*this)(file++, rank) = WHITE_KNIGHT; break;
-                    case 'P': (*this)(file++, rank) = WHITE_PAWN; break;
-                    case 'k':
-                        assert(!black_king_found);
-                        black_king_found = true;
-                        black_king_location = {file, rank};
-                        (*this)(file++, rank) = BLACK_KING;
-                        break;
-                    case 'q': (*this)(file++, rank) = BLACK_QUEEN; break;
-                    case 'r': (*this)(file++, rank) = BLACK_ROOK; break;
-                    case 'b': (*this)(file++, rank) = BLACK_BISHOP; break;
-                    case 'n': (*this)(file++, rank) = BLACK_KNIGHT; break;
-                    case 'p': (*this)(file++, rank) = BLACK_PAWN; break;
-                    default: break;
-                }
-            }
+    char fen_color_char;
+    fen >> fen_color_char;
+    switch (fen_color_char) {
+        case 'W': to_move = PieceColor::WHITE; break;
+        case 'w': to_move = PieceColor::WHITE; break;
+        case 'B': to_move = PieceColor::BLACK; break;
+        case 'b': to_move = PieceColor::BLACK; break;
+        default:
+            throw std::invalid_argument(
+                "FEN active color field contains invalid character: " +
+                std::string{fen_color_char}
+            );
+    }
+
+    std::string fen_rights_str;
+    fen >> fen_rights_str;
+    castling_rights = CastlingRights(fen_rights_str);
+
+    std::string fen_en_passant_str;
+    fen >> fen_en_passant_str;
+    if (fen_en_passant_str == "-") {
+        en_passant_file = NUM_FILES;
+    } else {
+        if (fen_en_passant_str.size() != 2) {
+            throw std::invalid_argument(
+                "FEN en passant field is not a valid square"
+            );
         }
-        assert(white_king_found);
-        assert(black_king_found);
-    }
-
-    { // Determine active color
-        char active_color;
-        fen >> active_color;
-        to_move = std::tolower(active_color) == 'w' ? PieceColor::WHITE
-                                                    : PieceColor::BLACK;
-    }
-
-    { // Determine castling rights
-        std::string castling_rights_str;
-        fen >> castling_rights_str;
-        castling_rights = CastlingRights(castling_rights_str);
-    }
-
-    { // Determine en passant square
-        std::string en_passant_square;
-        fen >> en_passant_square;
-
-        if (en_passant_square == "-") {
-            en_passant_file = NUM_FILES;
-        } else {
-            en_passant_file = en_passant_square[0] - 'a';
+        const char fen_en_passant_rank = fen_en_passant_str[1];
+        const bool valid_rank =
+            ((to_move == PieceColor::WHITE) && (fen_en_passant_rank == '6')) ||
+            ((to_move == PieceColor::BLACK) && (fen_en_passant_rank == '3'));
+        if (!valid_rank) {
+            throw std::invalid_argument("FEN en passant rank is invalid");
         }
+        const char fen_en_passant_file = fen_en_passant_str[0];
+        if ((fen_en_passant_file < 'a') || (fen_en_passant_file > 'h')) {
+            throw std::invalid_argument("FEN en passant file is invalid");
+        }
+        en_passant_file = static_cast<coord_t>(fen_en_passant_file - 'a');
     }
+}
+
+
+static constexpr char fen_char(PieceColor color) noexcept {
+    switch (color) {
+        case PieceColor::NONE: __builtin_unreachable();
+        case PieceColor::WHITE: return 'w';
+        case PieceColor::BLACK: return 'b';
+    }
+    __builtin_unreachable();
 }
 
 
 std::string ChessPosition::get_fen() const {
     std::ostringstream fen;
-
-    { // Get piece placement
-        unsigned char space_counter = 0;
-        auto append_spaces = [&fen, &space_counter]() {
-            if (space_counter > 0) {
-                fen << static_cast<char>(space_counter + 0x30);
-                space_counter = 0;
-            }
-        };
-
-        auto append_char = [&fen](char c, PieceColor color) {
-            fen
-                << (color == PieceColor::WHITE
-                        ? static_cast<char>(std::toupper(c))
-                        : c);
-        };
-
-        for (coord_t rank = NUM_RANKS - 1; rank >= 0; --rank) {
-            for (coord_t file = 0; file < NUM_FILES; ++file) {
-                const ChessPiece piece = (*this)(file, rank);
-                switch (piece.get_type()) {
-                    case PieceType::KING:
-                        append_spaces();
-                        append_char('k', piece.get_color());
-                        break;
-                    case PieceType::QUEEN:
-                        append_spaces();
-                        append_char('q', piece.get_color());
-                        break;
-                    case PieceType::ROOK:
-                        append_spaces();
-                        append_char('r', piece.get_color());
-                        break;
-                    case PieceType::BISHOP:
-                        append_spaces();
-                        append_char('b', piece.get_color());
-                        break;
-                    case PieceType::KNIGHT:
-                        append_spaces();
-                        append_char('n', piece.get_color());
-                        break;
-                    case PieceType::PAWN:
-                        append_spaces();
-                        append_char('p', piece.get_color());
-                        break;
-                    case PieceType::NONE: space_counter++; break;
-                }
-            }
-            append_spaces();
-            if (rank != 0) { fen << '/'; }
-        }
-    }
-    fen << ' ';
-
-    fen << (to_move == PieceColor::WHITE ? 'w' : 'b') << ' ';
-    fen << castling_rights << ' ';
-
+    fen << board << ' ' << fen_char(to_move) << ' ' << castling_rights << ' ';
     if (en_passant_square().in_bounds()) {
         fen << en_passant_square();
     } else {
         fen << '-';
     }
-
     return fen.str();
 }
 
 
 int ChessPosition::get_material_advantage() const {
     int material_advantage = 0;
-
     for (coord_t file = 0; file < NUM_FILES; ++file) {
         for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
             material_advantage += (*this)(file, rank).material_value();
         }
     }
-
     return material_advantage;
 }

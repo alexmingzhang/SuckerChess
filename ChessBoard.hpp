@@ -4,6 +4,8 @@
 #include <array>   // for std::array
 #include <cassert> // for assert
 #include <cstddef> // for std::size_t
+#include <ostream> // for std::ostream
+#include <string>  // for std::string
 
 #include "src/ChessMove.hpp"
 #include "src/ChessPiece.hpp"
@@ -35,25 +37,27 @@ public: // ========================================================= CONSTRUCTOR
                  EMPTY_SQUARE, EMPTY_SQUARE, BLACK_PAWN, BLACK_ROOK}}} {}
     // clang-format on
 
+    explicit ChessBoard(const std::string &fen_board_str);
+
 public: // ====================================================== INDEX OPERATOR
 
-    ChessPiece operator[](ChessSquare square) const noexcept {
+    constexpr ChessPiece operator[](ChessSquare square) const noexcept {
         assert(square.in_bounds());
         return data[static_cast<std::size_t>(square.file)]
                    [static_cast<std::size_t>(square.rank)];
     }
 
-    ChessPiece &operator[](ChessSquare square) noexcept {
+    constexpr ChessPiece &operator[](ChessSquare square) noexcept {
         assert(square.in_bounds());
         return data[static_cast<std::size_t>(square.file)]
                    [static_cast<std::size_t>(square.rank)];
     }
 
-    ChessPiece operator()(coord_t file, coord_t rank) const noexcept {
+    constexpr ChessPiece operator()(coord_t file, coord_t rank) const noexcept {
         return (*this)[{file, rank}];
     }
 
-    ChessPiece &operator()(coord_t file, coord_t rank) noexcept {
+    constexpr ChessPiece &operator()(coord_t file, coord_t rank) noexcept {
         return (*this)[{file, rank}];
     }
 
@@ -71,6 +75,8 @@ public: // ======================================================= STATE TESTING
     has_piece(ChessSquare square, ChessPiece piece) const noexcept {
         return square.in_bounds() && ((*this)[square] == piece);
     }
+
+    [[nodiscard]] ChessSquare find_unique_piece(ChessPiece piece) const;
 
 public: // ====================================================== PAWN UTILITIES
 
@@ -282,6 +288,9 @@ public: // ====================================================== ATTACK TESTING
     }
 
 }; // class ChessBoard
+
+
+std::ostream &operator<<(std::ostream &os, const ChessBoard &board);
 
 
 #endif // SUCKER_CHESS_CHESS_BOARD_HPP

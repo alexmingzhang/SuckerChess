@@ -15,7 +15,7 @@ CastlingRights::CastlingRights(const std::string &fen_rights_str)
             default:
                 throw std::invalid_argument(
                     "FEN castling rights string "
-                    "contains invalid character " +
+                    "contains invalid character: " +
                     std::string{c}
                 );
         }
