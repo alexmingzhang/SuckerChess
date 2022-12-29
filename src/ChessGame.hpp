@@ -127,19 +127,12 @@ public:
 
     PieceColor run(ChessEngine *white, ChessEngine *black, bool verbose = true);
 
-    [[nodiscard]] std::string get_PGN() const;
-
-    [[nodiscard]] std::string get_full_PGN(
-        const std::string &event_name,
-        int num_round,
-        const std::string &white_name,
-        const std::string &black_name
+    [[nodiscard]] std::string get_pgn(
+        const std::string &event_name = "",
+        long long num_round = -1,
+        const std::string &white_name = "",
+        const std::string &black_name = ""
     ) const;
-
-private:
-
-    [[nodiscard]] std::string get_PGN_result() const;
-    [[nodiscard]] std::string get_PGN_move_text() const;
 
 }; // class ChessGame
 

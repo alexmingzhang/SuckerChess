@@ -1,11 +1,10 @@
 #include "ChessGame.hpp"
 
-#include <algorithm> // for std::find
-#include <cassert>   // for assert
-#include <cstddef>   // for std::size_t
-#include <iostream>  // for std::cin, std::cout, std::cerr, std::endl
-#include <sstream>   // for std::istringstream, std::ostringstream
-#include <string>    // for std::getline, std::string
+#include <cassert>  // for assert
+#include <cstddef>  // for std::size_t
+#include <iostream> // for std::cin, std::cout, std::cerr, std::endl
+#include <sstream>  // for std::istringstream, std::ostringstream
+#include <string>   // for std::getline, std::string
 
 #include "Utilities.hpp"
 
@@ -74,6 +73,7 @@ void ChessGame::make_move(const ChessMove &move) {
 
 ChessMove ChessGame::get_console_move() {
 
+    // retrieve legal moves and names, with and without +/# suffixes
     const std::vector<ChessMove> &legal_moves = current_pos.get_legal_moves();
     std::vector<std::string> base_names;
     std::vector<std::string> suffixed_names;
@@ -82,8 +82,10 @@ ChessMove ChessGame::get_console_move() {
         suffixed_names.push_back(current_pos.get_move_name(move, true));
     }
 
+    // loop until user supplies a legal move
     while (true) {
 
+        // get command from stdin and trim leading/trailing whitespace
         std::string command;
         std::cout << "> ";
         std::getline(std::cin, command);
@@ -115,6 +117,7 @@ ChessMove ChessGame::get_console_move() {
             current_status = get_status();
             return NULL_MOVE;
         } else {
+            // search for move with name matching command
             assert(base_names.size() == legal_moves.size());
             assert(suffixed_names.size() == legal_moves.size());
             for (std::size_t i = 0; i < legal_moves.size(); ++i) {
@@ -141,7 +144,6 @@ ChessGame::run(ChessEngine *white, ChessEngine *black, bool verbose) {
             std::cout << current_pos.get() << current_pos.get_fen()
                       << std::endl;
         }
-
         assert(current_pos.get().check_consistency());
 
         if (current_status != IN_PROGRESS) {
@@ -199,21 +201,39 @@ ChessGame::run(ChessEngine *white, ChessEngine *black, bool verbose) {
             const ChessMove chosen_move = current_engine->pick_move(
                 current_pos.get(), legal_moves, pos_history, move_history
             );
-            assert(current_pos.get().is_legal(chosen_move));
+            // use if statement to avoid unnecessary
+            // evaluation of get_move_name()
             if (verbose) {
                 std::cout << "Chosen move: "
                           << current_pos.get_move_name(chosen_move, true)
                           << std::endl;
             }
+            assert(current_pos.get().is_legal(chosen_move));
             make_move(chosen_move);
         }
     }
 }
 
 
-std::string ChessGame::get_PGN_result() const {
+std::string ChessGame::get_pgn(
+    const std::string &event_name,
+    long long num_round,
+    const std::string &white_name,
+    const std::string &black_name
+) const {
+
     using enum GameStatus;
     std::ostringstream result;
+
+    // metadata
+    if (!event_name.empty()) { result << "[Event \"" << event_name << "\"]\n"; }
+    result << "[Site \"https://github.com/alexmingzhang/SuckerChess/\"]\n";
+    result << "[Date \"" << get_ymd_date('.') << "\"]\n";
+    if (num_round != -1) { result << "[Round \"" << num_round << "\"]\n"; }
+    if (!white_name.empty()) { result << "[White \"" << white_name << "\"]\n"; }
+    if (!black_name.empty()) { result << "[Black \"" << black_name << "\"]\n"; }
+
+    // game status
     result << "[Result \"";
     switch (current_status) {
         case IN_PROGRESS: result << "*"; break;
@@ -224,54 +244,29 @@ std::string ChessGame::get_PGN_result() const {
         case DRAWN_BY_REPETITION: [[fallthrough]];
         case DRAWN_BY_50_MOVE_RULE: result << "1/2-1/2"; break;
     }
-    result << "\"]\n";
-    return result.str();
-}
+    result << "\"]\n\n";
 
-
-std::string ChessGame::get_PGN_move_text() const {
-    std::ostringstream move_text;
     for (std::size_t i = 0; i < move_history.size(); ++i) {
-        const std::string name = pos_history[i].get_move_name(
+        const std::string move_name = pos_history[i].get_move_name(
             pos_history[i].get_legal_moves(), move_history[i], true
         );
         if (i % 2 == 0) {
-            if (i > 0) { move_text << ' '; }
-            move_text << (i / 2 + 1) << ". " << name;
+            if (i > 0) { result << ' '; }
+            result << (i / 2 + 1) << ". " << move_name;
         } else {
-            move_text << ' ' << name;
+            result << ' ' << move_name;
         }
     }
-    return move_text.str();
-}
+    switch (current_status) {
+        case IN_PROGRESS: break;
+        case WHITE_WON_BY_CHECKMATE: result << " 1-0"; break;
+        case BLACK_WON_BY_CHECKMATE: result << " 0-1"; break;
+        case DRAWN_BY_STALEMATE: [[fallthrough]];
+        case DRAWN_BY_INSUFFICIENT_MATERIAL: [[fallthrough]];
+        case DRAWN_BY_REPETITION: [[fallthrough]];
+        case DRAWN_BY_50_MOVE_RULE: result << " 1/2-1/2"; break;
+    }
+    result << '\n';
 
-
-std::string ChessGame::get_PGN() const {
-    std::ostringstream PGN;
-    PGN << "[Site \"https://github.com/alexmingzhang/SuckerChess/\"]\n";
-    PGN << "[Date \"" << get_ymd_date('.') << "\"]\n";
-    PGN << get_PGN_result();
-    PGN << get_PGN_move_text();
-    return PGN.str();
-}
-
-
-std::string ChessGame::get_full_PGN(
-    const std::string &event_name,
-    int num_round,
-    const std::string &white_name,
-    const std::string &black_name
-) const {
-    std::ostringstream PGN;
-
-    PGN << "[Event \"" << event_name << "\"]\n";
-    PGN << "[Site \"https://github.com/alexmingzhang/SuckerChess/\"]\n";
-    PGN << "[Date \"" << get_ymd_date('.') << "\"]\n";
-    PGN << "[Round \"" << num_round << "\"]\n";
-    PGN << "[White \"" << white_name << "\"]\n";
-    PGN << "[Black \"" << black_name << "\"]\n";
-    PGN << get_PGN_result() << "\n";
-    PGN << get_PGN_move_text();
-
-    return PGN.str();
+    return result.str();
 }
