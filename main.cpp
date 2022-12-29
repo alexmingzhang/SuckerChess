@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "src/ChessGame.hpp"
 #include "src/ChessPosition.hpp"
 #include "src/Utilities.hpp"
 
@@ -48,4 +49,14 @@ static void self_test() {
 }
 
 
-int main() { self_test(); }
+static void benchmark(unsigned long num_games) {
+    ChessEngine *const white = new Engine::Random;
+    ChessEngine *const black = new Engine::Random;
+    for (unsigned long i = 0; i < num_games; ++i) {
+        ChessGame game;
+        game.run(white, black, false);
+    }
+}
+
+
+int main() { benchmark(1000); }

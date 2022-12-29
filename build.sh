@@ -1,14 +1,13 @@
 GCC_WARNING_FLAGS="-Wall -Wextra -pedantic"
 
-CLANG_WARNING_FLAGS="\
--Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic \
--Wno-poison-system-directories -Wno-weak-vtables -Wno-padded -Wno-conditional-uninitialized"
+CLANG_WARNING_FLAGS="-Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic \
+-Wno-zero-as-null-pointer-constant -Wno-poison-system-directories \
+-Wno-weak-vtables -Wno-padded"
 
 SOURCES="\
-src/ChessPiece.cpp src/ChessMove.cpp src/CastlingRights.cpp \
-ChessPosition.cpp \
-Utilities.cpp ChessEngine.cpp ChessGame.cpp \
-ChessPlayer.cpp ChessTournament.cpp main.cpp"
+src/ChessPiece.cpp src/ChessMove.cpp src/ChessBoard.cpp src/CastlingRights.cpp \
+src/ChessPosition.cpp src/Utilities.cpp src/ChessEngine.cpp src/ChessGame.cpp \
+main.cpp"
 
 GCC_OPT_FLAGS="-DNDEBUG -O3 -march=native -flto=auto"
 

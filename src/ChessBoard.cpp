@@ -112,6 +112,7 @@ static constexpr char fen_char(ChessPiece piece) noexcept {
                 case PieceType::KNIGHT: return 'N';
                 case PieceType::PAWN: return 'P';
             }
+            __builtin_unreachable();
         case PieceColor::BLACK:
             switch (piece.get_type()) {
                 case PieceType::NONE: __builtin_unreachable();
@@ -122,6 +123,7 @@ static constexpr char fen_char(ChessPiece piece) noexcept {
                 case PieceType::KNIGHT: return 'n';
                 case PieceType::PAWN: return 'p';
             }
+            __builtin_unreachable();
     }
     __builtin_unreachable();
 }
