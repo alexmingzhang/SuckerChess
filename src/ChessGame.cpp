@@ -139,8 +139,11 @@ ChessGame::run(ChessEngine *white, ChessEngine *black, bool verbose) {
     using enum GameStatus;
     while (true) {
 
-        print(verbose, current_pos);
-        println(verbose, current_pos.get_fen());
+        // use if statement to avoid unnecessary evaluation of get_fen()
+        if (verbose) {
+            std::cout << current_pos << current_pos.get_fen() << std::endl;
+        }
+
         assert(current_pos.check_consistency());
 
         if (current_status != IN_PROGRESS) {
@@ -208,11 +211,11 @@ ChessGame::run(ChessEngine *white, ChessEngine *black, bool verbose) {
                     legal_moves.begin(), legal_moves.end(), chosen_move
                 ) != legal_moves.end()
             );
-            println(
-                verbose,
-                "Chosen move: " +
-                    current_pos.get_move_name(legal_moves, chosen_move)
-            );
+            if (verbose) {
+                std::cout << "Chosen move: "
+                          << current_pos.get_move_name(legal_moves, chosen_move)
+                          << std::endl;
+            }
             make_move(chosen_move);
         }
     }

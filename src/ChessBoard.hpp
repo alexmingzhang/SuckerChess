@@ -76,7 +76,22 @@ public: // ======================================================= STATE TESTING
         return square.in_bounds() && ((*this)[square] == piece);
     }
 
+public: // =========================================================== SEARCHING
+
+    [[nodiscard]] constexpr ChessSquare find_first_piece(ChessPiece piece
+    ) const noexcept {
+        for (coord_t file = 0; file < NUM_FILES; ++file) {
+            for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
+                const ChessSquare square = {file, rank};
+                if ((*this)[square] == piece) { return square; }
+            }
+        }
+        __builtin_unreachable();
+    }
+
     [[nodiscard]] ChessSquare find_unique_piece(ChessPiece piece) const;
+
+public: // ============================================================ COUNTING
 
     [[nodiscard]] constexpr int count(ChessPiece piece) const noexcept {
         int result = 0;

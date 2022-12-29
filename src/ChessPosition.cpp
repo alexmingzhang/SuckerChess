@@ -211,8 +211,11 @@ void ChessPosition::load_fen(const std::string &fen_string) {
     std::string fen_board_str;
     fen >> fen_board_str;
     board = ChessBoard(fen_board_str);
+
+#ifdef SUCKER_CHESS_TRACK_KING_LOCATIONS
     white_king_location = board.find_unique_piece(WHITE_KING);
     black_king_location = board.find_unique_piece(BLACK_KING);
+#endif
 
     char fen_color_char;
     fen >> fen_color_char;

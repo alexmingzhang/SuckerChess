@@ -1,10 +1,11 @@
 #ifndef SUCKER_CHESS_CHESS_POSITION_HPP
 #define SUCKER_CHESS_CHESS_POSITION_HPP
 
-#include <cassert> // for assert
-#include <ostream> // for std::ostream
-#include <string>  // for std::string
-#include <vector>  // for std::vector
+#include <cassert>  // for assert
+#include <optional> // for std::optional
+#include <ostream>  // for std::ostream
+#include <string>   // for std::string
+#include <vector>   // for std::vector
 
 #include "CastlingRights.hpp"
 #include "ChessBoard.hpp"
@@ -15,29 +16,39 @@
 class ChessPosition {
 
     ChessBoard board;
-    ChessSquare white_king_location;
-    ChessSquare black_king_location;
     PieceColor to_move;
     coord_t en_passant_file;
     CastlingRights castling_rights;
+
+#ifdef SUCKER_CHESS_TRACK_KING_LOCATIONS
+    ChessSquare white_king_location;
+    ChessSquare black_king_location;
+#endif
 
 public: // ======================================================== CONSTRUCTORS
 
     explicit constexpr ChessPosition() noexcept
         : board()
-        , white_king_location({4, 0})
-        , black_king_location({4, NUM_RANKS - 1})
         , to_move(PieceColor::WHITE)
         , en_passant_file(NUM_FILES)
-        , castling_rights(true, true, true, true) {}
+        , castling_rights(true, true, true, true)
+#ifdef SUCKER_CHESS_TRACK_KING_LOCATIONS
+        , white_king_location({4, 0})
+        , black_king_location({4, NUM_RANKS - 1})
+#endif
+    {
+    }
 
     explicit ChessPosition(const std::string &fen)
         : board()
-        , white_king_location()
-        , black_king_location()
         , to_move(PieceColor::NONE)
         , en_passant_file(NUM_FILES)
-        , castling_rights(false, false, false, false) {
+        , castling_rights(false, false, false, false)
+#ifdef SUCKER_CHESS_TRACK_KING_LOCATIONS
+        , white_king_location()
+        , black_king_location()
+#endif
+    {
         load_fen(fen);
     }
 
@@ -45,36 +56,6 @@ public: // =========================================================== ACCESSORS
 
     [[nodiscard]] constexpr const ChessBoard &get_board() const noexcept {
         return board;
-    }
-
-    [[nodiscard]] constexpr ChessSquare
-    get_white_king_location() const noexcept {
-        return white_king_location;
-    }
-
-    [[nodiscard]] constexpr ChessSquare
-    get_black_king_location() const noexcept {
-        return black_king_location;
-    }
-
-    [[nodiscard]] constexpr ChessSquare get_king_location(PieceColor color
-    ) const noexcept {
-        switch (color) {
-            case PieceColor::NONE: __builtin_unreachable();
-            case PieceColor::WHITE: return white_king_location;
-            case PieceColor::BLACK: return black_king_location;
-        }
-        __builtin_unreachable();
-    }
-
-    [[nodiscard]] constexpr ChessSquare get_enemy_king_location(PieceColor color
-    ) const noexcept {
-        switch (color) {
-            case PieceColor::NONE: __builtin_unreachable();
-            case PieceColor::WHITE: return black_king_location;
-            case PieceColor::BLACK: return white_king_location;
-        }
-        __builtin_unreachable();
     }
 
     [[nodiscard]] constexpr PieceColor get_color_to_move() const noexcept {
@@ -105,6 +86,64 @@ public: // =========================================================== ACCESSORS
         __builtin_unreachable();
     }
 
+#ifdef SUCKER_CHESS_TRACK_KING_LOCATIONS
+
+    [[nodiscard]] constexpr ChessSquare
+    get_white_king_location() const noexcept {
+        return white_king_location;
+    }
+
+    [[nodiscard]] constexpr ChessSquare
+    get_black_king_location() const noexcept {
+        return black_king_location;
+    }
+
+#else
+
+    [[nodiscard]] constexpr ChessSquare
+    get_white_king_location() const noexcept {
+        return board.find_first_piece(WHITE_KING);
+    }
+
+    [[nodiscard]] constexpr ChessSquare
+    get_black_king_location() const noexcept {
+        return board.find_first_piece(BLACK_KING);
+    }
+
+
+#endif
+
+    [[nodiscard]] constexpr ChessSquare get_king_location(PieceColor color
+    ) const noexcept {
+        switch (color) {
+            case PieceColor::NONE: __builtin_unreachable();
+            case PieceColor::WHITE: return get_white_king_location();
+            case PieceColor::BLACK: return get_black_king_location();
+        }
+        __builtin_unreachable();
+    }
+
+    [[nodiscard]] constexpr ChessSquare get_enemy_king_location(PieceColor color
+    ) const noexcept {
+        switch (color) {
+            case PieceColor::NONE: __builtin_unreachable();
+            case PieceColor::WHITE: return get_black_king_location();
+            case PieceColor::BLACK: return get_white_king_location();
+        }
+        __builtin_unreachable();
+    }
+
+    [[nodiscard]] constexpr ChessSquare get_king_location() const noexcept {
+        return get_king_location(to_move);
+    }
+
+    [[nodiscard]] constexpr ChessSquare
+    get_enemy_king_location() const noexcept {
+        return get_enemy_king_location(to_move);
+    }
+
+private: // =========================================================== MUTATORS
+
 public: // ====================================================== INDEX OPERATOR
 
     constexpr ChessPiece operator[](ChessSquare square) const noexcept {
@@ -127,7 +166,11 @@ public: // ====================================================== INDEX OPERATOR
 
 public: // ========================================================== COMPARISON
 
-    constexpr bool operator==(const ChessPosition &) const noexcept = default;
+    constexpr bool operator==(const ChessPosition &other) const noexcept {
+        return (board == other.board) && (to_move == other.to_move) &&
+               (en_passant_file == other.en_passant_file) &&
+               (castling_rights == other.castling_rights);
+    }
 
 private: // ===================================================== PAWN UTILITIES
 
@@ -423,12 +466,14 @@ public: // ====================================================== MOVE EXECUTION
         (*this)[move.get_dst()] = piece.promote(move.get_promotion_type());
         (*this)[move.get_src()] = EMPTY_SQUARE;
 
+#ifdef SUCKER_CHESS_TRACK_KING_LOCATIONS
         // update king location
         if (piece == WHITE_KING) {
             white_king_location = move.get_dst();
         } else if (piece == BLACK_KING) {
             black_king_location = move.get_dst();
         }
+#endif
 
         // record en passant file
         const coord_t delta_rank = move.get_dst_rank() - move.get_src_rank();
@@ -455,14 +500,18 @@ public: // ======================================================= CHECK TESTING
             case PieceColor::NONE: __builtin_unreachable();
             case PieceColor::WHITE:
                 return board.is_attacked_by(
-                    PieceColor::BLACK, white_king_location
+                    PieceColor::BLACK, get_white_king_location()
                 );
             case PieceColor::BLACK:
                 return board.is_attacked_by(
-                    PieceColor::WHITE, black_king_location
+                    PieceColor::WHITE, get_black_king_location()
                 );
         }
         __builtin_unreachable();
+    }
+
+    [[nodiscard]] constexpr bool in_check() const noexcept {
+        return in_check(to_move);
     }
 
     [[nodiscard]] constexpr PieceColor get_moving_color(ChessMove move
@@ -484,7 +533,7 @@ public: // ======================================================= CHECK TESTING
     ) const noexcept {
         ChessPosition copy = *this;
         copy.make_move(move);
-        return copy.in_check(copy.get_color_to_move());
+        return copy.in_check();
     }
 
     [[nodiscard]] constexpr bool is_legal(ChessMove move) const noexcept {
