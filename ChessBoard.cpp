@@ -14,7 +14,7 @@ ChessBoard::ChessBoard(const std::string &fen_board_str)
     // inserted too many entries into a single row
     const auto push = [&](ChessPiece piece) {
         (*this)(file++, rank) = piece;
-        if (file >= NUM_FILES) {
+        if (file > NUM_FILES) {
             throw std::invalid_argument(
                 "FEN board string contains a row with more than eight entries"
             );

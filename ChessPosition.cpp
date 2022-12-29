@@ -1,7 +1,6 @@
 #include "ChessPosition.hpp"
 
 #include <algorithm> // for std::sort
-#include <cctype>    // for std::toupper, std::tolower
 #include <iostream>  // for std::cout, std::endl
 #include <sstream>   // for std::istringstream, std::ostringstream
 
@@ -16,33 +15,20 @@ bool ChessPosition::check_consistency() const noexcept {
     std::vector<ChessMove> generated_legal_black_moves =
         get_legal_moves(PieceColor::BLACK);
 
-    std::sort(
-        generated_valid_white_moves.begin(), generated_valid_white_moves.end()
-    );
-    std::sort(
-        generated_valid_black_moves.begin(), generated_valid_black_moves.end()
-    );
-    std::sort(
-        generated_legal_white_moves.begin(), generated_legal_white_moves.end()
-    );
-    std::sort(
-        generated_legal_black_moves.begin(), generated_legal_black_moves.end()
-    );
-
-    std::vector<ChessMove> valid_moves_for_white;
-    std::vector<ChessMove> valid_moves_for_black;
-    std::vector<ChessMove> legal_moves_for_white;
-    std::vector<ChessMove> legal_moves_for_black;
+    std::vector<ChessMove> filtered_valid_white_moves;
+    std::vector<ChessMove> filtered_valid_black_moves;
+    std::vector<ChessMove> filtered_legal_white_moves;
+    std::vector<ChessMove> filtered_legal_black_moves;
 
     const auto push_move = [&](ChessMove move) {
         if (is_valid(move)) {
             switch (get_moving_color(move)) {
                 case PieceColor::NONE: __builtin_unreachable();
                 case PieceColor::WHITE:
-                    valid_moves_for_white.push_back(move);
+                    filtered_valid_white_moves.push_back(move);
                     break;
                 case PieceColor::BLACK:
-                    valid_moves_for_black.push_back(move);
+                    filtered_valid_black_moves.push_back(move);
                     break;
             }
         }
@@ -50,10 +36,10 @@ bool ChessPosition::check_consistency() const noexcept {
             switch (get_moving_color(move)) {
                 case PieceColor::NONE: __builtin_unreachable();
                 case PieceColor::WHITE:
-                    legal_moves_for_white.push_back(move);
+                    filtered_legal_white_moves.push_back(move);
                     break;
                 case PieceColor::BLACK:
-                    legal_moves_for_black.push_back(move);
+                    filtered_legal_black_moves.push_back(move);
                     break;
             }
         }
@@ -75,40 +61,48 @@ bool ChessPosition::check_consistency() const noexcept {
         }
     }
 
-    std::sort(valid_moves_for_white.begin(), valid_moves_for_white.end());
-    std::sort(valid_moves_for_black.begin(), valid_moves_for_black.end());
-    std::sort(legal_moves_for_white.begin(), legal_moves_for_white.end());
-    std::sort(legal_moves_for_black.begin(), legal_moves_for_black.end());
-
-    if (valid_moves_for_white != generated_valid_white_moves) {
-        std::cout << "filtered valid for white:";
-        for (ChessMove move : valid_moves_for_white) {
-            std::cout << ' ' << move;
-        }
-        std::cout << std::endl;
-        std::cout << "generated valid for white:";
-        for (ChessMove move : generated_valid_white_moves) {
-            std::cout << ' ' << move;
-        }
-        std::cout << std::endl;
-    }
-    if (valid_moves_for_black != generated_valid_black_moves) {
-        std::cout << "filtered valid for black:";
-        for (ChessMove move : valid_moves_for_black) {
-            std::cout << ' ' << move;
-        }
-        std::cout << std::endl;
-        std::cout << "generated valid for black:";
-        for (ChessMove move : generated_valid_black_moves) {
-            std::cout << ' ' << move;
-        }
-        std::cout << std::endl;
+    std::sort(
+        generated_valid_white_moves.begin(), generated_valid_white_moves.end()
+    );
+    std::sort(
+        filtered_valid_white_moves.begin(), filtered_valid_white_moves.end()
+    );
+    if (generated_valid_white_moves != filtered_valid_white_moves) {
+        return false;
     }
 
-    return (valid_moves_for_white == generated_valid_white_moves) &&
-           (valid_moves_for_black == generated_valid_black_moves) &&
-           (legal_moves_for_white == generated_legal_white_moves) &&
-           (legal_moves_for_black == generated_legal_black_moves);
+    std::sort(
+        generated_valid_black_moves.begin(), generated_valid_black_moves.end()
+    );
+    std::sort(
+        filtered_valid_black_moves.begin(), filtered_valid_black_moves.end()
+    );
+    if (generated_valid_black_moves != filtered_valid_black_moves) {
+        return false;
+    }
+
+    std::sort(
+        generated_legal_white_moves.begin(), generated_legal_white_moves.end()
+    );
+    std::sort(
+        filtered_legal_white_moves.begin(), filtered_legal_white_moves.end()
+    );
+    if (generated_legal_white_moves != filtered_legal_white_moves) {
+        return false;
+    }
+
+    std::sort(
+        generated_legal_black_moves.begin(), generated_legal_black_moves.end()
+    );
+    std::sort(
+        filtered_legal_black_moves.begin(), filtered_legal_black_moves.end()
+    );
+    if (generated_legal_black_moves != filtered_legal_black_moves) {
+        return false;
+    }
+
+    ChessPosition fen_round_trip(get_fen());
+    return (*this) == fen_round_trip;
 }
 
 
