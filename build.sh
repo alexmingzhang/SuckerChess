@@ -7,7 +7,7 @@ CLANG_WARNING_FLAGS="-Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic \
 SOURCES="\
 src/ChessPiece.cpp src/ChessMove.cpp src/ChessBoard.cpp src/CastlingRights.cpp \
 src/ChessPosition.cpp src/Utilities.cpp src/ChessEngine.cpp src/ChessGame.cpp \
-main.cpp"
+src/ChessPlayer.cpp src/ChessTournament.cpp main.cpp"
 
 GCC_OPT_FLAGS="-DNDEBUG -O3 -march=native -flto=auto"
 
