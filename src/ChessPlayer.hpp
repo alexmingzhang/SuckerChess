@@ -64,21 +64,21 @@ public: // ========================================================= CONSTRUCTOR
         for (PreferenceToken token : tokens) {
             // clang-format off
             switch (token) {
-                case MATE_IN_ONE: name_builder << 'M'; preference_engine->add_preference<MateInOne>();   break;
-                case CHECK:       name_builder << 'C'; preference_engine->add_preference<Check>();       break;
-                case CAPTURE:     name_builder << 'X'; preference_engine->add_preference<Capture>();     break;
-                case FIRST:       name_builder << 'A'; preference_engine->add_preference<First>();     break;
-                case LAST:        name_builder << 'Z'; preference_engine->add_preference<Last>();     break;
-                case REDUCE:      name_builder << 'R'; preference_engine->add_preference<Reduce>();      break;
-                case SWARM:       name_builder << 'S'; preference_engine->add_preference<Swarm>();       break;
-                case HUDDLE:      name_builder << 'H'; preference_engine->add_preference<Huddle>();      break;
-                case ENERGETIC:   name_builder << 'E'; preference_engine->add_preference<Energetic>();   break;
-                case LAZY:        name_builder << 'L'; preference_engine->add_preference<Lazy>();        break;
-                case COORDINATED: name_builder << 'I'; preference_engine->add_preference<Coordinated>(); break;
-                case BLOCKADE:    name_builder << 'B'; preference_engine->add_preference<Blockade>();    break;
-                case DEFENDER:    name_builder << 'D'; preference_engine->add_preference<Defender>();    break;
-                case OUTPOST:     name_builder << 'O'; preference_engine->add_preference<Outpost>();     break;
-                case GAMBIT:      name_builder << 'G'; preference_engine->add_preference<Gambit>();      break;
+                case MATE_IN_ONE: name_builder << "M1"; preference_engine->add_preference<MateInOne>();   break;
+                case CHECK:       name_builder << "Chk"; preference_engine->add_preference<Check>();       break;
+                case CAPTURE:     name_builder << "Cap"; preference_engine->add_preference<Capture>();     break;
+                case FIRST:       name_builder << "Fst"; preference_engine->add_preference<First>();     break;
+                case LAST:        name_builder << "Lst"; preference_engine->add_preference<Last>();     break;
+                case REDUCE:      name_builder << "Red"; preference_engine->add_preference<Reduce>();      break;
+                case SWARM:       name_builder << "Swm"; preference_engine->add_preference<Swarm>();       break;
+                case HUDDLE:      name_builder << "Hud"; preference_engine->add_preference<Huddle>();      break;
+                case ENERGETIC:   name_builder << "Nrg"; preference_engine->add_preference<Energetic>();   break;
+                case LAZY:        name_builder << "Lzy"; preference_engine->add_preference<Lazy>();        break;
+                case COORDINATED: name_builder << "Cor"; preference_engine->add_preference<Coordinated>(); break;
+                case BLOCKADE:    name_builder << "Blk"; preference_engine->add_preference<Blockade>();    break;
+                case DEFENDER:    name_builder << "Def"; preference_engine->add_preference<Defender>();    break;
+                case OUTPOST:     name_builder << "Out"; preference_engine->add_preference<Outpost>();     break;
+                case GAMBIT:      name_builder << "Gam"; preference_engine->add_preference<Gambit>();      break;
             }
             // clang-format on
         }
@@ -123,7 +123,7 @@ public: // ===========================================================
 
 public: // =====================================================================
 
-    ChessGame versus(ChessPlayer &black, bool verbose);
+    ChessGame versus(ChessPlayer &black, bool verbose = true);
 
     [[nodiscard]] std::string get_name_with_elo(int precision) const;
 
