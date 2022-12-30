@@ -67,8 +67,8 @@ public: // ========================================================= CONSTRUCTOR
                 case MATE_IN_ONE: name_builder << 'M'; preference_engine->add_preference<MateInOne>();   break;
                 case CHECK:       name_builder << 'C'; preference_engine->add_preference<Check>();       break;
                 case CAPTURE:     name_builder << 'X'; preference_engine->add_preference<Capture>();     break;
-                case FIRST:       name_builder << 'A'; preference_engine->add_preference<First>();     break;
-                case LAST:        name_builder << 'Z'; preference_engine->add_preference<Last>();     break;
+                case FIRST:       name_builder << 'A'; preference_engine->add_preference<First>();       break;
+                case LAST:        name_builder << 'Z'; preference_engine->add_preference<Last>();        break;
                 case REDUCE:      name_builder << 'R'; preference_engine->add_preference<Reduce>();      break;
                 case SWARM:       name_builder << 'S'; preference_engine->add_preference<Swarm>();       break;
                 case HUDDLE:      name_builder << 'H'; preference_engine->add_preference<Huddle>();      break;
