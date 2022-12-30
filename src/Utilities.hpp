@@ -3,6 +3,7 @@
 
 #include <cassert>  // for assert
 #include <iostream> // for std::cout, std::endl
+#include <ostream>  // for std::ostream
 #include <random>   // for std::mt19937, std::uniform_int_distribution
 #include <string>   // for std::string
 #include <vector>   // for std::vector
@@ -19,10 +20,21 @@ void println(bool verbose, const T &obj) {
     if (verbose) { std::cout << obj << std::endl; }
 }
 
+
 template <typename T>
-std::ostream &operator<<(std::ostream &out, const std::vector<T> &vec) {
-    for (const T &obj : vec) { out << obj << ' '; }
-    return out;
+std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec) {
+    os << '[';
+    bool first = true;
+    for (const T &obj : vec) {
+        if (!first) {
+            os << ", ";
+        } else {
+            first = false;
+        }
+        os << obj;
+    }
+    os << ']';
+    return os;
 }
 
 

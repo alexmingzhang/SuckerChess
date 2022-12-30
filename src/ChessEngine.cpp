@@ -82,13 +82,11 @@ DEFINE_PREFERENCE(CaptureHanging) {
 DEFINE_PREFERENCE(Castle) {
     return maximal_elements(allowed_moves, [&](ChessMove move) {
         if (current_pos.is_castle(move)) { return 2; }
-
         ChessPosition copy = current_pos;
         copy.make_move(move);
-
-        if (copy.get_castling_rights() < current_pos.get_castling_rights())
+        if (copy.get_castling_rights() < current_pos.get_castling_rights()) {
             return 0;
-
+        }
         return 1;
     });
 }
@@ -225,23 +223,13 @@ ChessMove Preference::pick_move(
     const std::vector<ChessMove> &move_history
 ) {
     std::vector<ChessMove> allowed_moves = legal_moves;
-    int count = 0;
     for (const std::unique_ptr<ChessPreference> &pref : preferences) {
-        // std::cout << "Allowed moves " << count++ << ": " << allowed_moves
-        //           << '\n';
-
         if (allowed_moves.size() <= 1) { break; }
         allowed_moves = pref->pick_preferred_moves(
             current_pos, allowed_moves, pos_history, move_history
         );
     }
-    // std::cout << "Allowed moves " << count++ << ": " << allowed_moves <<
-    // '\n';
     assert(!allowed_moves.empty());
-
-    // for (ChessMove move : allowed_moves) { std::cout << move << ' '; }
-    // exit(1);
-
     if (allowed_moves.size() == 1) {
         return allowed_moves[0];
     } else {
