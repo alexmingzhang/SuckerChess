@@ -13,6 +13,7 @@ std::string ChessPlayer::get_name_with_elo(int precision) const {
     return result.str();
 }
 
+
 ChessGame ChessPlayer::versus(ChessPlayer &black, int verbose_level) {
 
     ChessPlayer &white = *this; // local alias for naming symmetry

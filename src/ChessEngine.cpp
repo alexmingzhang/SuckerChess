@@ -82,13 +82,11 @@ DEFINE_PREFERENCE(CaptureHanging) {
 DEFINE_PREFERENCE(Castle) {
     return maximal_elements(allowed_moves, [&](ChessMove move) {
         if (current_pos.is_castle(move)) { return 2; }
-
         ChessPosition copy = current_pos;
         copy.make_move(move);
-
-        if (copy.get_castling_rights() < current_pos.get_castling_rights())
+        if (copy.get_castling_rights() < current_pos.get_castling_rights()) {
             return 0;
-
+        }
         return 1;
     });
 }
