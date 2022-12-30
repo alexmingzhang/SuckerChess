@@ -41,19 +41,6 @@ public: // ========================================================= CONSTRUCTOR
         , num_losses_as_black(0) {}
 
     explicit ChessPlayer(
-        std::unique_ptr<Engine::Preference> &&player_engine,
-        std::string player_name
-    ) noexcept
-        : name(std::move(player_name))
-        , engine(std::move(player_engine))
-        , elo(1000)
-        , num_wins_as_white(0)
-        , num_wins_as_black(0)
-        , num_draws(0)
-        , num_losses_as_white(0)
-        , num_losses_as_black(0) {}
-
-    explicit ChessPlayer(
         const std::vector<PreferenceToken> &tokens, std::string player_name = ""
     ) noexcept
         : name(std::move(player_name))
