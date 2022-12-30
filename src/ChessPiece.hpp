@@ -13,6 +13,13 @@ enum class PieceColor : std::uint8_t {
     BLACK = 2,
 }; // enum class PieceColor
 
+[[nodiscard]] constexpr PieceColor operator!(PieceColor color) noexcept {
+    switch (color) {
+        case PieceColor::NONE: __builtin_unreachable();
+        case PieceColor::WHITE: return PieceColor::BLACK;
+        case PieceColor::BLACK: return PieceColor::WHITE;
+    }
+}
 
 enum class PieceType : std::uint8_t {
     NONE = 0,

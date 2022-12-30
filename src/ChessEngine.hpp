@@ -29,8 +29,12 @@ public:
 enum class PreferenceToken {
 
     MATE_IN_ONE,
+    PREVENT_MATE_IN_ONE,
+    PREVENT_STALEMATE,
     CHECK,
     CAPTURE,
+    CAPTURE_HANGING,
+    CASTLE,
 
     FIRST, // first available move
     LAST,  // last available move
@@ -64,15 +68,23 @@ namespace Preference {
     }
 
 DECLARE_PREFERENCE(MateInOne);
+DECLARE_PREFERENCE(PreventMateInOne);
+DECLARE_PREFERENCE(PreventStalemate);
 DECLARE_PREFERENCE(Check);
 DECLARE_PREFERENCE(Capture);
+DECLARE_PREFERENCE(CaptureHanging);
+DECLARE_PREFERENCE(Castle);
+
 DECLARE_PREFERENCE(First);
 DECLARE_PREFERENCE(Last);
+
 DECLARE_PREFERENCE(Reduce);
+
 DECLARE_PREFERENCE(Swarm);
 DECLARE_PREFERENCE(Huddle);
 DECLARE_PREFERENCE(Energetic);
 DECLARE_PREFERENCE(Lazy);
+
 DECLARE_PREFERENCE(Coordinated);
 DECLARE_PREFERENCE(Blockade);
 DECLARE_PREFERENCE(Defender);

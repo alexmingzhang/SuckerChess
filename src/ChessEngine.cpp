@@ -25,6 +25,39 @@ DEFINE_PREFERENCE(MateInOne) {
     });
 }
 
+DEFINE_PREFERENCE(PreventMateInOne) {
+    return maximal_elements(allowed_moves, [&](ChessMove move) {
+        ChessPosition copy = current_pos;
+        copy.make_move(move);
+
+        for (ChessMove move_2 : copy.get_legal_moves()) {
+            ChessPosition copy_2 = copy;
+            copy_2.make_move(move_2);
+
+            if (copy_2.checkmated()) { return false; }
+        }
+
+        return true;
+    });
+}
+
+DEFINE_PREFERENCE(PreventStalemate) {
+    return maximal_elements(allowed_moves, [&](ChessMove move) {
+        ChessPosition copy = current_pos;
+        copy.make_move(move);
+
+        if (copy.stalemated()) { return false; }
+
+        int count = 0;
+        for (const ChessPosition &pos : pos_history) {
+            if (copy == pos) { ++count; }
+            if (count >= 2) { return false; }
+        }
+
+        return true;
+    });
+}
+
 DEFINE_PREFERENCE(Check) {
     return maximal_elements(allowed_moves, [&](ChessMove move) {
         return current_pos.puts_opponent_in_check(move);
@@ -34,6 +67,29 @@ DEFINE_PREFERENCE(Check) {
 DEFINE_PREFERENCE(Capture) {
     return maximal_elements(allowed_moves, [&](ChessMove move) {
         return current_pos.is_capture(move);
+    });
+}
+
+DEFINE_PREFERENCE(CaptureHanging) {
+    return maximal_elements(allowed_moves, [&](ChessMove move) {
+        return current_pos.is_capture(move) &&
+               current_pos.get_board().is_attacked_by(
+                   !current_pos.get_color_to_move(), move.get_dst()
+               ) == 0;
+    });
+}
+
+DEFINE_PREFERENCE(Castle) {
+    return maximal_elements(allowed_moves, [&](ChessMove move) {
+        if (current_pos.is_castle(move)) { return 2; }
+
+        ChessPosition copy = current_pos;
+        copy.make_move(move);
+
+        if (copy.get_castling_rights() < current_pos.get_castling_rights())
+            return 0;
+
+        return 1;
     });
 }
 
@@ -169,6 +225,10 @@ ChessMove Preference::pick_move(
         );
     }
     assert(!allowed_moves.empty());
+
+    // for (ChessMove move : allowed_moves) { std::cout << move << ' '; }
+    // exit(1);
+
     if (allowed_moves.size() == 1) {
         return allowed_moves[0];
     } else {

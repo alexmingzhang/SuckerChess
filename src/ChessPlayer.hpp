@@ -41,6 +41,19 @@ public: // ========================================================= CONSTRUCTOR
         , num_losses_as_black(0) {}
 
     explicit ChessPlayer(
+        std::unique_ptr<Engine::Preference> &&player_engine,
+        std::string player_name
+    ) noexcept
+        : name(std::move(player_name))
+        , engine(std::move(player_engine))
+        , elo(1000)
+        , num_wins_as_white(0)
+        , num_wins_as_black(0)
+        , num_draws(0)
+        , num_losses_as_white(0)
+        , num_losses_as_black(0) {}
+
+    explicit ChessPlayer(
         const std::vector<PreferenceToken> &tokens, std::string player_name = ""
     ) noexcept
         : name(std::move(player_name))
@@ -64,9 +77,12 @@ public: // ========================================================= CONSTRUCTOR
         for (PreferenceToken token : tokens) {
             // clang-format off
             switch (token) {
-                case MATE_IN_ONE: name_builder << "M1"; preference_engine->add_preference<MateInOne>();   break;
+                case MATE_IN_ONE:         name_builder << "M1"; preference_engine->add_preference<MateInOne>();   break;
+                case PREVENT_MATE_IN_ONE: name_builder << "PM1"; preference_engine->add_preference<PreventMateInOne>();   break;
+                case PREVENT_STALEMATE: name_builder << "PST"; preference_engine->add_preference<PreventStalemate>();   break;
                 case CHECK:       name_builder << "Chk"; preference_engine->add_preference<Check>();       break;
                 case CAPTURE:     name_builder << "Cap"; preference_engine->add_preference<Capture>();     break;
+                case CAPTURE_HANGING:     name_builder << "CAP"; preference_engine->add_preference<CaptureHanging>();     break;
                 case FIRST:       name_builder << "Fst"; preference_engine->add_preference<First>();     break;
                 case LAST:        name_builder << "Lst"; preference_engine->add_preference<Last>();     break;
                 case REDUCE:      name_builder << "Red"; preference_engine->add_preference<Reduce>();      break;
@@ -123,7 +139,16 @@ public: // ===========================================================
 
 public: // =====================================================================
 
-    ChessGame versus(ChessPlayer &black, bool verbose = true);
+    /**
+     * @brief Runs a game between two ChessPlayer objects; updates stats like
+     * wins, losses, and ELO
+     *
+     * @param black Other ChessPlayer
+     * @param verbose_level 0: nothing, 1: print result, 2: print game board
+     * every move
+     * @return ChessGame
+     */
+    ChessGame versus(ChessPlayer &black, int verbose_level = 1);
 
     [[nodiscard]] std::string get_name_with_elo(int precision) const;
 

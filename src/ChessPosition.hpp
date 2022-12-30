@@ -61,6 +61,11 @@ public: // =========================================================== ACCESSORS
         return to_move;
     }
 
+    [[nodiscard]] constexpr CastlingRights
+    get_castling_rights() const noexcept {
+        return castling_rights;
+    }
+
     [[nodiscard]] constexpr bool can_short_castle(PieceColor color
     ) const noexcept {
         switch (color) {
@@ -492,11 +497,7 @@ public: // ====================================================== MOVE EXECUTION
         }
 
         // update player to move
-        switch (color) {
-            case PieceColor::NONE: __builtin_unreachable();
-            case PieceColor::WHITE: to_move = PieceColor::BLACK; break;
-            case PieceColor::BLACK: to_move = PieceColor::WHITE; break;
-        }
+        to_move = !color;
     }
 
 public: // ======================================================= CHECK TESTING
