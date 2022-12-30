@@ -217,11 +217,11 @@ public: // ====================================================== LEAPER ATTACKS
                has_piece(square + ChessOffset{+1, -direction}, pawn);
     }
 
-    [[nodiscard]] constexpr bool
+    [[nodiscard]] constexpr int
     count_pawn_attacks(PieceColor color, ChessSquare square) const noexcept {
         const ChessPiece pawn = {color, PieceType::PAWN};
         const coord_t direction = pawn_direction(color);
-        return has_piece(square + ChessOffset{-1, -direction}, pawn) ||
+        return has_piece(square + ChessOffset{-1, -direction}, pawn) +
                has_piece(square + ChessOffset{+1, -direction}, pawn);
     }
 
