@@ -34,7 +34,7 @@ ChessGame ChessPlayer::versus(ChessPlayer &black, bool verbose) {
     PieceColor winner = game.run(white.engine.get(), black.engine.get(), false);
     switch (winner) {
         case PieceColor::NONE:
-            if (verbose) { std::cout << "Draw.\n"; };
+            if (verbose) { std::cout << "Draw.\n"; }
             ++white.num_draws;
             ++black.num_draws;
             white.elo += ELO_K_FACTOR * (0.5 - white_expected_score);
