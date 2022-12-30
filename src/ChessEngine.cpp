@@ -179,8 +179,7 @@ DEFINE_PREFERENCE(Defender) {
 DEFINE_PREFERENCE(Outpost) {
     return minimal_elements(allowed_moves, [&](ChessMove move) {
         const PieceColor self = current_pos.get_color_to_move();
-        const PieceColor enemy =
-            (self == PieceColor::WHITE) ? PieceColor::BLACK : PieceColor::WHITE;
+        const PieceColor enemy = !self;
         return current_pos.get_board().is_attacked_by(enemy, move.get_dst());
     });
 }
@@ -188,9 +187,17 @@ DEFINE_PREFERENCE(Outpost) {
 DEFINE_PREFERENCE(Gambit) {
     return maximal_elements(allowed_moves, [&](ChessMove move) {
         const PieceColor self = current_pos.get_color_to_move();
-        const PieceColor enemy =
-            (self == PieceColor::WHITE) ? PieceColor::BLACK : PieceColor::WHITE;
+        const PieceColor enemy = !self;
         return current_pos.get_board().is_attacked_by(self, move.get_dst()) &&
+               current_pos.get_board().is_attacked_by(enemy, move.get_dst());
+    });
+}
+
+DEFINE_PREFERENCE(Explore) {
+    return minimal_elements(allowed_moves, [&](ChessMove move) {
+        const PieceColor self = current_pos.get_color_to_move();
+        const PieceColor enemy = !self;
+        return current_pos.get_board().is_attacked_by(self, move.get_dst()) ||
                current_pos.get_board().is_attacked_by(enemy, move.get_dst());
     });
 }
@@ -218,12 +225,18 @@ ChessMove Preference::pick_move(
     const std::vector<ChessMove> &move_history
 ) {
     std::vector<ChessMove> allowed_moves = legal_moves;
+    int count = 0;
     for (const std::unique_ptr<ChessPreference> &pref : preferences) {
+        // std::cout << "Allowed moves " << count++ << ": " << allowed_moves
+        //           << '\n';
+
         if (allowed_moves.size() <= 1) { break; }
         allowed_moves = pref->pick_preferred_moves(
             current_pos, allowed_moves, pos_history, move_history
         );
     }
+    // std::cout << "Allowed moves " << count++ << ": " << allowed_moves <<
+    // '\n';
     assert(!allowed_moves.empty());
 
     // for (ChessMove move : allowed_moves) { std::cout << move << ' '; }

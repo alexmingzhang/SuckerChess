@@ -19,6 +19,12 @@ void println(bool verbose, const T &obj) {
     if (verbose) { std::cout << obj << std::endl; }
 }
 
+template <typename T>
+std::ostream &operator<<(std::ostream &out, const std::vector<T> &vec) {
+    for (const T &obj : vec) { out << obj << ' '; }
+    return out;
+}
+
 
 template <typename T>
 const T &random_choice(std::mt19937 &rng, const std::vector<T> &vec) {

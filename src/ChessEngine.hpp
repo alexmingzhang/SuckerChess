@@ -49,8 +49,9 @@ enum class PreferenceToken {
     COORDINATED, // maximizes number of squares attacked by self
     BLOCKADE,    // minimizes number of squares attacked by opponent
     DEFENDER,    // moves pieces to squares attacked by self
-    OUTPOST,     // moves pieces to squares which are not attacked by opponent
+    OUTPOST,     // moves pieces to squares not attacked by opponent
     GAMBIT,      // moves pieces to squares attacked by both self and opponent
+    EXPLORE, // move pieces to squares not attacked by both self nor opponent
 
 }; // enum class PreferenceToken
 
@@ -90,6 +91,8 @@ DECLARE_PREFERENCE(Blockade);
 DECLARE_PREFERENCE(Defender);
 DECLARE_PREFERENCE(Outpost);
 DECLARE_PREFERENCE(Gambit);
+DECLARE_PREFERENCE(Explore);
+
 
 #undef DECLARE_PREFERENCE
 

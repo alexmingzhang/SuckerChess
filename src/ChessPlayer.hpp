@@ -95,6 +95,8 @@ public: // ========================================================= CONSTRUCTOR
                 case DEFENDER:    name_builder << "Def"; preference_engine->add_preference<Defender>();    break;
                 case OUTPOST:     name_builder << "Out"; preference_engine->add_preference<Outpost>();     break;
                 case GAMBIT:      name_builder << "Gam"; preference_engine->add_preference<Gambit>();      break;
+                case EXPLORE:     name_builder << "Exp"; preference_engine->add_preference<Explore>();      break;
+
             }
             // clang-format on
         }
