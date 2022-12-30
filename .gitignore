@@ -6,5 +6,6 @@
 /build-release
 /cmake-build-debug
 /cmake-build-release
+/data
 
 .DS_Store
