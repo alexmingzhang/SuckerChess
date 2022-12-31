@@ -3,6 +3,7 @@
 #include <algorithm> // for std::find
 #include <cassert>   // for assert
 #include <cctype>    // for std::isspace
+#include <cstring>   // for std::strncmp
 #include <sstream>   // for std::ostringstream
 #include <stdexcept> // for std::runtime_error
 
@@ -33,8 +34,18 @@ UCI::UCI(
     while (true) {
         char line[256];
         ::fgets(line, 256, pipe);
-        if ((line[0] == 'u') && (line[1] == 'c') && (line[2] == 'i') &&
-            (line[3] == 'o') && (line[4] == 'k') && std::isspace(line[5])) {
+        if ((std::strncmp(line, "uciok", 5) == 0) && std::isspace(line[5])) {
+            break;
+        }
+    }
+
+    ::fputs("isready\n", pipe);
+    ::fflush(pipe);
+
+    while (true) {
+        char line[256];
+        ::fgets(line, 256, pipe);
+        if ((std::strncmp(line, "readyok", 7) == 0) && std::isspace(line[7])) {
             break;
         }
     }
@@ -48,9 +59,7 @@ static ChessMove read_best_move(std::FILE *pipe) {
     while (true) {
         char line[256];
         ::fgets(line, 256, pipe);
-        if ((line[0] == 'b') && (line[1] == 'e') && (line[2] == 's') &&
-            (line[3] == 't') && (line[4] == 'm') && (line[5] == 'o') &&
-            (line[6] == 'v') && (line[7] == 'e') && std::isspace(line[8])) {
+        if ((std::strncmp(line, "bestmove", 8) == 0) && std::isspace(line[8])) {
 
             const char src_file = line[9];
             if ((src_file < 'a') || (src_file > 'h')) {
