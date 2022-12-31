@@ -1,21 +1,17 @@
-#include <iostream>
-#include <memory>
-#include <sstream>
-#include <utility>
-#include <vector>
+#include <cstddef>  // for std::size_t
+#include <iostream> // for std::cout, std::cerr, std::endl
+#include <memory>   // for std::unique_ptr, std::make_unique
+#include <string>   // for std::string
 
 #include "src/ChessEngine.hpp"
 #include "src/ChessGame.hpp"
-#include "src/ChessPlayer.hpp"
 #include "src/ChessPosition.hpp"
-#include "src/ChessTournament.hpp"
 #include "src/Utilities.hpp"
 
 
-[[maybe_unused]] static void self_test() {
+static void self_test(unsigned long long num_games) {
     auto rng = properly_seeded_random_engine();
-    std::size_t count = 0;
-    while (true) {
+    for (unsigned long long count = 0; count < num_games; ++count) {
         ChessPosition pos;
         while (true) {
             if (!pos.check_consistency()) {
@@ -39,25 +35,34 @@
             }
             pos.make_move(random_choice(rng, moves));
         }
-        ++count;
-        std::cout << "Completed " << count
-                  << ((count == 1) ? " random self-test game."
+        std::cout << "Completed " << (count + 1)
+                  << ((count == 0) ? " random self-test game."
                                    : " random self-test games.")
                   << std::endl;
     }
 }
 
 
-//[[maybe_unused]] static void benchmark(unsigned long long num_games) {
-//    ChessEngine *const white = new Engine::Random();
-//    ChessEngine *const black = new Engine::Random();
-//    for (unsigned long long i = 0; i < num_games; ++i) {
-//        ChessGame game;
-//        game.run(white, black, false);
-//    }
-//    delete white;
-//    delete black;
-//}
+static void benchmark(unsigned long long num_games) {
+    std::unique_ptr<ChessEngine> white = std::make_unique<Engine::Preference>();
+    std::unique_ptr<ChessEngine> black = std::make_unique<Engine::Preference>();
+    for (unsigned long long i = 0; i < num_games; ++i) {
+        ChessGame game;
+        game.run(white.get(), black.get(), false);
+    }
+}
 
 
-int main() { self_test(); }
+int main(int argc, char **argv) {
+    for (int i = 0; i < argc; ++i) {
+        const std::string arg = argv[i];
+        if (arg == "--test") {
+            self_test(100);
+            return EXIT_SUCCESS;
+        } else if (arg == "--benchmark") {
+            benchmark(1000);
+            return EXIT_SUCCESS;
+        }
+    }
+    return EXIT_FAILURE;
+}
