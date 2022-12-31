@@ -60,15 +60,16 @@ void ChessTournament::run(long long num_rounds, long long print_frequency) {
     }
 }
 
+
 void ChessTournament::print_info() const {
     std::cout << name << " (round " << current_round << ", game "
-              << game_history.size() << ", kfactor " << elo_k_factor << ") \n";
+              << game_history.size() << ", K-factor " << elo_k_factor << ") \n";
     std::cout
-        << "      Engine   :   ELO   :   W (w/b)   :   D   :   L (w/b)  \n";
+        << "      Engine       :   ELO   :   W (w/b)   :   D   :   L (w/b)  \n";
     for (std::size_t i = 0; i < players.size(); ++i) {
         const ChessPlayer &p = *players[i];
         std::cout << std::right << std::setw(4) << i + 1 << ". ";
-        std::cout << std::left << std::setw(8) << p.get_name() << " : ";
+        std::cout << std::left << std::setw(12) << p.get_name() << " : ";
         std::cout << std::right << std::setw(7) << std::fixed
                   << std::setprecision(2) << p.get_elo() << " : ";
         std::cout << std::right << std::setw(5) << p.get_num_wins_as_white()

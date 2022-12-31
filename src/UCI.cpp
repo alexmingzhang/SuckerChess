@@ -123,10 +123,9 @@ ChessMove UCI::pick_move(
 
     // instruct engine to find best move
     std::ostringstream go_builder;
-    go_builder << "go ";
     switch (mode) {
-        case Mode::DEPTH: go_builder << "depth "; break;
-        case Mode::NODES: go_builder << "nodes "; break;
+        case Mode::DEPTH: go_builder << "go depth "; break;
+        case Mode::NODES: go_builder << "go nodes "; break;
     }
     go_builder << n << '\n';
     const std::string go_command = go_builder.str();

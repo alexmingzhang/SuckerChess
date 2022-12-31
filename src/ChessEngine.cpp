@@ -268,14 +268,11 @@ ChessMove Preference::pick_move(
     const std::vector<ChessMove> &move_history
 ) {
     std::vector<ChessMove> allowed_moves = legal_moves;
-    // int count = 0;
     for (const std::unique_ptr<ChessPreference> &pref : preferences) {
         if (allowed_moves.size() <= 1) { break; }
         allowed_moves = pref->pick_preferred_moves(
             current_pos, allowed_moves, pos_history, move_history
         );
-        // std::cout << "Allowed moves " << count++ << ": " << allowed_moves
-        //           << '\n';
     }
     assert(!allowed_moves.empty());
     if (allowed_moves.size() == 1) {
