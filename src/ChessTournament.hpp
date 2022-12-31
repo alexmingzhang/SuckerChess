@@ -10,7 +10,7 @@
 #include "ChessPlayer.hpp"
 
 
-class ChessTournament {
+class ChessTournament final {
 
     std::string name;
     std::vector<std::unique_ptr<ChessPlayer>> players;

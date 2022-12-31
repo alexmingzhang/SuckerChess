@@ -8,7 +8,7 @@
 #include <string>  // for std::string
 
 
-class CastlingRights {
+class CastlingRights final {
 
     std::uint8_t data;
 

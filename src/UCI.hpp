@@ -11,7 +11,7 @@
 namespace Engine {
 
 
-class UCI : public ChessEngine {
+class UCI final : public ChessEngine {
 
 public:
 

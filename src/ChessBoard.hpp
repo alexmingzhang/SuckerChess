@@ -11,7 +11,7 @@
 #include "ChessPiece.hpp"
 
 
-class ChessBoard {
+class ChessBoard final {
 
     std::array<std::array<ChessPiece, NUM_RANKS>, NUM_FILES> data;
 

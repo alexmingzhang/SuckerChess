@@ -68,7 +68,7 @@ enum class PreferenceToken {
 namespace Preference {
 
 #define CREATE_PREFERENCE_CLASS(CLASS_NAME, TOKEN_NAME, STRING_NAME, COMMENT)  \
-    class CLASS_NAME : public ChessPreference {                                \
+    class CLASS_NAME final : public ChessPreference {                          \
         std::vector<ChessMove> pick_preferred_moves(                           \
             const ChessPosition &current_pos,                                  \
             const std::vector<ChessMove> &allowed_moves,                       \
@@ -103,7 +103,7 @@ public:
 namespace Engine {
 
 
-class Preference : public ChessEngine {
+class Preference final : public ChessEngine {
 
     std::mt19937 rng;
     std::vector<std::unique_ptr<ChessPreference>> preferences;
@@ -129,7 +129,7 @@ public:
 }; // class Preference
 
 
-class CCCP : public ChessEngine {
+class CCCP final : public ChessEngine {
 
     std::mt19937 rng;
 

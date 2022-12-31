@@ -12,7 +12,7 @@
 #include "ChessPiece.hpp"
 
 
-class ChessPosition {
+class ChessPosition final {
 
     ChessBoard board;
     PieceColor to_move;
@@ -144,8 +144,6 @@ public: // =========================================================== ACCESSORS
     get_enemy_king_location() const noexcept {
         return get_enemy_king_location(to_move);
     }
-
-private: // =========================================================== MUTATORS
 
 public: // ====================================================== INDEX OPERATOR
 

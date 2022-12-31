@@ -12,7 +12,7 @@
 #include "ChessPosition.hpp"
 
 
-class ChessPositionWrapper {
+class ChessPositionWrapper final {
 
     ChessPosition position;
     mutable std::optional<std::vector<ChessMove>> cached_legal_moves;
@@ -100,7 +100,7 @@ enum class GameStatus : std::uint8_t {
 }; // enum class GameStatus
 
 
-class ChessGame {
+class ChessGame final {
 
 public:
 
