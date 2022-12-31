@@ -1,5 +1,7 @@
 #include "UCI.hpp"
 
+#include <algorithm> // for std::find_if
+#include <cassert>   // for assert
 #include <cctype>    // for std::isspace
 #include <sstream>   // for std::ostringstream
 #include <stdexcept> // for std::runtime_error
@@ -42,29 +44,7 @@ UCI::UCI(
 UCI::~UCI() { ::pclose(pipe); }
 
 
-ChessMove UCI::pick_move(
-    [[maybe_unused]] const ChessPosition &current_pos,
-    [[maybe_unused]] const std::vector<ChessMove> &legal_moves,
-    [[maybe_unused]] const std::vector<ChessPosition> &pos_history,
-    const std::vector<ChessMove> &move_history
-) {
-    std::ostringstream moves_builder;
-    moves_builder << "position startpos moves";
-    for (ChessMove move : move_history) { moves_builder << ' ' << move; }
-    moves_builder << '\n';
-    const std::string moves_command = moves_builder.str();
-    fputs(moves_command.c_str(), pipe);
-
-    std::ostringstream go_builder;
-    go_builder << "go ";
-    switch (mode) {
-        case Mode::DEPTH: go_builder << "depth "; break;
-        case Mode::NODES: go_builder << "nodes "; break;
-    }
-    go_builder << n << '\n';
-    const std::string go_command = go_builder.str();
-    fputs(go_command.c_str(), pipe);
-
+static ChessMove read_best_move(std::FILE *pipe) {
     while (true) {
         char line[256];
         fgets(line, 256, pipe);
@@ -126,6 +106,39 @@ ChessMove UCI::pick_move(
             }
         }
     }
+}
+
+
+ChessMove UCI::pick_move(
+    const ChessPosition &current_pos,
+    [[maybe_unused]] const std::vector<ChessMove> &legal_moves,
+    [[maybe_unused]] const std::vector<ChessPosition> &pos_history,
+    [[maybe_unused]] const std::vector<ChessMove> &move_history
+) {
+    // send current position to engine
+    std::ostringstream position_builder;
+    position_builder << "position fen " << current_pos.get_fen() << '\n';
+    const std::string position_command = position_builder.str();
+    fputs(position_command.c_str(), pipe);
+
+    // instruct engine to find best move
+    std::ostringstream go_builder;
+    go_builder << "go ";
+    switch (mode) {
+        case Mode::DEPTH: go_builder << "depth "; break;
+        case Mode::NODES: go_builder << "nodes "; break;
+    }
+    go_builder << n << '\n';
+    const std::string go_command = go_builder.str();
+    fputs(go_command.c_str(), pipe);
+
+    // read best move from engine output
+    const ChessMove result = read_best_move(pipe);
+    assert(
+        std::find(legal_moves.begin(), legal_moves.end(), result) !=
+        legal_moves.end()
+    );
+    return result;
 }
 
 
