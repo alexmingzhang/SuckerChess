@@ -30,24 +30,29 @@ DEFINE_PREFERENCE(PreventMateInOne) {
         ChessPosition copy = current_pos;
         copy.make_move(move);
 
+        // for each possible opponent response...
         for (ChessMove move_2 : copy.get_legal_moves()) {
             ChessPosition copy_2 = copy;
             copy_2.make_move(move_2);
 
+            // ...ensure that response does not deliver checkmate
             if (copy_2.checkmated()) { return false; }
         }
-
         return true;
     });
 }
 
-DEFINE_PREFERENCE(PreventStalemate) {
+DEFINE_PREFERENCE(PreventDraw) {
     return maximal_elements(allowed_moves, [&](ChessMove move) {
         ChessPosition copy = current_pos;
         copy.make_move(move);
 
-        if (copy.stalemated()) { return false; }
+        // avoid stalemate and insufficient material
+        if (copy.stalemated() || copy.get_board().has_insufficient_material()) {
+            return false;
+        }
 
+        // avoid threefold repetition
         int count = 0;
         for (const ChessPosition &pos : pos_history) {
             if (copy == pos) { ++count; }
@@ -73,9 +78,9 @@ DEFINE_PREFERENCE(Capture) {
 DEFINE_PREFERENCE(CaptureHanging) {
     return maximal_elements(allowed_moves, [&](ChessMove move) {
         return current_pos.is_capture(move) &&
-               current_pos.get_board().is_attacked_by(
+               !current_pos.get_board().is_attacked_by(
                    !current_pos.get_color_to_move(), move.get_dst()
-               ) == 0;
+               );
     });
 }
 
@@ -96,12 +101,25 @@ DEFINE_PREFERENCE(SmartCapture) {
 
 DEFINE_PREFERENCE(Castle) {
     return maximal_elements(allowed_moves, [&](ChessMove move) {
+        // always castle if possible
         if (current_pos.is_castle(move)) { return 2; }
+
+        // determine whether this moves gives up castling rights
+        const PieceColor self = current_pos.get_color_to_move();
         ChessPosition copy = current_pos;
         copy.make_move(move);
-        if (copy.get_castling_rights() < current_pos.get_castling_rights()) {
+
+        // avoid giving up short castling rights
+        if (current_pos.can_short_castle(self) &&
+            !copy.can_short_castle(self)) {
             return 0;
         }
+
+        // avoid giving up long castling rights
+        if (current_pos.can_long_castle(self) && !copy.can_long_castle(self)) {
+            return 0;
+        }
+
         return 1;
     });
 }
@@ -118,20 +136,15 @@ DEFINE_PREFERENCE(Reduce) {
     });
 }
 
-
 DEFINE_PREFERENCE(Greedy) {
     return maximal_elements(allowed_moves, [&](ChessMove move) {
         ChessPosition copy = current_pos;
         copy.make_move(move);
-
-        return (
-            (current_pos.get_color_to_move() == PieceColor::WHITE)
-                ? copy.get_material_advantage()
-                : copy.get_material_advantage() * -1
-        );
+        return (current_pos.get_color_to_move() == PieceColor::WHITE)
+                   ? copy.get_material_advantage()
+                   : -copy.get_material_advantage();
     });
 }
-
 
 DEFINE_PREFERENCE(Swarm) {
     const ChessSquare enemy_king_location =
@@ -151,19 +164,19 @@ DEFINE_PREFERENCE(Huddle) {
     });
 }
 
-DEFINE_PREFERENCE(Energetic) {
+DEFINE_PREFERENCE(Sniper) {
     return maximal_elements(allowed_moves, [&](ChessMove move) {
         return move.distance();
     });
 }
 
-DEFINE_PREFERENCE(Lazy) {
+DEFINE_PREFERENCE(Sloth) {
     return minimal_elements(allowed_moves, [&](ChessMove move) {
         return move.distance();
     });
 }
 
-DEFINE_PREFERENCE(Coordinated) {
+DEFINE_PREFERENCE(Conqueror) {
     return maximal_elements(allowed_moves, [&](ChessMove move) {
         const PieceColor self = current_pos.get_color_to_move();
         ChessPosition copy = current_pos;
@@ -179,7 +192,7 @@ DEFINE_PREFERENCE(Coordinated) {
     });
 }
 
-DEFINE_PREFERENCE(Blockade) {
+DEFINE_PREFERENCE(Constrictor) {
     return minimal_elements(allowed_moves, [&](ChessMove move) {
         ChessPosition copy = current_pos;
         copy.make_move(move);
@@ -197,10 +210,12 @@ DEFINE_PREFERENCE(Blockade) {
     });
 }
 
-DEFINE_PREFERENCE(Defender) {
+DEFINE_PREFERENCE(Reinforced) {
     return maximal_elements(allowed_moves, [&](ChessMove move) {
         const PieceColor self = current_pos.get_color_to_move();
-        return current_pos.get_board().is_attacked_by(self, move.get_dst());
+        ChessPosition copy = current_pos;
+        copy.make_move(move);
+        return copy.get_board().is_attacked_by(self, move.get_dst());
     });
 }
 

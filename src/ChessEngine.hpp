@@ -26,79 +26,60 @@ public:
 }; // class ChessPreference
 
 
+// clang-format off
+#define DECLARE_PREFERENCES(MACRO) \
+    MACRO(MateInOne,        MATE_IN_ONE,         "Ma1", "always give checkmate if possible") \
+    MACRO(PreventMateInOne, PREVENT_MATE_IN_ONE, "PM1", "avoid moving to positions that give opponent checkmate") \
+    MACRO(PreventDraw,      PREVENT_DRAW,        "PDr", "avoid stalemate and threefold repetition") \
+    MACRO(Check,            CHECK,               "Chk", "always check opponent if possible") \
+    MACRO(Capture,          CAPTURE,             "Cap", "always capture any piece if possible") \
+    MACRO(CaptureHanging,   CAPTURE_HANGING,     "CHa", "always capture hanging pieces if possible") \
+    MACRO(SmartCapture,     SMART_CAPTURE,       "SCp", "") \
+    MACRO(Castle,           CASTLE,              "Cst", "always castle if possible and avoid giving up castling rights") \
+    MACRO(First,            FIRST,               "Fst", "always make first available move") \
+    MACRO(Last,             LAST,                "Lst", "always make last available move") \
+    MACRO(Reduce,           REDUCE,              "Red", "make moves that minimize opponent's number of legal responses") \
+    MACRO(Greedy,           GREEDY,              "Grd", "") \
+    MACRO(Swarm,            SWARM,               "Swm", "move pieces toward enemy king") \
+    MACRO(Huddle,           HUDDLE,              "Hud", "move pieces toward own king") \
+    MACRO(Sniper,           SNIPER,              "Sni", "make moves that maximize distance travelled") \
+    MACRO(Sloth,            SLOTH,               "Slo", "make moves that minimize distance travelled") \
+    MACRO(Conqueror,        CONQUEROR,           "Cnq", "make moves that maximize number of squares own pieces can see") \
+    MACRO(Constrictor,      CONSTRICTOR,         "Cns", "make moves that minimize number of squares enemy pieces can see") \
+    MACRO(Reinforced,       REINFORCED,          "Rei", "always move to defended squares if possible") \
+    MACRO(Outpost,          OUTPOST,             "Out", "always move to squares that are not attacked by enemy if possible") \
+    MACRO(Gambit,           GAMBIT,              "Gam", "always move to squares that are attacked by both self and enemy if possible") \
+    MACRO(Explore,          EXPLORE,             "Exp", "always move to squares that are attacked by neither self nor enemy if possible")
+// clang-format on
+
+
 enum class PreferenceToken {
 
-    MATE_IN_ONE,
-    PREVENT_MATE_IN_ONE,
-    PREVENT_STALEMATE,
-    CHECK,
-    CAPTURE,
-    CAPTURE_HANGING, // capture pieces with no defenders
-    SMART_CAPTURE,
-    CASTLE,
+#define CREATE_PREFERENCE_TOKEN(CLASS_NAME, TOKEN_NAME, STRING_NAME, COMMENT)  \
+    TOKEN_NAME,
 
-    FIRST,  // first available move
-    LAST,   // last available move
-    REDUCE, // minimize available moves for opponent
+    DECLARE_PREFERENCES(CREATE_PREFERENCE_TOKEN)
 
-    GREEDY, // maximize own material
-
-    SWARM,     // moves pieces toward enemy king
-    HUDDLE,    // moves pieces toward own king
-    ENERGETIC, // makes long moves
-    LAZY,      // makes short moves
-
-    COORDINATED, // maximizes number of squares attacked by self
-    BLOCKADE,    // minimizes number of squares attacked by opponent
-    DEFENDER,    // moves pieces to squares attacked by self
-    OUTPOST,     // moves pieces to squares not attacked by opponent
-    GAMBIT,      // moves pieces to squares attacked by both self and opponent
-    EXPLORE, // move pieces to squares not attacked by either self nor opponent
+#undef CREATE_PREFERENCE_TOKEN
 
 }; // enum class PreferenceToken
 
 
 namespace Preference {
 
-#define DECLARE_PREFERENCE(NAME)                                               \
-    class NAME : public ChessPreference {                                      \
+#define CREATE_PREFERENCE_CLASS(CLASS_NAME, TOKEN_NAME, STRING_NAME, COMMENT)  \
+    class CLASS_NAME : public ChessPreference {                                \
         std::vector<ChessMove> pick_preferred_moves(                           \
             const ChessPosition &current_pos,                                  \
             const std::vector<ChessMove> &allowed_moves,                       \
             const std::vector<ChessPosition> &pos_history,                     \
             const std::vector<ChessMove> &move_history                         \
         ) override;                                                            \
-    }
+    };
 
-DECLARE_PREFERENCE(MateInOne);
-DECLARE_PREFERENCE(PreventMateInOne);
-DECLARE_PREFERENCE(PreventStalemate);
-DECLARE_PREFERENCE(Check);
-DECLARE_PREFERENCE(Capture);
-DECLARE_PREFERENCE(CaptureHanging);
-DECLARE_PREFERENCE(SmartCapture);
-DECLARE_PREFERENCE(Castle);
+DECLARE_PREFERENCES(CREATE_PREFERENCE_CLASS)
 
-DECLARE_PREFERENCE(First);
-DECLARE_PREFERENCE(Last);
-DECLARE_PREFERENCE(Reduce);
-
-DECLARE_PREFERENCE(Greedy);
-
-DECLARE_PREFERENCE(Swarm);
-DECLARE_PREFERENCE(Huddle);
-DECLARE_PREFERENCE(Energetic);
-DECLARE_PREFERENCE(Lazy);
-
-DECLARE_PREFERENCE(Coordinated);
-DECLARE_PREFERENCE(Blockade);
-DECLARE_PREFERENCE(Defender);
-DECLARE_PREFERENCE(Outpost);
-DECLARE_PREFERENCE(Gambit);
-DECLARE_PREFERENCE(Explore);
-
-
-#undef DECLARE_PREFERENCE
+#undef CREATE_PREFERENCE_CLASS
 
 } // namespace Preference
 

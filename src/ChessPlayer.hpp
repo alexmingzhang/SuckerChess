@@ -54,37 +54,17 @@ public: // ========================================================= CONSTRUCTOR
         auto preference_engine = std::make_unique<Engine::Preference>();
         std::ostringstream name_builder;
 
-        // A B C D E   G H I     L M   O     R S         X   Z
-        //           F       J K     N   P Q     T U V W   Y
+#define CREATE_PREFERENCE_CASE(CLASS_NAME, TOKEN_NAME, STRING_NAME, COMMENT)   \
+    case TOKEN_NAME:                                                           \
+        name_builder << STRING_NAME;                                           \
+        preference_engine->add_preference<CLASS_NAME>();                       \
+        break;
 
         for (PreferenceToken token : tokens) {
-            // clang-format off
-            switch (token) {
-                case MATE_IN_ONE:         name_builder << "M1"; preference_engine->add_preference<MateInOne>();   break;
-                case PREVENT_MATE_IN_ONE: name_builder << "PM1"; preference_engine->add_preference<PreventMateInOne>();   break;
-                case PREVENT_STALEMATE: name_builder << "PST"; preference_engine->add_preference<PreventStalemate>();   break;
-                case CHECK:       name_builder << "Chk"; preference_engine->add_preference<Check>();       break;
-                case CAPTURE:     name_builder << "Cap"; preference_engine->add_preference<Capture>();     break;
-                case CAPTURE_HANGING:     name_builder << "HCP"; preference_engine->add_preference<CaptureHanging>();     break;
-                case SMART_CAPTURE:     name_builder << "SCP"; preference_engine->add_preference<SmartCapture>();     break;
-                case FIRST:       name_builder << "Fst"; preference_engine->add_preference<First>();     break;
-                case LAST:        name_builder << "Lst"; preference_engine->add_preference<Last>();     break;
-                case REDUCE:      name_builder << "Red"; preference_engine->add_preference<Reduce>();      break;
-                case GREEDY:      name_builder << "Grd"; preference_engine->add_preference<Greedy>();      break;
-                case SWARM:       name_builder << "Swm"; preference_engine->add_preference<Swarm>();       break;
-                case HUDDLE:      name_builder << "Hud"; preference_engine->add_preference<Huddle>();      break;
-                case ENERGETIC:   name_builder << "Nrg"; preference_engine->add_preference<Energetic>();   break;
-                case LAZY:        name_builder << "Lzy"; preference_engine->add_preference<Lazy>();        break;
-                case COORDINATED: name_builder << "Cor"; preference_engine->add_preference<Coordinated>(); break;
-                case BLOCKADE:    name_builder << "Blk"; preference_engine->add_preference<Blockade>();    break;
-                case DEFENDER:    name_builder << "Def"; preference_engine->add_preference<Defender>();    break;
-                case OUTPOST:     name_builder << "Out"; preference_engine->add_preference<Outpost>();     break;
-                case GAMBIT:      name_builder << "Gam"; preference_engine->add_preference<Gambit>();      break;
-                case EXPLORE:     name_builder << "Exp"; preference_engine->add_preference<Explore>();      break;
-
-            }
-            // clang-format on
+            switch (token) { DECLARE_PREFERENCES(CREATE_PREFERENCE_CASE) }
         }
+
+#undef CREATE_PREFERENCE_TOKEN
 
         if (name.empty()) { name = name_builder.str(); }
         engine = std::move(preference_engine);
@@ -131,9 +111,9 @@ public: // =====================================================================
      * wins, losses, and ELO
      *
      * @param black Other ChessPlayer
-     * @param elo_k_factor K-factor used in ELO calculation
-     * @param verbose_level 0: nothing, 1: print result, 2: print game board
-     * every move
+     * @param elo_k_factor K-factor used in Elo rating calculation
+     * @param verbose_level 0: nothing, 1: print result,
+     *                      2: print board after every move
      * @return ChessGame
      */
     ChessGame
