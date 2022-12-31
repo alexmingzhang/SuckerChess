@@ -145,26 +145,6 @@ public: // =========================================================== ACCESSORS
         return get_enemy_king_location(to_move);
     }
 
-public: // ====================================================== INDEX OPERATOR
-
-    constexpr ChessPiece operator[](ChessSquare square) const noexcept {
-        assert(square.in_bounds());
-        return board[square];
-    }
-
-    constexpr ChessPiece &operator[](ChessSquare square) noexcept {
-        assert(square.in_bounds());
-        return board[square];
-    }
-
-    constexpr ChessPiece operator()(coord_t file, coord_t rank) const noexcept {
-        return (*this)[{file, rank}];
-    }
-
-    constexpr ChessPiece &operator()(coord_t file, coord_t rank) noexcept {
-        return (*this)[{file, rank}];
-    }
-
 public: // ========================================================== COMPARISON
 
     constexpr bool operator==(const ChessPosition &other) const noexcept {
@@ -196,7 +176,7 @@ private: // ============================================ MOVE VALIDATION HELPERS
 
         // There must be a piece to move;
         ensure(move.in_bounds());
-        const ChessPiece piece = (*this)[move.get_src()];
+        const ChessPiece piece = board.get_piece(move.get_src());
         const PieceType type = piece.get_type();
         const PieceColor color = piece.get_color();
         const PieceColor opponent = (color == PieceColor::WHITE)
@@ -223,19 +203,19 @@ private: // ============================================ MOVE VALIDATION HELPERS
         // both pieces must have never been moved in the current game.
         const ChessPiece FRIENDLY_ROOK = {color, PieceType::ROOK};
         if (move.get_dst_file() == 2) {
-            ensure((*this)(0, rank) == FRIENDLY_ROOK);
-            ensure((*this)(1, rank) == EMPTY_SQUARE);
-            ensure((*this)(2, rank) == EMPTY_SQUARE);
-            ensure((*this)(3, rank) == EMPTY_SQUARE);
+            ensure(board.get_piece(0, rank) == FRIENDLY_ROOK);
+            ensure(board.get_piece(1, rank) == EMPTY_SQUARE);
+            ensure(board.get_piece(2, rank) == EMPTY_SQUARE);
+            ensure(board.get_piece(3, rank) == EMPTY_SQUARE);
             ensure(!board.is_attacked_by(opponent, {2, rank}));
             ensure(!board.is_attacked_by(opponent, {3, rank}));
             ensure(!board.is_attacked_by(opponent, {4, rank}));
             ensure(can_long_castle(color));
         } else {
             ensure(move.get_dst_file() == 6);
-            ensure((*this)(NUM_FILES - 1, rank) == FRIENDLY_ROOK);
-            ensure((*this)(5, rank) == EMPTY_SQUARE);
-            ensure((*this)(6, rank) == EMPTY_SQUARE);
+            ensure(board.get_piece(NUM_FILES - 1, rank) == FRIENDLY_ROOK);
+            ensure(board.get_piece(5, rank) == EMPTY_SQUARE);
+            ensure(board.get_piece(6, rank) == EMPTY_SQUARE);
             ensure(!board.is_attacked_by(opponent, {4, rank}));
             ensure(!board.is_attacked_by(opponent, {5, rank}));
             ensure(!board.is_attacked_by(opponent, {6, rank}));
@@ -250,7 +230,7 @@ private: // ============================================ MOVE VALIDATION HELPERS
 
         // There must be a piece to move.
         ensure(move.in_bounds());
-        const ChessPiece piece = (*this)[move.get_src()];
+        const ChessPiece piece = board.get_piece(move.get_src());
         const PieceType type = piece.get_type();
         const PieceColor color = piece.get_color();
         ensure(color != PieceColor::NONE);
@@ -264,7 +244,7 @@ private: // ============================================ MOVE VALIDATION HELPERS
         );
         ensure(move.distance() == 1);
         ensure(move.is_diagonal());
-        const ChessPiece target = (*this)[move.get_dst()];
+        const ChessPiece target = board.get_piece(move.get_dst());
         ensure(target == EMPTY_SQUARE);
 
         // En passant may only be performed by the player who holds the right
@@ -278,7 +258,7 @@ private: // ============================================ MOVE VALIDATION HELPERS
         // Instead, it captures the piece located at the intersection of
         // the source rank and the destination file.
         const ChessPiece captured =
-            (*this)(move.get_dst_file(), move.get_src_rank());
+            board.get_piece(move.get_dst_file(), move.get_src_rank());
 
         // En passant may only be used to capture an enemy pawn.
         ensure(captured.get_color() != color);
@@ -304,7 +284,7 @@ public: // ===================================================== MOVE VALIDATION
 
         // There must be a piece to move.
         ensure(move.in_bounds());
-        const ChessPiece piece = (*this)[move.get_src()];
+        const ChessPiece piece = board.get_piece(move.get_src());
         const PieceType type = piece.get_type();
         const PieceColor color = piece.get_color();
         ensure(color != PieceColor::NONE);
@@ -313,7 +293,7 @@ public: // ===================================================== MOVE VALIDATION
         ensure(move.get_src() != move.get_dst());
 
         // A piece cannot capture another piece of its own color.
-        const ChessPiece target = (*this)[move.get_dst()];
+        const ChessPiece target = board.get_piece(move.get_dst());
         const PieceColor target_color = target.get_color();
         ensure(color != target_color);
 
@@ -399,24 +379,28 @@ public: // ===================================================== MOVE VALIDATION
 public: // ====================================================== MOVE EXECUTION
 
     [[nodiscard]] constexpr bool is_castle(ChessMove move) const noexcept {
-        return ((*this)[move.get_src()].get_type() == PieceType::KING) &&
+        return (board.get_piece(move.get_src()).get_type() == PieceType::KING
+               ) &&
                (move.distance() != 1);
     }
 
     [[nodiscard]] constexpr bool is_en_passant(ChessMove move) const noexcept {
-        return ((*this)[move.get_src()].get_type() == PieceType::PAWN) &&
-               move.is_diagonal() && ((*this)[move.get_dst()] == EMPTY_SQUARE);
+        return (board.get_piece(move.get_src()).get_type() == PieceType::PAWN
+               ) &&
+               move.is_diagonal() &&
+               (board.get_piece(move.get_dst()) == EMPTY_SQUARE);
     }
 
     [[nodiscard]] constexpr bool is_capture(ChessMove move) const noexcept {
-        return ((*this)[move.get_dst()].get_color() != PieceColor::NONE) ||
+        return (board.get_piece(move.get_dst()).get_color() != PieceColor::NONE
+               ) ||
                is_en_passant(move);
     }
 
     [[nodiscard]] constexpr bool is_capture_or_pawn_move(ChessMove move
     ) const noexcept {
-        const ChessPiece piece = (*this)[move.get_src()];
-        const ChessPiece target = (*this)[move.get_dst()];
+        const ChessPiece piece = board.get_piece(move.get_src());
+        const ChessPiece target = board.get_piece(move.get_dst());
         return (piece.get_type() == PieceType::PAWN) ||
                (target.get_color() != PieceColor::NONE);
     }
@@ -428,10 +412,10 @@ public: // ====================================================== MOVE EXECUTION
 
         // no move should ever be made that captures a king,
         // since chess ends at checkmate
-        assert((*this)[move.get_dst()].get_type() != PieceType::KING);
+        assert(board.get_piece(move.get_dst()).get_type() != PieceType::KING);
 
         // get moving piece
-        const ChessPiece piece = (*this)[move.get_src()];
+        const ChessPiece piece = board.get_piece(move.get_src());
         const PieceColor color = piece.get_color();
 
         // update castling rights
@@ -458,22 +442,26 @@ public: // ====================================================== MOVE EXECUTION
 
         // perform move
         if (is_en_passant(move)) {
-            (*this)(move.get_dst_file(), move.get_src_rank()) = EMPTY_SQUARE;
+            board.set_piece(
+                move.get_dst_file(), move.get_src_rank(), EMPTY_SQUARE
+            );
         } else if (is_castle(move)) {
             const coord_t rank = move.get_src_rank();
             const ChessPiece rook = {color, PieceType::ROOK};
             if (move.get_dst_file() == 6) { // short castle
-                (*this)(5, rank) = rook;
-                (*this)(7, rank) = EMPTY_SQUARE;
+                board.set_piece(5, rank, rook);
+                board.set_piece(7, rank, EMPTY_SQUARE);
             } else if (move.get_dst_file() == 2) { // long castle
-                (*this)(3, rank) = rook;
-                (*this)(0, rank) = EMPTY_SQUARE;
+                board.set_piece(3, rank, rook);
+                board.set_piece(0, rank, EMPTY_SQUARE);
             } else {
                 __builtin_unreachable();
             }
         }
-        (*this)[move.get_dst()] = piece.promote(move.get_promotion_type());
-        (*this)[move.get_src()] = EMPTY_SQUARE;
+        board.set_piece(
+            move.get_dst(), piece.promote(move.get_promotion_type())
+        );
+        board.set_piece(move.get_src(), EMPTY_SQUARE);
 
 #ifdef SUCKER_CHESS_TRACK_KING_LOCATIONS
         // update king location
@@ -522,27 +510,9 @@ public: // ======================================================= CHECK TESTING
     [[nodiscard]] constexpr PieceColor get_moving_color(ChessMove move
     ) const noexcept {
         assert(move.in_bounds());
-        const PieceColor result = (*this)[move.get_src()].get_color();
+        const PieceColor result = board.get_piece(move.get_src()).get_color();
         assert(result != PieceColor::NONE);
         return result;
-    }
-
-    [[nodiscard]] constexpr bool puts_self_in_check(ChessMove move
-    ) const noexcept {
-        ChessPosition copy = *this;
-        copy.make_move(move);
-        return copy.in_check(get_moving_color(move));
-    }
-
-    [[nodiscard]] constexpr bool puts_opponent_in_check(ChessMove move
-    ) const noexcept {
-        ChessPosition copy = *this;
-        copy.make_move(move);
-        return copy.in_check();
-    }
-
-    [[nodiscard]] constexpr bool is_legal(ChessMove move) const noexcept {
-        return is_valid(move) && !puts_self_in_check(move);
     }
 
 private: // ============================================ MOVE GENERATION HELPERS
@@ -550,7 +520,7 @@ private: // ============================================ MOVE GENERATION HELPERS
     [[nodiscard]] constexpr bool
     is_valid_dst(PieceColor moving_color, ChessSquare square) const noexcept {
         if (!square.in_bounds()) { return false; }
-        const ChessPiece target = (*this)[square];
+        const ChessPiece target = board.get_piece(square);
         const PieceColor target_color = target.get_color();
         const PieceType target_type = target.get_type();
         return (target_color != moving_color) &&
@@ -560,7 +530,7 @@ private: // ============================================ MOVE GENERATION HELPERS
     [[nodiscard]] constexpr bool
     is_valid_cap(PieceColor moving_color, ChessSquare square) const noexcept {
         if (!square.in_bounds()) { return false; }
-        const ChessPiece target = (*this)[square];
+        const ChessPiece target = board.get_piece(square);
         const PieceColor target_color = target.get_color();
         const PieceType target_type = target.get_type();
         return (target_color != moving_color) &&
@@ -642,10 +612,10 @@ private: // ============================================ MOVE GENERATION HELPERS
     visit_castling_moves(PieceColor moving_color, const F &f) const {
         if (moving_color == PieceColor::WHITE) {
             if (castling_rights.white_can_short_castle()) {
-                assert(board(4, 0) == WHITE_KING);
-                assert(board(7, 0) == WHITE_ROOK);
-                if (board(5, 0) == EMPTY_SQUARE &&
-                    board(6, 0) == EMPTY_SQUARE &&
+                assert(board.get_piece(4, 0) == WHITE_KING);
+                assert(board.get_piece(7, 0) == WHITE_ROOK);
+                if (board.get_piece(5, 0) == EMPTY_SQUARE &&
+                    board.get_piece(6, 0) == EMPTY_SQUARE &&
                     !board.is_attacked_by(PieceColor::BLACK, {4, 0}) &&
                     !board.is_attacked_by(PieceColor::BLACK, {5, 0}) &&
                     !board.is_attacked_by(PieceColor::BLACK, {6, 0})) {
@@ -656,11 +626,11 @@ private: // ============================================ MOVE GENERATION HELPERS
                 }
             }
             if (castling_rights.white_can_long_castle()) {
-                assert(board(0, 0) == WHITE_ROOK);
-                assert(board(4, 0) == WHITE_KING);
-                if (board(1, 0) == EMPTY_SQUARE &&
-                    board(2, 0) == EMPTY_SQUARE &&
-                    board(3, 0) == EMPTY_SQUARE &&
+                assert(board.get_piece(0, 0) == WHITE_ROOK);
+                assert(board.get_piece(4, 0) == WHITE_KING);
+                if (board.get_piece(1, 0) == EMPTY_SQUARE &&
+                    board.get_piece(2, 0) == EMPTY_SQUARE &&
+                    board.get_piece(3, 0) == EMPTY_SQUARE &&
                     !board.is_attacked_by(PieceColor::BLACK, {2, 0}) &&
                     !board.is_attacked_by(PieceColor::BLACK, {3, 0}) &&
                     !board.is_attacked_by(PieceColor::BLACK, {4, 0})) {
@@ -672,10 +642,10 @@ private: // ============================================ MOVE GENERATION HELPERS
             }
         } else if (moving_color == PieceColor::BLACK) {
             if (castling_rights.black_can_short_castle()) {
-                assert(board(4, 7) == BLACK_KING);
-                assert(board(7, 7) == BLACK_ROOK);
-                if (board(5, 7) == EMPTY_SQUARE &&
-                    board(6, 7) == EMPTY_SQUARE &&
+                assert(board.get_piece(4, 7) == BLACK_KING);
+                assert(board.get_piece(7, 7) == BLACK_ROOK);
+                if (board.get_piece(5, 7) == EMPTY_SQUARE &&
+                    board.get_piece(6, 7) == EMPTY_SQUARE &&
                     !board.is_attacked_by(PieceColor::WHITE, {4, 7}) &&
                     !board.is_attacked_by(PieceColor::WHITE, {5, 7}) &&
                     !board.is_attacked_by(PieceColor::WHITE, {6, 7})) {
@@ -686,11 +656,11 @@ private: // ============================================ MOVE GENERATION HELPERS
                 }
             }
             if (castling_rights.black_can_long_castle()) {
-                assert(board(0, 7) == BLACK_ROOK);
-                assert(board(4, 7) == BLACK_KING);
-                if (board(1, 7) == EMPTY_SQUARE &&
-                    board(2, 7) == EMPTY_SQUARE &&
-                    board(3, 7) == EMPTY_SQUARE &&
+                assert(board.get_piece(0, 7) == BLACK_ROOK);
+                assert(board.get_piece(4, 7) == BLACK_KING);
+                if (board.get_piece(1, 7) == EMPTY_SQUARE &&
+                    board.get_piece(2, 7) == EMPTY_SQUARE &&
+                    board.get_piece(3, 7) == EMPTY_SQUARE &&
                     !board.is_attacked_by(PieceColor::WHITE, {2, 7}) &&
                     !board.is_attacked_by(PieceColor::WHITE, {3, 7}) &&
                     !board.is_attacked_by(PieceColor::WHITE, {4, 7})) {
@@ -712,7 +682,7 @@ public: // ===================================================== MOVE GENERATION
         PieceColor moving_color, ChessSquare src, const F &f
     ) const {
         assert(src.in_bounds());
-        const ChessPiece piece = (*this)[src];
+        const ChessPiece piece = board.get_piece(src);
         assert(piece.get_color() == moving_color);
         assert(piece.get_type() != PieceType::NONE);
         switch (piece.get_type()) {
@@ -769,7 +739,7 @@ public: // ===================================================== MOVE GENERATION
         std::vector<ChessMove> result;
         for (coord_t src_file = 0; src_file < NUM_FILES; ++src_file) {
             for (coord_t src_rank = 0; src_rank < NUM_RANKS; ++src_rank) {
-                if ((*this)(src_file, src_rank).get_color() == color) {
+                if (board.get_piece(src_file, src_rank).get_color() == color) {
                     visit_valid_moves(
                         color,
                         {src_file, src_rank},
@@ -790,14 +760,18 @@ public: // ===================================================== MOVE GENERATION
         std::vector<ChessMove> result;
         for (coord_t src_file = 0; src_file < NUM_FILES; ++src_file) {
             for (coord_t src_rank = 0; src_rank < NUM_RANKS; ++src_rank) {
-                if ((*this)(src_file, src_rank).get_color() == color) {
+                if (board.get_piece(src_file, src_rank).get_color() == color) {
                     visit_valid_moves(
                         color,
                         {src_file, src_rank},
                         [&](ChessMove move) {
                             assert(is_valid(move));
                             assert(get_moving_color(move) == color);
-                            if (is_legal(move)) { result.push_back(move); }
+                            ChessPosition next = *this;
+                            next.make_move(move);
+                            if (!next.in_check(color)) {
+                                result.push_back(move);
+                            }
                         }
                     );
                 }
@@ -852,7 +826,7 @@ public: // ========================================================== EVALUATION
         int result = 0;
         for (coord_t file = 0; file < NUM_FILES; ++file) {
             for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
-                result += (*this)(file, rank).material_value();
+                result += board.get_piece(file, rank).material_value();
             }
         }
         return result;

@@ -39,26 +39,31 @@ public: // ========================================================= CONSTRUCTOR
 
     explicit ChessBoard(const std::string &fen_board_str);
 
-public: // ====================================================== INDEX OPERATOR
+public: // =========================================================== ACCESSORS
 
-    constexpr ChessPiece operator[](ChessSquare square) const noexcept {
+    [[nodiscard]] constexpr ChessPiece get_piece(ChessSquare square
+    ) const noexcept {
         assert(square.in_bounds());
         return data[static_cast<std::size_t>(square.file)]
                    [static_cast<std::size_t>(square.rank)];
     }
 
-    constexpr ChessPiece &operator[](ChessSquare square) noexcept {
+    [[nodiscard]] constexpr ChessPiece
+    get_piece(coord_t file, coord_t rank) const noexcept {
+        return get_piece({file, rank});
+    }
+
+public: // ============================================================ MUTATORS
+
+    constexpr void set_piece(ChessSquare square, ChessPiece piece) noexcept {
         assert(square.in_bounds());
-        return data[static_cast<std::size_t>(square.file)]
-                   [static_cast<std::size_t>(square.rank)];
+        data[static_cast<std::size_t>(square.file)]
+            [static_cast<std::size_t>(square.rank)] = piece;
     }
 
-    constexpr ChessPiece operator()(coord_t file, coord_t rank) const noexcept {
-        return (*this)[{file, rank}];
-    }
-
-    constexpr ChessPiece &operator()(coord_t file, coord_t rank) noexcept {
-        return (*this)[{file, rank}];
+    constexpr void
+    set_piece(coord_t file, coord_t rank, ChessPiece piece) noexcept {
+        set_piece({file, rank}, piece);
     }
 
 public: // ========================================================== COMPARISON
@@ -68,12 +73,12 @@ public: // ========================================================== COMPARISON
 public: // ======================================================= STATE TESTING
 
     [[nodiscard]] constexpr bool is_empty(ChessSquare square) const noexcept {
-        return square.in_bounds() && ((*this)[square] == EMPTY_SQUARE);
+        return square.in_bounds() && (get_piece(square) == EMPTY_SQUARE);
     }
 
     [[nodiscard]] constexpr bool
     has_piece(ChessSquare square, ChessPiece piece) const noexcept {
-        return square.in_bounds() && ((*this)[square] == piece);
+        return square.in_bounds() && (get_piece(square) == piece);
     }
 
 public: // =========================================================== SEARCHING
@@ -83,7 +88,7 @@ public: // =========================================================== SEARCHING
         for (coord_t file = 0; file < NUM_FILES; ++file) {
             for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
                 const ChessSquare square = {file, rank};
-                if ((*this)[square] == piece) { return square; }
+                if (get_piece(square) == piece) { return square; }
             }
         }
         __builtin_unreachable();
@@ -97,7 +102,7 @@ public: // ============================================================ COUNTING
         int result = 0;
         for (coord_t file = 0; file < NUM_FILES; ++file) {
             for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
-                if ((*this)(file, rank) == piece) { ++result; }
+                if (get_piece(file, rank) == piece) { ++result; }
             }
         }
         return result;
@@ -233,7 +238,7 @@ private: // ============================================== SLIDER ATTACK HELPERS
         ChessSquare current = square + offset;
         while (is_empty(current)) { current += offset; }
         if (current.in_bounds()) {
-            const ChessPiece piece = (*this)[current];
+            const ChessPiece piece = get_piece(current);
             if (piece.get_color() == color) { return piece; }
         }
         return EMPTY_SQUARE;

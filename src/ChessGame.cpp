@@ -193,7 +193,7 @@ ChessGame::run(ChessEngine *white, ChessEngine *black, bool verbose) {
         if (current_engine == nullptr) {
             const ChessMove chosen_move = get_console_move();
             if (chosen_move != NULL_MOVE) {
-                assert(current_pos.get().is_legal(chosen_move));
+                assert(current_pos.get().is_valid(chosen_move));
                 make_move(chosen_move);
             }
         } else {
@@ -207,7 +207,7 @@ ChessGame::run(ChessEngine *white, ChessEngine *black, bool verbose) {
                           << current_pos.get_move_name(chosen_move, true)
                           << std::endl;
             }
-            assert(current_pos.get().is_legal(chosen_move));
+            assert(current_pos.get().is_valid(chosen_move));
             make_move(chosen_move);
         }
     }

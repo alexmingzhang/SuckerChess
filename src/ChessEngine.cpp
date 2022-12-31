@@ -65,7 +65,9 @@ DEFINE_PREFERENCE(PreventDraw) {
 
 DEFINE_PREFERENCE(Check) {
     return maximal_elements(allowed_moves, [&](ChessMove move) {
-        return current_pos.puts_opponent_in_check(move);
+        ChessPosition next = current_pos;
+        next.make_move(move);
+        return next.in_check();
     });
 }
 
@@ -322,9 +324,9 @@ ChessMove CCCP::pick_move(
             continue;
         } else if (copy.checkmated()) {
             return move;
-        } else if (current_pos.puts_opponent_in_check(move)) {
+        } else if (copy.in_check()) {
             check_move = move;
-        } else if (check_move == NULL_MOVE && current_pos[move.get_dst()] != EMPTY_SQUARE) {
+        } else if (check_move == NULL_MOVE && current_pos.get_board().get_piece(move.get_dst()) != EMPTY_SQUARE) {
             int capture_move_material_advantage = std::abs(
                 copy.get_material_advantage() -
                 current_pos.get_material_advantage()

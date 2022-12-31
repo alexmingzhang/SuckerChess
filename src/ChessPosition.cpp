@@ -22,7 +22,8 @@ bool ChessPosition::check_consistency() const noexcept {
 
     const auto push_move = [&](ChessMove move) {
         if (is_valid(move)) {
-            switch (get_moving_color(move)) {
+            const PieceColor color = get_moving_color(move);
+            switch (color) {
                 case PieceColor::NONE: __builtin_unreachable();
                 case PieceColor::WHITE:
                     filtered_valid_white_moves.push_back(move);
@@ -31,15 +32,21 @@ bool ChessPosition::check_consistency() const noexcept {
                     filtered_valid_black_moves.push_back(move);
                     break;
             }
-        }
-        if (is_legal(move)) {
-            switch (get_moving_color(move)) {
+
+            ChessPosition next = *this;
+            next.make_move(move);
+
+            switch (color) {
                 case PieceColor::NONE: __builtin_unreachable();
                 case PieceColor::WHITE:
-                    filtered_legal_white_moves.push_back(move);
+                    if (!next.in_check(color)) {
+                        filtered_legal_white_moves.push_back(move);
+                    }
                     break;
                 case PieceColor::BLACK:
-                    filtered_legal_black_moves.push_back(move);
+                    if (!next.in_check(color)) {
+                        filtered_legal_black_moves.push_back(move);
+                    }
                     break;
             }
         }
@@ -110,7 +117,7 @@ std::string ChessPosition::get_move_name(
     const std::vector<ChessMove> &legal_moves, ChessMove move, bool suffix
 ) const {
     assert(is_valid(move));
-    const ChessPiece piece = (*this)[move.get_src()];
+    const ChessPiece piece = board.get_piece(move.get_src());
     std::ostringstream result;
     if (is_castle(move)) {
         if (move.get_dst_file() == 6) {
@@ -139,7 +146,7 @@ std::string ChessPosition::get_move_name(
             bool ambiguous_rank = false;
             bool ambiguous_diag = false;
             for (ChessMove other : legal_moves) {
-                const ChessPiece other_piece = (*this)[other.get_src()];
+                const ChessPiece other_piece = board.get_piece(other.get_src());
                 if (other_piece.get_type() == piece.get_type() &&
                     other.get_dst() == move.get_dst()) {
                     const bool file_match =
@@ -193,7 +200,7 @@ std::ostream &operator<<(std::ostream &os, const ChessPosition &pos) {
     for (coord_t rank = NUM_RANKS - 1; rank >= 0; --rank) {
         os << rank + 1 << " │";
         for (coord_t file = 0; file < NUM_FILES; ++file) {
-            os << ' ' << pos(file, rank) << " │";
+            os << ' ' << pos.get_board().get_piece(file, rank) << " │";
         }
         os << "\n";
         if (rank > 0) { os << "  ├───┼───┼───┼───┼───┼───┼───┼───┤\n"; }

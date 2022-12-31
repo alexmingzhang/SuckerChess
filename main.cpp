@@ -37,14 +37,6 @@
                 std::cerr << chosen_move << std::endl;
                 return;
             }
-            if (!pos.is_legal(chosen_move)) {
-                std::cerr << "FATAL ERROR: Illegal chess move found."
-                          << std::endl;
-                std::cerr << pos << std::endl;
-                std::cerr << pos.get_fen() << std::endl;
-                std::cerr << chosen_move << std::endl;
-                return;
-            }
             pos.make_move(random_choice(rng, moves));
         }
         ++count;
@@ -68,42 +60,4 @@
 //}
 
 
-[[maybe_unused]] static void run_tournament() {
-
-    using enum PreferenceToken;
-    ChessTournament tournament;
-
-    tournament.add_player(std::make_unique<ChessPlayer>(
-        std::vector<PreferenceToken>({MATE_IN_ONE})
-    ));
-
-    const std::vector<PreferenceToken> tokens = {
-        CAPTURE, REDUCE, ENERGETIC, LAZY};
-
-    for (PreferenceToken t1 : tokens) {
-        for (PreferenceToken t2 : tokens) {
-            if (t1 == t2) {
-                tournament.add_player(std::make_unique<ChessPlayer>(
-                    std::vector<PreferenceToken>({MATE_IN_ONE, t1})
-                ));
-            } else {
-                tournament.add_player(std::make_unique<ChessPlayer>(
-                    std::vector<PreferenceToken>({MATE_IN_ONE, t1, t2})
-                ));
-            }
-        }
-    }
-
-    tournament.add_player(std::make_unique<ChessPlayer>(
-        std::vector<PreferenceToken>({MATE_IN_ONE, CHECK, CAPTURE, SWARM})
-    ));
-
-    tournament.add_player(
-        std::make_unique<ChessPlayer>(std::make_unique<Engine::CCCP>(), "CCCP")
-    );
-
-    tournament.run(-1, 1);
-}
-
-
-int main() { run_tournament(); }
+int main() { self_test(); }

@@ -13,7 +13,7 @@ ChessBoard::ChessBoard(const std::string &fen_board_str)
     // every time we insert a new entry, make sure we haven't
     // inserted too many entries into a single row
     const auto push = [&](ChessPiece piece) {
-        (*this)(file++, rank) = piece;
+        set_piece(file++, rank, piece);
         if (file > NUM_FILES) {
             throw std::invalid_argument(
                 "FEN board string contains a row with more than eight entries"
@@ -83,7 +83,7 @@ ChessSquare ChessBoard::find_unique_piece(ChessPiece piece) const {
     for (coord_t file = 0; file < NUM_FILES; ++file) {
         for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
             const ChessSquare square = {file, rank};
-            if ((*this)[square] == piece) {
+            if (get_piece(square) == piece) {
                 if (found) {
                     throw std::invalid_argument(
                         "found more than one of desired piece"
@@ -139,7 +139,7 @@ std::ostream &operator<<(std::ostream &os, const ChessBoard &board) {
     };
     for (coord_t rank = NUM_RANKS - 1; rank >= 0; --rank) {
         for (coord_t file = 0; file < NUM_FILES; ++file) {
-            const ChessPiece piece = board(file, rank);
+            const ChessPiece piece = board.get_piece(file, rank);
             if (piece == EMPTY_SQUARE) {
                 ++num_empty_squares;
             } else {
