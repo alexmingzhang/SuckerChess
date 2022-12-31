@@ -1,6 +1,6 @@
 #include "UCI.hpp"
 
-#include <algorithm> // for std::find_if
+#include <algorithm> // for std::find
 #include <cassert>   // for assert
 #include <cctype>    // for std::isspace
 #include <sstream>   // for std::ostringstream
@@ -27,12 +27,12 @@ UCI::UCI(
         );
     }
 
-    std::fputs("uci\n", pipe);
-    std::fflush(pipe);
+    ::fputs("uci\n", pipe);
+    ::fflush(pipe);
 
     while (true) {
         char line[256];
-        std::fgets(line, 256, pipe);
+        ::fgets(line, 256, pipe);
         if ((line[0] == 'u') && (line[1] == 'c') && (line[2] == 'i') &&
             (line[3] == 'o') && (line[4] == 'k') && std::isspace(line[5])) {
             break;
@@ -47,7 +47,7 @@ UCI::~UCI() { ::pclose(pipe); }
 static ChessMove read_best_move(std::FILE *pipe) {
     while (true) {
         char line[256];
-        fgets(line, 256, pipe);
+        ::fgets(line, 256, pipe);
         if ((line[0] == 'b') && (line[1] == 'e') && (line[2] == 's') &&
             (line[3] == 't') && (line[4] == 'm') && (line[5] == 'o') &&
             (line[6] == 'v') && (line[7] == 'e') && std::isspace(line[8])) {
@@ -119,7 +119,7 @@ ChessMove UCI::pick_move(
     std::ostringstream position_builder;
     position_builder << "position fen " << current_pos.get_fen() << '\n';
     const std::string position_command = position_builder.str();
-    fputs(position_command.c_str(), pipe);
+    ::fputs(position_command.c_str(), pipe);
 
     // instruct engine to find best move
     std::ostringstream go_builder;
@@ -129,7 +129,7 @@ ChessMove UCI::pick_move(
     }
     go_builder << n << '\n';
     const std::string go_command = go_builder.str();
-    fputs(go_command.c_str(), pipe);
+    ::fputs(go_command.c_str(), pipe);
 
     // read best move from engine output
     const ChessMove result = read_best_move(pipe);

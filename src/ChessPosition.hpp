@@ -113,8 +113,7 @@ public: // =========================================================== ACCESSORS
     get_black_king_location() const noexcept {
         return board.find_first_piece(BLACK_KING);
     }
-
-
+    
 #endif
 
     [[nodiscard]] constexpr ChessSquare get_king_location(PieceColor color

@@ -1,7 +1,7 @@
 #ifndef SUCKER_CHESS_CHESS_ENGINE_HPP
 #define SUCKER_CHESS_CHESS_ENGINE_HPP
 
-#include <memory>  // for std::unique_ptr
+#include <memory>  // for std::unique_ptr, std::make_unique
 #include <random>  // for std::mt19937
 #include <utility> // for std::forward
 #include <vector>  // for std::vector

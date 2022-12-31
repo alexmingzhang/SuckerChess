@@ -7,9 +7,8 @@
 
 #include <algorithm> // for std::sort
 #include <cstddef>   // for std::size_t
-#include <iomanip>   // for std::setw
-#include <iostream>  // for std::cout, std::endl
-#include <sstream>   // for std::ostringstream
+#include <iomanip> // for std::setw, std::left, std::right, std::fixed, std::setprecision
+#include <iostream> // for std::cout, std::endl, std::flush
 
 
 void ChessTournament::sort_players_by_elo() {

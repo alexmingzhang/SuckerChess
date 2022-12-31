@@ -4,12 +4,12 @@
 #include <memory>  // for std::unique_ptr, std::make_unique
 #include <sstream> // for std::ostringstream
 #include <string>  // for std::string
-#include <tuple>   // for std::tuple
 #include <utility> // for std::move
 #include <vector>  // for std::vector
 
 #include "ChessEngine.hpp"
 #include "ChessGame.hpp"
+
 
 class ChessPlayer final {
 
@@ -48,16 +48,13 @@ public: // ========================================================= CONSTRUCTOR
         , num_losses_as_white(0)
         , num_losses_as_black(0) {
 
-        using enum PreferenceToken;
-        using namespace Preference;
-
         auto preference_engine = std::make_unique<Engine::Preference>();
         std::ostringstream name_builder;
 
 #define CREATE_PREFERENCE_CASE(CLASS_NAME, TOKEN_NAME, STRING_NAME, COMMENT)   \
-    case TOKEN_NAME:                                                           \
+    case PreferenceToken::TOKEN_NAME:                                          \
         name_builder << STRING_NAME;                                           \
-        preference_engine->add_preference<CLASS_NAME>();                       \
+        preference_engine->add_preference<Preference::CLASS_NAME>();           \
         break;
 
         for (PreferenceToken token : tokens) {
@@ -70,9 +67,7 @@ public: // ========================================================= CONSTRUCTOR
         engine = std::move(preference_engine);
     }
 
-public: // ===========================================================
-
-    // ACCESSORS
+public: // =========================================================== ACCESSORS
 
     [[nodiscard]] constexpr const std::string &get_name() const noexcept {
         return name;

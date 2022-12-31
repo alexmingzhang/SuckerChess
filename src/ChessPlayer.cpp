@@ -2,7 +2,7 @@
 
 #include <cmath> // for std::pow
 #include <iomanip> // for std::left, std::right, std::setw, std::fixed, std::setprecision
-#include <iostream> // for std::cout, std::endl
+#include <iostream> // for std::cout
 #include <sstream>  // for std::ostringstream
 
 

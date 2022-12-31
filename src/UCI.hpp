@@ -1,10 +1,11 @@
 #ifndef SUCKER_CHESS_UCI_HPP
 #define SUCKER_CHESS_UCI_HPP
 
-#include "ChessEngine.hpp"
-
 #include <cstdio> // for std::FILE
 #include <string> // for std::string
+#include <vector> // for std::vector
+
+#include "ChessEngine.hpp"
 
 
 namespace Engine {
