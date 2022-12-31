@@ -64,7 +64,7 @@ public: // ========================================================= CONSTRUCTOR
             switch (token) { DECLARE_PREFERENCES(CREATE_PREFERENCE_CASE) }
         }
 
-#undef CREATE_PREFERENCE_TOKEN
+#undef CREATE_PREFERENCE_CASE
 
         if (name.empty()) { name = name_builder.str(); }
         engine = std::move(preference_engine);
