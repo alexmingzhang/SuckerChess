@@ -708,8 +708,9 @@ private: // ============================================ MOVE GENERATION HELPERS
 public: // ===================================================== MOVE GENERATION
 
     template <typename F>
-    constexpr void
-    visit_moves(PieceColor moving_color, ChessSquare src, const F &f) const {
+    constexpr void visit_valid_moves(
+        PieceColor moving_color, ChessSquare src, const F &f
+    ) const {
         assert(src.in_bounds());
         const ChessPiece piece = (*this)[src];
         assert(piece.get_color() == moving_color);
@@ -769,10 +770,14 @@ public: // ===================================================== MOVE GENERATION
         for (coord_t src_file = 0; src_file < NUM_FILES; ++src_file) {
             for (coord_t src_rank = 0; src_rank < NUM_RANKS; ++src_rank) {
                 if ((*this)(src_file, src_rank).get_color() == color) {
-                    visit_moves(
+                    visit_valid_moves(
                         color,
                         {src_file, src_rank},
-                        [&](ChessMove move) { result.push_back(move); }
+                        [&](ChessMove move) {
+                            assert(is_valid(move));
+                            assert(get_moving_color(move) == color);
+                            result.push_back(move);
+                        }
                     );
                 }
             }
@@ -786,10 +791,12 @@ public: // ===================================================== MOVE GENERATION
         for (coord_t src_file = 0; src_file < NUM_FILES; ++src_file) {
             for (coord_t src_rank = 0; src_rank < NUM_RANKS; ++src_rank) {
                 if ((*this)(src_file, src_rank).get_color() == color) {
-                    visit_moves(
+                    visit_valid_moves(
                         color,
                         {src_file, src_rank},
                         [&](ChessMove move) {
+                            assert(is_valid(move));
+                            assert(get_moving_color(move) == color);
                             if (is_legal(move)) { result.push_back(move); }
                         }
                     );
