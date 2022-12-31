@@ -44,19 +44,25 @@ void ChessTournament::run(long long num_rounds, long long print_frequency) {
             for (std::size_t j = i + 1; j < players.size(); ++j) {
                 ChessPlayer &p2 = *players[j];
                 if (verbose) { std::cout << game_history.size() << ": "; }
-                game_history.push_back(p1.versus(p2, verbose));
+                game_history.push_back(p1.versus(p2, elo_k_factor, verbose));
                 if (verbose) { std::cout << game_history.size() << ": "; }
-                game_history.push_back(p2.versus(p1, verbose));
+                game_history.push_back(p2.versus(p1, elo_k_factor, verbose));
             }
         }
 
-        current_round++;
+        ++current_round;
+
+        if (infinite_rounds) {
+            elo_k_factor *= 0.99;
+        } else {
+            elo_k_factor -= 40.0 / static_cast<double>(num_rounds);
+        }
     }
 }
 
 void ChessTournament::print_info() const {
     std::cout << name << " (round " << current_round << ", game "
-              << game_history.size() << ") \n";
+              << game_history.size() << ", kfactor " << elo_k_factor << ") \n";
     std::cout
         << "      Engine   :   ELO   :   W (w/b)   :   D   :   L (w/b)  \n";
     for (std::size_t i = 0; i < players.size(); ++i) {

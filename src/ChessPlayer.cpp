@@ -14,7 +14,9 @@ std::string ChessPlayer::get_name_with_elo(int precision) const {
 }
 
 
-ChessGame ChessPlayer::versus(ChessPlayer &black, int verbose_level) {
+ChessGame ChessPlayer::versus(
+    ChessPlayer &black, double elo_k_factor, int verbose_level
+) {
 
     ChessPlayer &white = *this; // local alias for naming symmetry
     ChessGame game;
@@ -38,22 +40,22 @@ ChessGame ChessPlayer::versus(ChessPlayer &black, int verbose_level) {
             if (verbose_level > 0) { std::cout << "Draw.\n"; }
             ++white.num_draws;
             ++black.num_draws;
-            white.elo += ELO_K_FACTOR * (0.5 - white_expected_score);
-            black.elo += ELO_K_FACTOR * (0.5 - black_expected_score);
+            white.elo += elo_k_factor * (0.5 - white_expected_score);
+            black.elo += elo_k_factor * (0.5 - black_expected_score);
             break;
         case PieceColor::WHITE:
             if (verbose_level > 0) { std::cout << white.name << " won!\n"; }
             ++white.num_wins_as_white;
             ++black.num_losses_as_black;
-            white.elo += ELO_K_FACTOR * (1.0 - white_expected_score);
-            black.elo += ELO_K_FACTOR * (0.0 - black_expected_score);
+            white.elo += elo_k_factor * (1.0 - white_expected_score);
+            black.elo += elo_k_factor * (0.0 - black_expected_score);
             break;
         case PieceColor::BLACK:
             if (verbose_level > 0) { std::cout << black.name << " won!\n"; }
             ++white.num_losses_as_white;
             ++black.num_wins_as_black;
-            white.elo += ELO_K_FACTOR * (0.0 - white_expected_score);
-            black.elo += ELO_K_FACTOR * (1.0 - black_expected_score);
+            white.elo += elo_k_factor * (0.0 - white_expected_score);
+            black.elo += elo_k_factor * (1.0 - black_expected_score);
             break;
     }
     return game;

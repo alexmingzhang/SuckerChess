@@ -11,10 +11,6 @@
 #include "ChessEngine.hpp"
 #include "ChessGame.hpp"
 
-
-constexpr double ELO_K_FACTOR = 32.0;
-
-
 class ChessPlayer final {
 
     std::string name;
@@ -135,11 +131,13 @@ public: // =====================================================================
      * wins, losses, and ELO
      *
      * @param black Other ChessPlayer
+     * @param elo_k_factor K-factor used in ELO calculation
      * @param verbose_level 0: nothing, 1: print result, 2: print game board
      * every move
      * @return ChessGame
      */
-    ChessGame versus(ChessPlayer &black, int verbose_level = 1);
+    ChessGame
+    versus(ChessPlayer &black, double elo_k_factor, int verbose_level = 1);
 
     [[nodiscard]] std::string get_name_with_elo(int precision) const;
 

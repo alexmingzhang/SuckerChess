@@ -16,6 +16,7 @@ class ChessTournament {
     std::vector<std::unique_ptr<ChessPlayer>> players;
     std::vector<ChessGame> game_history;
     long long current_round;
+    double elo_k_factor;
 
 public: // ======================================================== CONSTRUCTORS
 
@@ -23,13 +24,15 @@ public: // ======================================================== CONSTRUCTORS
         : name("SuckerChess Tournament")
         , players()
         , game_history()
-        , current_round(0) {}
+        , current_round(0)
+        , elo_k_factor(40.0) {}
 
     explicit ChessTournament(std::string n)
         : name(std::move(n))
         , players()
         , game_history()
-        , current_round(0) {}
+        , current_round(0)
+        , elo_k_factor(40.0) {}
 
 public: // =========================================================== ACCESSORS
 
