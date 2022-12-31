@@ -179,10 +179,8 @@ std::string ChessPosition::get_move_name(
     if (suffix) {
         ChessPosition copy = *this;
         copy.make_move(move);
-        if (copy.checkmated()) {
-            result << '#';
-        } else if (puts_opponent_in_check(move)) {
-            result << '+';
+        if (copy.in_check()) {
+            result << (copy.get_legal_moves().empty() ? '#' : '+');
         }
     }
     return result.str();
