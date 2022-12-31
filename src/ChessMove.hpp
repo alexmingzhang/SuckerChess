@@ -6,7 +6,6 @@
 #include <cmath>     // for std::abs
 #include <compare>   // for operator<=>
 #include <cstdint>   // for std::uint16_t
-#include <numeric>   // for std::gcd
 #include <ostream>   // for std::ostream
 
 #include "ChessPiece.hpp"
