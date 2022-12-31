@@ -33,13 +33,15 @@ enum class PreferenceToken {
     PREVENT_STALEMATE,
     CHECK,
     CAPTURE,
-    CAPTURE_HANGING,
+    CAPTURE_HANGING, // capture pieces with no defenders
+    SMART_CAPTURE,
     CASTLE,
 
-    FIRST, // first available move
-    LAST,  // last available move
-
+    FIRST,  // first available move
+    LAST,   // last available move
     REDUCE, // minimize available moves for opponent
+
+    GREEDY, // maximize own material
 
     SWARM,     // moves pieces toward enemy king
     HUDDLE,    // moves pieces toward own king
@@ -51,7 +53,7 @@ enum class PreferenceToken {
     DEFENDER,    // moves pieces to squares attacked by self
     OUTPOST,     // moves pieces to squares not attacked by opponent
     GAMBIT,      // moves pieces to squares attacked by both self and opponent
-    EXPLORE, // move pieces to squares not attacked by both self nor opponent
+    EXPLORE, // move pieces to squares not attacked by either self nor opponent
 
 }; // enum class PreferenceToken
 
@@ -74,12 +76,14 @@ DECLARE_PREFERENCE(PreventStalemate);
 DECLARE_PREFERENCE(Check);
 DECLARE_PREFERENCE(Capture);
 DECLARE_PREFERENCE(CaptureHanging);
+DECLARE_PREFERENCE(SmartCapture);
 DECLARE_PREFERENCE(Castle);
 
 DECLARE_PREFERENCE(First);
 DECLARE_PREFERENCE(Last);
-
 DECLARE_PREFERENCE(Reduce);
+
+DECLARE_PREFERENCE(Greedy);
 
 DECLARE_PREFERENCE(Swarm);
 DECLARE_PREFERENCE(Huddle);

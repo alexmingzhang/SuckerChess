@@ -79,6 +79,21 @@ DEFINE_PREFERENCE(CaptureHanging) {
     });
 }
 
+DEFINE_PREFERENCE(SmartCapture) {
+    return maximal_elements(allowed_moves, [&](ChessMove move) {
+        if (!current_pos.is_capture(move)) { return 0; }
+
+        const PieceColor self = current_pos.get_color_to_move();
+        const PieceColor enemy = !self;
+        int defenders =
+            current_pos.get_board().count_attacks_by(self, move.get_dst());
+        int attackers =
+            current_pos.get_board().count_attacks_by(enemy, move.get_dst());
+
+        return defenders - attackers;
+    });
+}
+
 DEFINE_PREFERENCE(Castle) {
     return maximal_elements(allowed_moves, [&](ChessMove move) {
         if (current_pos.is_castle(move)) { return 2; }
@@ -102,6 +117,21 @@ DEFINE_PREFERENCE(Reduce) {
         return copy.get_legal_moves().size();
     });
 }
+
+
+DEFINE_PREFERENCE(Greedy) {
+    return maximal_elements(allowed_moves, [&](ChessMove move) {
+        ChessPosition copy = current_pos;
+        copy.make_move(move);
+
+        return (
+            (current_pos.get_color_to_move() == PieceColor::WHITE)
+                ? copy.get_material_advantage()
+                : copy.get_material_advantage() * -1
+        );
+    });
+}
+
 
 DEFINE_PREFERENCE(Swarm) {
     const ChessSquare enemy_king_location =
@@ -223,11 +253,14 @@ ChessMove Preference::pick_move(
     const std::vector<ChessMove> &move_history
 ) {
     std::vector<ChessMove> allowed_moves = legal_moves;
+    // int count = 0;
     for (const std::unique_ptr<ChessPreference> &pref : preferences) {
         if (allowed_moves.size() <= 1) { break; }
         allowed_moves = pref->pick_preferred_moves(
             current_pos, allowed_moves, pos_history, move_history
         );
+        // std::cout << "Allowed moves " << count++ << ": " << allowed_moves
+        //           << '\n';
     }
     assert(!allowed_moves.empty());
     if (allowed_moves.size() == 1) {

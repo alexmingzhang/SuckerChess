@@ -135,7 +135,6 @@ ChessMove ChessGame::get_console_move() {
 
 PieceColor
 ChessGame::run(ChessEngine *white, ChessEngine *black, bool verbose) {
-
     using enum GameStatus;
     while (true) {
 

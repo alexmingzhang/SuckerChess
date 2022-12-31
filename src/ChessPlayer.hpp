@@ -69,10 +69,12 @@ public: // ========================================================= CONSTRUCTOR
                 case PREVENT_STALEMATE: name_builder << "PST"; preference_engine->add_preference<PreventStalemate>();   break;
                 case CHECK:       name_builder << "Chk"; preference_engine->add_preference<Check>();       break;
                 case CAPTURE:     name_builder << "Cap"; preference_engine->add_preference<Capture>();     break;
-                case CAPTURE_HANGING:     name_builder << "CAP"; preference_engine->add_preference<CaptureHanging>();     break;
+                case CAPTURE_HANGING:     name_builder << "HCP"; preference_engine->add_preference<CaptureHanging>();     break;
+                case SMART_CAPTURE:     name_builder << "SCP"; preference_engine->add_preference<SmartCapture>();     break;
                 case FIRST:       name_builder << "Fst"; preference_engine->add_preference<First>();     break;
                 case LAST:        name_builder << "Lst"; preference_engine->add_preference<Last>();     break;
                 case REDUCE:      name_builder << "Red"; preference_engine->add_preference<Reduce>();      break;
+                case GREEDY:      name_builder << "Grd"; preference_engine->add_preference<Greedy>();      break;
                 case SWARM:       name_builder << "Swm"; preference_engine->add_preference<Swarm>();       break;
                 case HUDDLE:      name_builder << "Hud"; preference_engine->add_preference<Huddle>();      break;
                 case ENERGETIC:   name_builder << "Nrg"; preference_engine->add_preference<Energetic>();   break;
