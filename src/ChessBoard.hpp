@@ -72,12 +72,14 @@ public: // ========================================================== COMPARISON
 
 public: // ======================================================= STATE TESTING
 
-    [[nodiscard]] constexpr bool is_empty(ChessSquare square) const noexcept {
+    [[nodiscard]] constexpr bool in_bounds_and_empty(ChessSquare square
+    ) const noexcept {
         return square.in_bounds() && (get_piece(square) == EMPTY_SQUARE);
     }
 
-    [[nodiscard]] constexpr bool
-    has_piece(ChessSquare square, ChessPiece piece) const noexcept {
+    [[nodiscard]] constexpr bool in_bounds_and_has_piece(
+        ChessSquare square, ChessPiece piece
+    ) const noexcept {
         return square.in_bounds() && (get_piece(square) == piece);
     }
 
@@ -161,56 +163,56 @@ public: // ====================================================== LEAPER ATTACKS
     [[nodiscard]] constexpr bool
     is_attacked_by_king(PieceColor color, ChessSquare square) const noexcept {
         const ChessPiece king = {color, PieceType::KING};
-        return has_piece(square + ChessOffset{-1, -1}, king) ||
-               has_piece(square + ChessOffset{-1, 0}, king) ||
-               has_piece(square + ChessOffset{-1, +1}, king) ||
-               has_piece(square + ChessOffset{0, -1}, king) ||
-               has_piece(square + ChessOffset{0, +1}, king) ||
-               has_piece(square + ChessOffset{+1, -1}, king) ||
-               has_piece(square + ChessOffset{+1, 0}, king) ||
-               has_piece(square + ChessOffset{+1, +1}, king);
+        return in_bounds_and_has_piece(square.shift(-1, -1), king) ||
+               in_bounds_and_has_piece(square.shift(-1, 0), king) ||
+               in_bounds_and_has_piece(square.shift(-1, +1), king) ||
+               in_bounds_and_has_piece(square.shift(0, -1), king) ||
+               in_bounds_and_has_piece(square.shift(0, +1), king) ||
+               in_bounds_and_has_piece(square.shift(+1, -1), king) ||
+               in_bounds_and_has_piece(square.shift(+1, 0), king) ||
+               in_bounds_and_has_piece(square.shift(+1, +1), king);
     }
 
     [[nodiscard]] constexpr int
     count_king_attacks(PieceColor color, ChessSquare square) const noexcept {
         const ChessPiece king = {color, PieceType::KING};
         int result = 0;
-        if (has_piece(square + ChessOffset{-1, -1}, king)) { ++result; }
-        if (has_piece(square + ChessOffset{-1, 0}, king)) { ++result; }
-        if (has_piece(square + ChessOffset{-1, +1}, king)) { ++result; }
-        if (has_piece(square + ChessOffset{0, -1}, king)) { ++result; }
-        if (has_piece(square + ChessOffset{0, +1}, king)) { ++result; }
-        if (has_piece(square + ChessOffset{+1, -1}, king)) { ++result; }
-        if (has_piece(square + ChessOffset{+1, 0}, king)) { ++result; }
-        if (has_piece(square + ChessOffset{+1, +1}, king)) { ++result; }
+        if (in_bounds_and_has_piece(square.shift(-1, -1), king)) { ++result; }
+        if (in_bounds_and_has_piece(square.shift(-1, 0), king)) { ++result; }
+        if (in_bounds_and_has_piece(square.shift(-1, +1), king)) { ++result; }
+        if (in_bounds_and_has_piece(square.shift(0, -1), king)) { ++result; }
+        if (in_bounds_and_has_piece(square.shift(0, +1), king)) { ++result; }
+        if (in_bounds_and_has_piece(square.shift(+1, -1), king)) { ++result; }
+        if (in_bounds_and_has_piece(square.shift(+1, 0), king)) { ++result; }
+        if (in_bounds_and_has_piece(square.shift(+1, +1), king)) { ++result; }
         return result;
     }
 
     [[nodiscard]] constexpr bool
     is_attacked_by_knight(PieceColor color, ChessSquare square) const noexcept {
         const ChessPiece knight = {color, PieceType::KNIGHT};
-        return has_piece(square + ChessOffset{-2, -1}, knight) ||
-               has_piece(square + ChessOffset{-2, +1}, knight) ||
-               has_piece(square + ChessOffset{-1, -2}, knight) ||
-               has_piece(square + ChessOffset{-1, +2}, knight) ||
-               has_piece(square + ChessOffset{+1, -2}, knight) ||
-               has_piece(square + ChessOffset{+1, +2}, knight) ||
-               has_piece(square + ChessOffset{+2, -1}, knight) ||
-               has_piece(square + ChessOffset{+2, +1}, knight);
+        return in_bounds_and_has_piece(square.shift(-2, -1), knight) ||
+               in_bounds_and_has_piece(square.shift(-2, +1), knight) ||
+               in_bounds_and_has_piece(square.shift(-1, -2), knight) ||
+               in_bounds_and_has_piece(square.shift(-1, +2), knight) ||
+               in_bounds_and_has_piece(square.shift(+1, -2), knight) ||
+               in_bounds_and_has_piece(square.shift(+1, +2), knight) ||
+               in_bounds_and_has_piece(square.shift(+2, -1), knight) ||
+               in_bounds_and_has_piece(square.shift(+2, +1), knight);
     }
 
     [[nodiscard]] constexpr int
     count_knight_attacks(PieceColor color, ChessSquare square) const noexcept {
         const ChessPiece knight = {color, PieceType::KNIGHT};
         int result = 0;
-        if (has_piece(square + ChessOffset{-2, -1}, knight)) { ++result; }
-        if (has_piece(square + ChessOffset{-2, +1}, knight)) { ++result; }
-        if (has_piece(square + ChessOffset{-1, -2}, knight)) { ++result; }
-        if (has_piece(square + ChessOffset{-1, +2}, knight)) { ++result; }
-        if (has_piece(square + ChessOffset{+1, -2}, knight)) { ++result; }
-        if (has_piece(square + ChessOffset{+1, +2}, knight)) { ++result; }
-        if (has_piece(square + ChessOffset{+2, -1}, knight)) { ++result; }
-        if (has_piece(square + ChessOffset{+2, +1}, knight)) { ++result; }
+        if (in_bounds_and_has_piece(square.shift(-2, -1), knight)) { ++result; }
+        if (in_bounds_and_has_piece(square.shift(-2, +1), knight)) { ++result; }
+        if (in_bounds_and_has_piece(square.shift(-1, -2), knight)) { ++result; }
+        if (in_bounds_and_has_piece(square.shift(-1, +2), knight)) { ++result; }
+        if (in_bounds_and_has_piece(square.shift(+1, -2), knight)) { ++result; }
+        if (in_bounds_and_has_piece(square.shift(+1, +2), knight)) { ++result; }
+        if (in_bounds_and_has_piece(square.shift(+2, -1), knight)) { ++result; }
+        if (in_bounds_and_has_piece(square.shift(+2, +1), knight)) { ++result; }
         return result;
     }
 
@@ -218,25 +220,30 @@ public: // ====================================================== LEAPER ATTACKS
     is_attacked_by_pawn(PieceColor color, ChessSquare square) const noexcept {
         const ChessPiece pawn = {color, PieceType::PAWN};
         const coord_t direction = pawn_direction(color);
-        return has_piece(square + ChessOffset{-1, -direction}, pawn) ||
-               has_piece(square + ChessOffset{+1, -direction}, pawn);
+        return in_bounds_and_has_piece(square.shift(-1, -direction), pawn) ||
+               in_bounds_and_has_piece(square.shift(+1, -direction), pawn);
     }
 
     [[nodiscard]] constexpr int
     count_pawn_attacks(PieceColor color, ChessSquare square) const noexcept {
         const ChessPiece pawn = {color, PieceType::PAWN};
         const coord_t direction = pawn_direction(color);
-        return has_piece(square + ChessOffset{-1, -direction}, pawn) +
-               has_piece(square + ChessOffset{+1, -direction}, pawn);
+        return in_bounds_and_has_piece(square.shift(-1, -direction), pawn) +
+               in_bounds_and_has_piece(square.shift(+1, -direction), pawn);
     }
 
 private: // ============================================== SLIDER ATTACK HELPERS
 
     [[nodiscard]] constexpr ChessPiece find_slider(
-        PieceColor color, ChessSquare square, ChessOffset offset
+        PieceColor color,
+        ChessSquare square,
+        coord_t file_offset,
+        coord_t rank_offset
     ) const noexcept {
-        ChessSquare current = square + offset;
-        while (is_empty(current)) { current += offset; }
+        ChessSquare current = square.shift(file_offset, rank_offset);
+        while (in_bounds_and_empty(current)) {
+            current = current.shift(file_offset, rank_offset);
+        }
         if (current.in_bounds()) {
             const ChessPiece piece = get_piece(current);
             if (piece.get_color() == color) { return piece; }
@@ -250,13 +257,13 @@ private: // ===================================================== SLIDER ATTACKS
         PieceColor color, ChessSquare square
     ) const noexcept {
         using enum PieceType;
-        const ChessPiece a = find_slider(color, square, {-1, 0});
+        const ChessPiece a = find_slider(color, square, -1, 0);
         if (a.get_type() == QUEEN || a.get_type() == ROOK) { return true; }
-        const ChessPiece b = find_slider(color, square, {0, -1});
+        const ChessPiece b = find_slider(color, square, 0, -1);
         if (b.get_type() == QUEEN || b.get_type() == ROOK) { return true; }
-        const ChessPiece c = find_slider(color, square, {0, +1});
+        const ChessPiece c = find_slider(color, square, 0, +1);
         if (c.get_type() == QUEEN || c.get_type() == ROOK) { return true; }
-        const ChessPiece d = find_slider(color, square, {+1, 0});
+        const ChessPiece d = find_slider(color, square, +1, 0);
         if (d.get_type() == QUEEN || d.get_type() == ROOK) { return true; }
         return false;
     }
@@ -266,13 +273,13 @@ private: // ===================================================== SLIDER ATTACKS
     ) const noexcept {
         using enum PieceType;
         int result = 0;
-        const ChessPiece a = find_slider(color, square, {-1, 0});
+        const ChessPiece a = find_slider(color, square, -1, 0);
         if (a.get_type() == QUEEN || a.get_type() == ROOK) { ++result; }
-        const ChessPiece b = find_slider(color, square, {0, -1});
+        const ChessPiece b = find_slider(color, square, 0, -1);
         if (b.get_type() == QUEEN || b.get_type() == ROOK) { ++result; }
-        const ChessPiece c = find_slider(color, square, {0, +1});
+        const ChessPiece c = find_slider(color, square, 0, +1);
         if (c.get_type() == QUEEN || c.get_type() == ROOK) { ++result; }
-        const ChessPiece d = find_slider(color, square, {+1, 0});
+        const ChessPiece d = find_slider(color, square, +1, 0);
         if (d.get_type() == QUEEN || d.get_type() == ROOK) { ++result; }
         return result;
     }
@@ -281,13 +288,13 @@ private: // ===================================================== SLIDER ATTACKS
         PieceColor color, ChessSquare square
     ) const noexcept {
         using enum PieceType;
-        const ChessPiece a = find_slider(color, square, {-1, -1});
+        const ChessPiece a = find_slider(color, square, -1, -1);
         if (a.get_type() == QUEEN || a.get_type() == BISHOP) { return true; }
-        const ChessPiece b = find_slider(color, square, {-1, +1});
+        const ChessPiece b = find_slider(color, square, -1, +1);
         if (b.get_type() == QUEEN || b.get_type() == BISHOP) { return true; }
-        const ChessPiece c = find_slider(color, square, {+1, -1});
+        const ChessPiece c = find_slider(color, square, +1, -1);
         if (c.get_type() == QUEEN || c.get_type() == BISHOP) { return true; }
-        const ChessPiece d = find_slider(color, square, {+1, +1});
+        const ChessPiece d = find_slider(color, square, +1, +1);
         if (d.get_type() == QUEEN || d.get_type() == BISHOP) { return true; }
         return false;
     }
@@ -297,13 +304,13 @@ private: // ===================================================== SLIDER ATTACKS
     ) const noexcept {
         using enum PieceType;
         int result = 0;
-        const ChessPiece a = find_slider(color, square, {-1, -1});
+        const ChessPiece a = find_slider(color, square, -1, -1);
         if (a.get_type() == QUEEN || a.get_type() == BISHOP) { ++result; }
-        const ChessPiece b = find_slider(color, square, {-1, +1});
+        const ChessPiece b = find_slider(color, square, -1, +1);
         if (b.get_type() == QUEEN || b.get_type() == BISHOP) { ++result; }
-        const ChessPiece c = find_slider(color, square, {+1, -1});
+        const ChessPiece c = find_slider(color, square, +1, -1);
         if (c.get_type() == QUEEN || c.get_type() == BISHOP) { ++result; }
-        const ChessPiece d = find_slider(color, square, {+1, +1});
+        const ChessPiece d = find_slider(color, square, +1, +1);
         if (d.get_type() == QUEEN || d.get_type() == BISHOP) { ++result; }
         return result;
     }

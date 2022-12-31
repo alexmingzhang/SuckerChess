@@ -17,14 +17,6 @@ constexpr coord_t NUM_FILES = 8;
 constexpr coord_t NUM_RANKS = 8;
 
 
-struct ChessOffset {
-
-    coord_t file_offset;
-    coord_t rank_offset;
-
-}; // struct ChessOffset
-
-
 struct ChessSquare final {
 
     coord_t file;
@@ -37,14 +29,9 @@ struct ChessSquare final {
 
     constexpr auto operator<=>(const ChessSquare &) const noexcept = default;
 
-    constexpr ChessSquare &operator+=(ChessOffset offset) noexcept {
-        file += offset.file_offset;
-        rank += offset.rank_offset;
-        return *this;
-    }
-
-    constexpr ChessSquare operator+(ChessOffset offset) const noexcept {
-        return {file + offset.file_offset, rank + offset.rank_offset};
+    constexpr ChessSquare
+    shift(coord_t file_offset, coord_t rank_offset) const noexcept {
+        return {file + file_offset, rank + rank_offset};
     }
 
     [[nodiscard]] constexpr coord_t distance(ChessSquare other) const noexcept {
@@ -226,13 +213,6 @@ public: // ============================================================ GEOMETRY
     [[nodiscard]] constexpr bool is_diagonal() const noexcept {
         return std::abs(get_src_file() - get_dst_file()) ==
                std::abs(get_src_rank() - get_dst_rank());
-    }
-
-    [[nodiscard]] constexpr ChessOffset direction() const noexcept {
-        const coord_t delta_file = get_dst_file() - get_src_file();
-        const coord_t delta_rank = get_dst_rank() - get_src_rank();
-        const coord_t gcd = std::gcd(delta_file, delta_rank);
-        return {delta_file / gcd, delta_rank / gcd};
     }
 
     [[nodiscard]] constexpr coord_t distance() const noexcept {

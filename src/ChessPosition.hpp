@@ -268,12 +268,19 @@ private: // ============================================ MOVE VALIDATION HELPERS
     }
 
     [[nodiscard]] constexpr bool path_is_clear(ChessMove move) const noexcept {
-        const ChessOffset offset = move.direction();
-        ChessSquare current = move.get_src() + offset;
+        const coord_t file_offset =
+            (move.get_dst_file() < move.get_src_file())   ? -1
+            : (move.get_dst_file() > move.get_src_file()) ? +1
+                                                          : 0;
+        const coord_t rank_offset =
+            (move.get_dst_rank() < move.get_src_rank())   ? -1
+            : (move.get_dst_rank() > move.get_src_rank()) ? +1
+                                                          : 0;
+        ChessSquare current = move.get_src().shift(file_offset, rank_offset);
         const ChessSquare dst = move.get_dst();
         while (current != dst) {
-            if (!board.is_empty(current)) { return false; }
-            current += offset;
+            if (!board.in_bounds_and_empty(current)) { return false; }
+            current = current.shift(file_offset, rank_offset);
         }
         return true;
     }
@@ -349,10 +356,10 @@ public: // ===================================================== MOVE VALIDATION
                     );
                     // Both the square being moved through and the destination
                     // square must be empty.
-                    ensure(board.is_empty(
-                        move.get_src() + ChessOffset{0, direction}
+                    ensure(board.in_bounds_and_empty(
+                        move.get_src().shift(0, direction)
                     ));
-                    ensure(board.is_empty(move.get_dst()));
+                    ensure(board.in_bounds_and_empty(move.get_dst()));
                 } else {
                     ensure(
                         move.get_dst_rank() == move.get_src_rank() + direction
@@ -540,20 +547,28 @@ private: // ============================================ MOVE GENERATION HELPERS
 
     template <typename F>
     constexpr void visit_leaper_move(
-        PieceColor moving_color, ChessSquare src, ChessOffset offset, const F &f
+        PieceColor moving_color,
+        ChessSquare src,
+        coord_t file_offset,
+        coord_t rank_offset,
+        const F &f
     ) const {
-        const ChessSquare dst = src + offset;
+        const ChessSquare dst = src.shift(file_offset, rank_offset);
         if (is_valid_dst(moving_color, dst)) { f(ChessMove{src, dst}); }
     }
 
     template <typename F>
     constexpr void visit_slider_moves(
-        PieceColor moving_color, ChessSquare src, ChessOffset offset, const F &f
+        PieceColor moving_color,
+        ChessSquare src,
+        coord_t file_offset,
+        coord_t rank_offset,
+        const F &f
     ) const {
-        ChessSquare dst = src + offset;
-        while (board.is_empty(dst)) {
+        ChessSquare dst = src.shift(file_offset, rank_offset);
+        while (board.in_bounds_and_empty(dst)) {
             f(ChessMove{src, dst});
-            dst += offset;
+            dst = dst.shift(file_offset, rank_offset);
         }
         if (is_valid_dst(moving_color, dst)) { f(ChessMove{src, dst}); }
     }
@@ -577,23 +592,22 @@ private: // ============================================ MOVE GENERATION HELPERS
         PieceColor moving_color, ChessSquare src, const F &f
     ) const {
         const coord_t direction = ChessBoard::pawn_direction(moving_color);
-        const ChessSquare dst_move = src + ChessOffset{0, direction};
-        if (board.is_empty(dst_move)) {
+        const ChessSquare dst_move = src.shift(0, direction);
+        if (board.in_bounds_and_empty(dst_move)) {
             visit_promotion_moves(moving_color, src, dst_move, f);
             if (src.rank == ChessBoard::pawn_origin_rank(moving_color)) {
-                const ChessSquare dst_double_move =
-                    dst_move + ChessOffset{0, direction};
-                if (board.is_empty(dst_double_move)) {
+                const ChessSquare dst_double = dst_move.shift(0, direction);
+                if (board.in_bounds_and_empty(dst_double)) {
                     // no promotion possible on initial double-step move
-                    f(ChessMove{src, dst_double_move});
+                    f(ChessMove{src, dst_double});
                 }
             }
         }
-        const ChessSquare dst_capture_l = src + ChessOffset{-1, direction};
+        const ChessSquare dst_capture_l = src.shift(-1, direction);
         if (is_valid_cap(moving_color, dst_capture_l)) {
             visit_promotion_moves(moving_color, src, dst_capture_l, f);
         }
-        const ChessSquare dst_capture_r = src + ChessOffset{+1, direction};
+        const ChessSquare dst_capture_r = src.shift(+1, direction);
         if (is_valid_cap(moving_color, dst_capture_r)) {
             visit_promotion_moves(moving_color, src, dst_capture_r, f);
         }
@@ -688,47 +702,47 @@ public: // ===================================================== MOVE GENERATION
         switch (piece.get_type()) {
             case PieceType::NONE: __builtin_unreachable();
             case PieceType::KING:
-                visit_leaper_move(moving_color, src, {-1, -1}, f);
-                visit_leaper_move(moving_color, src, {-1, 0}, f);
-                visit_leaper_move(moving_color, src, {-1, +1}, f);
-                visit_leaper_move(moving_color, src, {0, -1}, f);
-                visit_leaper_move(moving_color, src, {0, +1}, f);
-                visit_leaper_move(moving_color, src, {+1, -1}, f);
-                visit_leaper_move(moving_color, src, {+1, 0}, f);
-                visit_leaper_move(moving_color, src, {+1, +1}, f);
+                visit_leaper_move(moving_color, src, -1, -1, f);
+                visit_leaper_move(moving_color, src, -1, 0, f);
+                visit_leaper_move(moving_color, src, -1, +1, f);
+                visit_leaper_move(moving_color, src, 0, -1, f);
+                visit_leaper_move(moving_color, src, 0, +1, f);
+                visit_leaper_move(moving_color, src, +1, -1, f);
+                visit_leaper_move(moving_color, src, +1, 0, f);
+                visit_leaper_move(moving_color, src, +1, +1, f);
                 visit_castling_moves(moving_color, f);
                 break;
             case PieceType::QUEEN:
-                visit_slider_moves(moving_color, src, {-1, -1}, f);
-                visit_slider_moves(moving_color, src, {-1, 0}, f);
-                visit_slider_moves(moving_color, src, {-1, +1}, f);
-                visit_slider_moves(moving_color, src, {0, -1}, f);
-                visit_slider_moves(moving_color, src, {0, +1}, f);
-                visit_slider_moves(moving_color, src, {+1, -1}, f);
-                visit_slider_moves(moving_color, src, {+1, 0}, f);
-                visit_slider_moves(moving_color, src, {+1, +1}, f);
+                visit_slider_moves(moving_color, src, -1, -1, f);
+                visit_slider_moves(moving_color, src, -1, 0, f);
+                visit_slider_moves(moving_color, src, -1, +1, f);
+                visit_slider_moves(moving_color, src, 0, -1, f);
+                visit_slider_moves(moving_color, src, 0, +1, f);
+                visit_slider_moves(moving_color, src, +1, -1, f);
+                visit_slider_moves(moving_color, src, +1, 0, f);
+                visit_slider_moves(moving_color, src, +1, +1, f);
                 break;
             case PieceType::ROOK:
-                visit_slider_moves(moving_color, src, {-1, 0}, f);
-                visit_slider_moves(moving_color, src, {0, -1}, f);
-                visit_slider_moves(moving_color, src, {0, +1}, f);
-                visit_slider_moves(moving_color, src, {+1, 0}, f);
+                visit_slider_moves(moving_color, src, -1, 0, f);
+                visit_slider_moves(moving_color, src, 0, -1, f);
+                visit_slider_moves(moving_color, src, 0, +1, f);
+                visit_slider_moves(moving_color, src, +1, 0, f);
                 break;
             case PieceType::BISHOP:
-                visit_slider_moves(moving_color, src, {-1, -1}, f);
-                visit_slider_moves(moving_color, src, {-1, +1}, f);
-                visit_slider_moves(moving_color, src, {+1, -1}, f);
-                visit_slider_moves(moving_color, src, {+1, +1}, f);
+                visit_slider_moves(moving_color, src, -1, -1, f);
+                visit_slider_moves(moving_color, src, -1, +1, f);
+                visit_slider_moves(moving_color, src, +1, -1, f);
+                visit_slider_moves(moving_color, src, +1, +1, f);
                 break;
             case PieceType::KNIGHT:
-                visit_leaper_move(moving_color, src, {-2, -1}, f);
-                visit_leaper_move(moving_color, src, {-2, +1}, f);
-                visit_leaper_move(moving_color, src, {-1, -2}, f);
-                visit_leaper_move(moving_color, src, {-1, +2}, f);
-                visit_leaper_move(moving_color, src, {+1, -2}, f);
-                visit_leaper_move(moving_color, src, {+1, +2}, f);
-                visit_leaper_move(moving_color, src, {+2, -1}, f);
-                visit_leaper_move(moving_color, src, {+2, +1}, f);
+                visit_leaper_move(moving_color, src, -2, -1, f);
+                visit_leaper_move(moving_color, src, -2, +1, f);
+                visit_leaper_move(moving_color, src, -1, -2, f);
+                visit_leaper_move(moving_color, src, -1, +2, f);
+                visit_leaper_move(moving_color, src, +1, -2, f);
+                visit_leaper_move(moving_color, src, +1, +2, f);
+                visit_leaper_move(moving_color, src, +2, -1, f);
+                visit_leaper_move(moving_color, src, +2, +1, f);
                 break;
             case PieceType::PAWN: visit_pawn_moves(moving_color, src, f); break;
         }
