@@ -83,6 +83,28 @@ public: // ======================================================= STATE TESTING
         return square.in_bounds() && (get_piece(square) == piece);
     }
 
+    [[nodiscard]] constexpr bool in_bounds_and_is_valid_dst(
+        PieceColor moving_color, ChessSquare square
+    ) const noexcept {
+        assert(moving_color != PieceColor::NONE);
+        if (!square.in_bounds()) { return false; }
+        const ChessPiece target = get_piece(square);
+        return (target.get_color() != moving_color) &&
+               (target.get_type() != PieceType::KING);
+    }
+
+    [[nodiscard]] constexpr bool in_bounds_and_is_valid_cap(
+        PieceColor moving_color, ChessSquare square
+    ) const noexcept {
+        assert(moving_color != PieceColor::NONE);
+        if (!square.in_bounds()) { return false; }
+        const ChessPiece target = get_piece(square);
+        const PieceColor target_color = target.get_color();
+        return (target_color != moving_color) &&
+               (target_color != PieceColor::NONE) &&
+               (target.get_type() != PieceType::KING);
+    }
+
 public: // =========================================================== SEARCHING
 
     [[nodiscard]] constexpr ChessSquare find_first_piece(ChessPiece piece
@@ -130,6 +152,7 @@ public: // ====================================================== PAWN UTILITIES
 
     [[nodiscard]] static constexpr coord_t pawn_direction(PieceColor color
     ) noexcept {
+        assert(color != PieceColor::NONE);
         switch (color) {
             case PieceColor::NONE: __builtin_unreachable();
             case PieceColor::WHITE: return +1;
@@ -140,6 +163,7 @@ public: // ====================================================== PAWN UTILITIES
 
     [[nodiscard]] static constexpr coord_t pawn_origin_rank(PieceColor color
     ) noexcept {
+        assert(color != PieceColor::NONE);
         switch (color) {
             case PieceColor::NONE: __builtin_unreachable();
             case PieceColor::WHITE: return 1;
@@ -150,6 +174,7 @@ public: // ====================================================== PAWN UTILITIES
 
     [[nodiscard]] static constexpr coord_t promotion_rank(PieceColor color
     ) noexcept {
+        assert(color != PieceColor::NONE);
         switch (color) {
             case PieceColor::NONE: __builtin_unreachable();
             case PieceColor::WHITE: return NUM_RANKS - 1;
@@ -162,6 +187,8 @@ public: // ====================================================== LEAPER ATTACKS
 
     [[nodiscard]] constexpr bool
     is_attacked_by_king(PieceColor color, ChessSquare square) const noexcept {
+        assert(color != PieceColor::NONE);
+        assert(square.in_bounds());
         const ChessPiece king = {color, PieceType::KING};
         return in_bounds_and_has_piece(square.shift(-1, -1), king) ||
                in_bounds_and_has_piece(square.shift(-1, 0), king) ||
@@ -175,6 +202,8 @@ public: // ====================================================== LEAPER ATTACKS
 
     [[nodiscard]] constexpr int
     count_king_attacks(PieceColor color, ChessSquare square) const noexcept {
+        assert(color != PieceColor::NONE);
+        assert(square.in_bounds());
         const ChessPiece king = {color, PieceType::KING};
         int result = 0;
         if (in_bounds_and_has_piece(square.shift(-1, -1), king)) { ++result; }
@@ -190,6 +219,8 @@ public: // ====================================================== LEAPER ATTACKS
 
     [[nodiscard]] constexpr bool
     is_attacked_by_knight(PieceColor color, ChessSquare square) const noexcept {
+        assert(color != PieceColor::NONE);
+        assert(square.in_bounds());
         const ChessPiece knight = {color, PieceType::KNIGHT};
         return in_bounds_and_has_piece(square.shift(-2, -1), knight) ||
                in_bounds_and_has_piece(square.shift(-2, +1), knight) ||
@@ -203,6 +234,8 @@ public: // ====================================================== LEAPER ATTACKS
 
     [[nodiscard]] constexpr int
     count_knight_attacks(PieceColor color, ChessSquare square) const noexcept {
+        assert(color != PieceColor::NONE);
+        assert(square.in_bounds());
         const ChessPiece knight = {color, PieceType::KNIGHT};
         int result = 0;
         if (in_bounds_and_has_piece(square.shift(-2, -1), knight)) { ++result; }
@@ -218,6 +251,8 @@ public: // ====================================================== LEAPER ATTACKS
 
     [[nodiscard]] constexpr bool
     is_attacked_by_pawn(PieceColor color, ChessSquare square) const noexcept {
+        assert(color != PieceColor::NONE);
+        assert(square.in_bounds());
         const ChessPiece pawn = {color, PieceType::PAWN};
         const coord_t direction = pawn_direction(color);
         return in_bounds_and_has_piece(square.shift(-1, -direction), pawn) ||
@@ -226,6 +261,8 @@ public: // ====================================================== LEAPER ATTACKS
 
     [[nodiscard]] constexpr int
     count_pawn_attacks(PieceColor color, ChessSquare square) const noexcept {
+        assert(color != PieceColor::NONE);
+        assert(square.in_bounds());
         const ChessPiece pawn = {color, PieceType::PAWN};
         const coord_t direction = pawn_direction(color);
         return in_bounds_and_has_piece(square.shift(-1, -direction), pawn) +
@@ -240,6 +277,8 @@ private: // ============================================== SLIDER ATTACK HELPERS
         coord_t file_offset,
         coord_t rank_offset
     ) const noexcept {
+        assert(color != PieceColor::NONE);
+        assert(square.in_bounds());
         ChessSquare current = square.shift(file_offset, rank_offset);
         while (in_bounds_and_empty(current)) {
             current = current.shift(file_offset, rank_offset);
@@ -256,6 +295,8 @@ private: // ===================================================== SLIDER ATTACKS
     [[nodiscard]] constexpr bool is_attacked_orthogonally(
         PieceColor color, ChessSquare square
     ) const noexcept {
+        assert(color != PieceColor::NONE);
+        assert(square.in_bounds());
         using enum PieceType;
         const ChessPiece a = find_slider(color, square, -1, 0);
         if (a.get_type() == QUEEN || a.get_type() == ROOK) { return true; }
@@ -271,6 +312,8 @@ private: // ===================================================== SLIDER ATTACKS
     [[nodiscard]] constexpr int count_orthogonal_attacks(
         PieceColor color, ChessSquare square
     ) const noexcept {
+        assert(color != PieceColor::NONE);
+        assert(square.in_bounds());
         using enum PieceType;
         int result = 0;
         const ChessPiece a = find_slider(color, square, -1, 0);
@@ -287,6 +330,8 @@ private: // ===================================================== SLIDER ATTACKS
     [[nodiscard]] constexpr bool is_attacked_diagonally(
         PieceColor color, ChessSquare square
     ) const noexcept {
+        assert(color != PieceColor::NONE);
+        assert(square.in_bounds());
         using enum PieceType;
         const ChessPiece a = find_slider(color, square, -1, -1);
         if (a.get_type() == QUEEN || a.get_type() == BISHOP) { return true; }
@@ -302,6 +347,8 @@ private: // ===================================================== SLIDER ATTACKS
     [[nodiscard]] constexpr int count_diagonal_attacks(
         PieceColor color, ChessSquare square
     ) const noexcept {
+        assert(color != PieceColor::NONE);
+        assert(square.in_bounds());
         using enum PieceType;
         int result = 0;
         const ChessPiece a = find_slider(color, square, -1, -1);
@@ -321,23 +368,22 @@ public: // ====================================================== ATTACK TESTING
     is_attacked_by(PieceColor color, ChessSquare square) const noexcept {
         assert(color != PieceColor::NONE);
         assert(square.in_bounds());
-        // TODO: optimal ordering of branches
-        return is_attacked_by_king(color, square) ||
-               is_attacked_orthogonally(color, square) ||
-               is_attacked_diagonally(color, square) ||
+        return is_attacked_by_pawn(color, square) ||
                is_attacked_by_knight(color, square) ||
-               is_attacked_by_pawn(color, square);
+               is_attacked_diagonally(color, square) ||
+               is_attacked_orthogonally(color, square) ||
+               is_attacked_by_king(color, square);
     }
 
     [[nodiscard]] constexpr int
     count_attacks_by(PieceColor color, ChessSquare square) const noexcept {
         assert(color != PieceColor::NONE);
         assert(square.in_bounds());
-        return count_king_attacks(color, square) +
-               count_orthogonal_attacks(color, square) +
-               count_diagonal_attacks(color, square) +
+        return count_pawn_attacks(color, square) +
                count_knight_attacks(color, square) +
-               count_pawn_attacks(color, square);
+               count_diagonal_attacks(color, square) +
+               count_orthogonal_attacks(color, square) +
+               count_king_attacks(color, square);
     }
 
 }; // class ChessBoard

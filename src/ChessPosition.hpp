@@ -524,27 +524,6 @@ public: // ======================================================= CHECK TESTING
 
 private: // ============================================ MOVE GENERATION HELPERS
 
-    [[nodiscard]] constexpr bool
-    is_valid_dst(PieceColor moving_color, ChessSquare square) const noexcept {
-        if (!square.in_bounds()) { return false; }
-        const ChessPiece target = board.get_piece(square);
-        const PieceColor target_color = target.get_color();
-        const PieceType target_type = target.get_type();
-        return (target_color != moving_color) &&
-               (target_type != PieceType::KING);
-    }
-
-    [[nodiscard]] constexpr bool
-    is_valid_cap(PieceColor moving_color, ChessSquare square) const noexcept {
-        if (!square.in_bounds()) { return false; }
-        const ChessPiece target = board.get_piece(square);
-        const PieceColor target_color = target.get_color();
-        const PieceType target_type = target.get_type();
-        return (target_color != moving_color) &&
-               (target_color != PieceColor::NONE) &&
-               (target_type != PieceType::KING);
-    }
-
     template <typename F>
     constexpr void visit_leaper_move(
         PieceColor moving_color,
@@ -554,7 +533,9 @@ private: // ============================================ MOVE GENERATION HELPERS
         const F &f
     ) const {
         const ChessSquare dst = src.shift(file_offset, rank_offset);
-        if (is_valid_dst(moving_color, dst)) { f(ChessMove{src, dst}); }
+        if (board.in_bounds_and_is_valid_dst(moving_color, dst)) {
+            f(ChessMove{src, dst});
+        }
     }
 
     template <typename F>
@@ -570,7 +551,9 @@ private: // ============================================ MOVE GENERATION HELPERS
             f(ChessMove{src, dst});
             dst = dst.shift(file_offset, rank_offset);
         }
-        if (is_valid_dst(moving_color, dst)) { f(ChessMove{src, dst}); }
+        if (board.in_bounds_and_is_valid_dst(moving_color, dst)) {
+            f(ChessMove{src, dst});
+        }
     }
 
     template <typename F>
@@ -604,11 +587,11 @@ private: // ============================================ MOVE GENERATION HELPERS
             }
         }
         const ChessSquare dst_capture_l = src.shift(-1, direction);
-        if (is_valid_cap(moving_color, dst_capture_l)) {
+        if (board.in_bounds_and_is_valid_cap(moving_color, dst_capture_l)) {
             visit_promotion_moves(moving_color, src, dst_capture_l, f);
         }
         const ChessSquare dst_capture_r = src.shift(+1, direction);
-        if (is_valid_cap(moving_color, dst_capture_r)) {
+        if (board.in_bounds_and_is_valid_cap(moving_color, dst_capture_r)) {
             visit_promotion_moves(moving_color, src, dst_capture_r, f);
         }
         if (moving_color == to_move) {
@@ -748,54 +731,35 @@ public: // ===================================================== MOVE GENERATION
         }
     }
 
-    [[nodiscard]] std::vector<ChessMove> get_valid_moves(PieceColor color
-    ) const noexcept {
-        std::vector<ChessMove> result;
+    template <typename F>
+    constexpr void
+    visit_valid_moves(PieceColor moving_color, const F &f) const {
         for (coord_t src_file = 0; src_file < NUM_FILES; ++src_file) {
             for (coord_t src_rank = 0; src_rank < NUM_RANKS; ++src_rank) {
-                if (board.get_piece(src_file, src_rank).get_color() == color) {
-                    visit_valid_moves(
-                        color,
-                        {src_file, src_rank},
-                        [&](ChessMove move) {
-                            assert(is_valid(move));
-                            assert(get_moving_color(move) == color);
-                            result.push_back(move);
-                        }
-                    );
+                const ChessSquare src = {src_file, src_rank};
+                if (board.get_piece(src).get_color() == moving_color) {
+                    visit_valid_moves(moving_color, src, f);
                 }
             }
         }
-        return result;
     }
 
-    [[nodiscard]] std::vector<ChessMove> get_legal_moves(PieceColor color
+    template <typename F>
+    constexpr void visit_valid_moves(const F &f) const {
+        visit_valid_moves(to_move, f);
+    }
+
+    [[nodiscard]] std::vector<ChessMove> get_legal_moves(PieceColor moving_color
     ) const noexcept {
         std::vector<ChessMove> result;
-        for (coord_t src_file = 0; src_file < NUM_FILES; ++src_file) {
-            for (coord_t src_rank = 0; src_rank < NUM_RANKS; ++src_rank) {
-                if (board.get_piece(src_file, src_rank).get_color() == color) {
-                    visit_valid_moves(
-                        color,
-                        {src_file, src_rank},
-                        [&](ChessMove move) {
-                            assert(is_valid(move));
-                            assert(get_moving_color(move) == color);
-                            ChessPosition next = *this;
-                            next.make_move(move);
-                            if (!next.in_check(color)) {
-                                result.push_back(move);
-                            }
-                        }
-                    );
-                }
-            }
-        }
+        visit_valid_moves(moving_color, [&](ChessMove move) {
+            assert(is_valid(move));
+            assert(get_moving_color(move) == moving_color);
+            ChessPosition next = *this;
+            next.make_move(move);
+            if (!next.in_check(moving_color)) { result.push_back(move); }
+        });
         return result;
-    }
-
-    [[nodiscard]] std::vector<ChessMove> get_valid_moves() const noexcept {
-        return get_valid_moves(to_move);
     }
 
     [[nodiscard]] std::vector<ChessMove> get_legal_moves() const noexcept {

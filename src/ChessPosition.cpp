@@ -6,10 +6,17 @@
 
 
 bool ChessPosition::check_consistency() const noexcept {
-    std::vector<ChessMove> generated_valid_white_moves =
-        get_valid_moves(PieceColor::WHITE);
-    std::vector<ChessMove> generated_valid_black_moves =
-        get_valid_moves(PieceColor::BLACK);
+
+    std::vector<ChessMove> generated_valid_white_moves;
+    visit_valid_moves(PieceColor::WHITE, [&](ChessMove move) {
+        generated_valid_white_moves.push_back(move);
+    });
+
+    std::vector<ChessMove> generated_valid_black_moves;
+    visit_valid_moves(PieceColor::BLACK, [&](ChessMove move) {
+        generated_valid_black_moves.push_back(move);
+    });
+
     std::vector<ChessMove> generated_legal_white_moves =
         get_legal_moves(PieceColor::WHITE);
     std::vector<ChessMove> generated_legal_black_moves =
