@@ -2,6 +2,7 @@
 #define SUCKER_CHESS_CHESS_TOURNAMENT_HPP
 
 #include <memory>  // for std::unique_ptr
+#include <random>  // for std::mt19937
 #include <string>  // for std::string
 #include <utility> // for std::move
 #include <vector>  // for std::vector
