@@ -34,4 +34,5 @@ add_executable(SuckerChessOptimized ${SuckerChessSourcesList})
 target_compile_definitions(SuckerChessOptimized PRIVATE
         SUCKER_CHESS_USE_COMPRESSED_CHESS_PIECE
         SUCKER_CHESS_USE_COMPRESSED_CHESS_MOVE
+        SUCKER_CHESS_USE_COMPRESSED_CHESS_BOARD
         SUCKER_CHESS_TRACK_KING_LOCATIONS)

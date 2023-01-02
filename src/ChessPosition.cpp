@@ -225,17 +225,25 @@ void ChessPosition::load_fen(const std::string &fen_string) {
     board = ChessBoard(fen_board_str);
 
 #ifdef SUCKER_CHESS_TRACK_KING_LOCATIONS
-    white_king_location = board.find_unique_piece(WHITE_KING);
-    black_king_location = board.find_unique_piece(BLACK_KING);
+    const ChessSquare white_king_location = board.find_unique_piece(WHITE_KING);
+    const ChessSquare black_king_location = board.find_unique_piece(BLACK_KING);
+    assert(white_king_location.in_bounds());
+    assert(black_king_location.in_bounds());
+    white_king_location_data = static_cast<std::uint8_t>(
+        (white_king_location.file << 4) | white_king_location.rank
+    );
+    black_king_location_data = static_cast<std::uint8_t>(
+        (black_king_location.file << 4) | black_king_location.rank
+    );
 #endif
 
     char fen_color_char;
     fen >> fen_color_char;
     switch (fen_color_char) {
-        case 'W': to_move = PieceColor::WHITE; break;
-        case 'w': to_move = PieceColor::WHITE; break;
-        case 'B': to_move = PieceColor::BLACK; break;
-        case 'b': to_move = PieceColor::BLACK; break;
+        case 'W': move_data = 0x00; break;
+        case 'w': move_data = 0x00; break;
+        case 'B': move_data = 0x10; break;
+        case 'b': move_data = 0x10; break;
         default:
             throw std::invalid_argument(
                 "FEN active color field contains invalid character: " +
@@ -249,18 +257,17 @@ void ChessPosition::load_fen(const std::string &fen_string) {
 
     std::string fen_en_passant_str;
     fen >> fen_en_passant_str;
-    if (fen_en_passant_str == "-") {
-        en_passant_file = NUM_FILES;
-    } else {
+    if (fen_en_passant_str != "-") {
         if (fen_en_passant_str.size() != 2) {
             throw std::invalid_argument(
                 "FEN en passant field is not a valid square"
             );
         }
         const char fen_en_passant_rank = fen_en_passant_str[1];
-        const bool valid_rank =
-            ((to_move == PieceColor::WHITE) && (fen_en_passant_rank == '6')) ||
-            ((to_move == PieceColor::BLACK) && (fen_en_passant_rank == '3'));
+        const bool valid_rank = ((get_color_to_move() == PieceColor::WHITE) &&
+                                 (fen_en_passant_rank == '6')) ||
+                                ((get_color_to_move() == PieceColor::BLACK) &&
+                                 (fen_en_passant_rank == '3'));
         if (!valid_rank) {
             throw std::invalid_argument("FEN en passant rank is invalid");
         }
@@ -268,7 +275,8 @@ void ChessPosition::load_fen(const std::string &fen_string) {
         if ((fen_en_passant_file < 'a') || (fen_en_passant_file > 'h')) {
             throw std::invalid_argument("FEN en passant file is invalid");
         }
-        en_passant_file = static_cast<coord_t>(fen_en_passant_file - 'a');
+        move_data |= 0x08;
+        move_data |= static_cast<std::uint8_t>(fen_en_passant_file - 'a');
     }
 }
 
@@ -285,8 +293,9 @@ static constexpr char fen_char(PieceColor color) noexcept {
 
 std::string ChessPosition::get_fen() const noexcept {
     std::ostringstream fen;
-    fen << board << ' ' << fen_char(to_move) << ' ' << castling_rights << ' ';
-    if (en_passant_square().in_bounds()) {
+    fen << board << ' ' << fen_char(get_color_to_move()) << ' '
+        << castling_rights << ' ';
+    if (is_en_passant_available()) {
         fen << en_passant_square();
     } else {
         fen << '-';

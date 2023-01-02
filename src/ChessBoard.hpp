@@ -4,6 +4,7 @@
 #include <array>   // for std::array
 #include <cassert> // for assert
 #include <cstddef> // for std::size_t
+#include <cstdint> // for std::uint8_t
 #include <ostream> // for std::ostream
 #include <string>  // for std::string
 
@@ -13,39 +14,105 @@
 
 class ChessBoard final {
 
+#ifdef SUCKER_CHESS_USE_COMPRESSED_CHESS_BOARD
+    static_assert(NUM_RANKS % 2 == 0);
+    std::array<std::array<std::uint8_t, NUM_RANKS / 2>, NUM_FILES> data;
+#else
     std::array<std::array<ChessPiece, NUM_RANKS>, NUM_FILES> data;
+#endif
 
 public: // ========================================================= CONSTRUCTOR
 
-    // clang-format off
-    explicit constexpr ChessBoard() noexcept
-        : data{{{WHITE_ROOK,   WHITE_PAWN, EMPTY_SQUARE, EMPTY_SQUARE,
-                 EMPTY_SQUARE, EMPTY_SQUARE, BLACK_PAWN, BLACK_ROOK},
-                {WHITE_KNIGHT, WHITE_PAWN, EMPTY_SQUARE, EMPTY_SQUARE,
-                 EMPTY_SQUARE, EMPTY_SQUARE, BLACK_PAWN, BLACK_KNIGHT},
-                {WHITE_BISHOP, WHITE_PAWN, EMPTY_SQUARE, EMPTY_SQUARE,
-                 EMPTY_SQUARE, EMPTY_SQUARE, BLACK_PAWN, BLACK_BISHOP},
-                {WHITE_QUEEN,  WHITE_PAWN, EMPTY_SQUARE, EMPTY_SQUARE,
-                 EMPTY_SQUARE, EMPTY_SQUARE, BLACK_PAWN, BLACK_QUEEN},
-                {WHITE_KING,   WHITE_PAWN, EMPTY_SQUARE, EMPTY_SQUARE,
-                 EMPTY_SQUARE, EMPTY_SQUARE, BLACK_PAWN, BLACK_KING},
-                {WHITE_BISHOP, WHITE_PAWN, EMPTY_SQUARE, EMPTY_SQUARE,
-                 EMPTY_SQUARE, EMPTY_SQUARE, BLACK_PAWN, BLACK_BISHOP},
-                {WHITE_KNIGHT, WHITE_PAWN, EMPTY_SQUARE, EMPTY_SQUARE,
-                 EMPTY_SQUARE, EMPTY_SQUARE, BLACK_PAWN, BLACK_KNIGHT},
-                {WHITE_ROOK,   WHITE_PAWN, EMPTY_SQUARE, EMPTY_SQUARE,
-                 EMPTY_SQUARE, EMPTY_SQUARE, BLACK_PAWN, BLACK_ROOK}}} {}
-    // clang-format on
+    explicit constexpr ChessBoard() noexcept {
+
+        // begin with all squares empty
+        for (coord_t file = 0; file < NUM_FILES; ++file) {
+            for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
+                set_piece(file, rank, EMPTY_SQUARE);
+            }
+        }
+
+        // set up white pieces
+        set_piece(0, 0, WHITE_ROOK);
+        set_piece(1, 0, WHITE_KNIGHT);
+        set_piece(2, 0, WHITE_BISHOP);
+        set_piece(3, 0, WHITE_QUEEN);
+        set_piece(4, 0, WHITE_KING);
+        set_piece(5, 0, WHITE_BISHOP);
+        set_piece(6, 0, WHITE_KNIGHT);
+        set_piece(7, 0, WHITE_ROOK);
+
+        // set up white pawns
+        set_piece(0, 1, WHITE_PAWN);
+        set_piece(1, 1, WHITE_PAWN);
+        set_piece(2, 1, WHITE_PAWN);
+        set_piece(3, 1, WHITE_PAWN);
+        set_piece(4, 1, WHITE_PAWN);
+        set_piece(5, 1, WHITE_PAWN);
+        set_piece(6, 1, WHITE_PAWN);
+        set_piece(7, 1, WHITE_PAWN);
+
+        // set up black pieces
+        set_piece(0, 7, BLACK_ROOK);
+        set_piece(1, 7, BLACK_KNIGHT);
+        set_piece(2, 7, BLACK_BISHOP);
+        set_piece(3, 7, BLACK_QUEEN);
+        set_piece(4, 7, BLACK_KING);
+        set_piece(5, 7, BLACK_BISHOP);
+        set_piece(6, 7, BLACK_KNIGHT);
+        set_piece(7, 7, BLACK_ROOK);
+
+        // set up black pawns
+        set_piece(0, 6, BLACK_PAWN);
+        set_piece(1, 6, BLACK_PAWN);
+        set_piece(2, 6, BLACK_PAWN);
+        set_piece(3, 6, BLACK_PAWN);
+        set_piece(4, 6, BLACK_PAWN);
+        set_piece(5, 6, BLACK_PAWN);
+        set_piece(6, 6, BLACK_PAWN);
+        set_piece(7, 6, BLACK_PAWN);
+    }
 
     explicit ChessBoard(const std::string &fen_board_str);
 
 public: // =========================================================== ACCESSORS
 
+    static constexpr ChessPiece piece_from_cell_value(std::uint8_t value
+    ) noexcept {
+        assert(value < 0x0F);
+        assert(value != 0x07);
+        assert(value != 0x08);
+        if (value == 0x00) { return EMPTY_SQUARE; }
+        const PieceColor color =
+            (value & 0x08) ? PieceColor::BLACK : PieceColor::WHITE;
+        const auto type = static_cast<PieceType>(value & 0x07);
+        return {color, type};
+    }
+
+    static constexpr std::uint8_t cell_value_from_piece(ChessPiece piece
+    ) noexcept {
+        std::uint8_t result =
+            (piece.get_color() == PieceColor::BLACK) ? 0x08 : 0x00;
+        result |= static_cast<std::uint8_t>(piece.get_type());
+        return result;
+    }
+
     [[nodiscard]] constexpr ChessPiece get_piece(ChessSquare square
     ) const noexcept {
         assert(square.in_bounds());
+#ifdef SUCKER_CHESS_USE_COMPRESSED_CHESS_BOARD
+        const std::uint8_t cell =
+            data[static_cast<std::size_t>(square.file)]
+                [static_cast<std::size_t>(square.rank / 2)];
+        if (square.rank & 1) {
+            return piece_from_cell_value(cell >> 4);
+        } else {
+            return piece_from_cell_value(cell & 0x0F);
+        }
+#else
         return data[static_cast<std::size_t>(square.file)]
                    [static_cast<std::size_t>(square.rank)];
+#endif
     }
 
     [[nodiscard]] constexpr ChessPiece
@@ -57,8 +124,22 @@ public: // ============================================================ MUTATORS
 
     constexpr void set_piece(ChessSquare square, ChessPiece piece) noexcept {
         assert(square.in_bounds());
+#ifdef SUCKER_CHESS_USE_COMPRESSED_CHESS_BOARD
+        const auto file = static_cast<std::size_t>(square.file);
+        const auto rank = static_cast<std::size_t>(square.rank);
+        std::uint8_t cell = data[file][rank / 2];
+        if (square.rank & 1) {
+            cell &= 0x0F;
+            cell |= cell_value_from_piece(piece) << 4;
+        } else {
+            cell &= 0xF0;
+            cell |= cell_value_from_piece(piece);
+        }
+        data[file][rank / 2] = cell;
+#else
         data[static_cast<std::size_t>(square.file)]
             [static_cast<std::size_t>(square.rank)] = piece;
+#endif
     }
 
     constexpr void

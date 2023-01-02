@@ -2,6 +2,7 @@
 #define SUCKER_CHESS_CHESS_POSITION_HPP
 
 #include <cassert> // for assert
+#include <cstdint> // for std::uint8_t
 #include <ostream> // for std::ostream
 #include <string>  // for std::string
 #include <vector>  // for std::vector
@@ -15,37 +16,34 @@
 class ChessPosition final {
 
     ChessBoard board;
-    PieceColor to_move;
-    coord_t en_passant_file;
+    std::uint8_t move_data; // TO_MOVE, EN_PASSANT_AVAILABLE, EN_PASSANT_FILE
     CastlingRights castling_rights;
 
 #ifdef SUCKER_CHESS_TRACK_KING_LOCATIONS
-    ChessSquare white_king_location;
-    ChessSquare black_king_location;
+    std::uint8_t white_king_location_data;
+    std::uint8_t black_king_location_data;
 #endif
 
 public: // ======================================================== CONSTRUCTORS
 
     explicit constexpr ChessPosition() noexcept
         : board()
-        , to_move(PieceColor::WHITE)
-        , en_passant_file(NUM_FILES)
+        , move_data(0)
         , castling_rights(true, true, true, true)
 #ifdef SUCKER_CHESS_TRACK_KING_LOCATIONS
-        , white_king_location({4, 0})
-        , black_king_location({4, NUM_RANKS - 1})
+        , white_king_location_data(0x40)
+        , black_king_location_data(0x47)
 #endif
     {
     }
 
     explicit ChessPosition(const std::string &fen)
         : board()
-        , to_move(PieceColor::NONE)
-        , en_passant_file(NUM_FILES)
+        , move_data(0)
         , castling_rights(false, false, false, false)
 #ifdef SUCKER_CHESS_TRACK_KING_LOCATIONS
-        , white_king_location()
-        , black_king_location()
+        , white_king_location_data(0)
+        , black_king_location_data(0)
 #endif
     {
         load_fen(fen);
@@ -58,7 +56,7 @@ public: // =========================================================== ACCESSORS
     }
 
     [[nodiscard]] constexpr PieceColor get_color_to_move() const noexcept {
-        return to_move;
+        return (move_data & 0x10) ? PieceColor::BLACK : PieceColor::WHITE;
     }
 
     [[nodiscard]] constexpr CastlingRights
@@ -94,12 +92,20 @@ public: // =========================================================== ACCESSORS
 
     [[nodiscard]] constexpr ChessSquare
     get_white_king_location() const noexcept {
-        return white_king_location;
+        const coord_t file = white_king_location_data >> 4;
+        const coord_t rank = white_king_location_data & 0x0F;
+        const ChessSquare result = {file, rank};
+        assert(result.in_bounds());
+        return result;
     }
 
     [[nodiscard]] constexpr ChessSquare
     get_black_king_location() const noexcept {
-        return black_king_location;
+        const coord_t file = black_king_location_data >> 4;
+        const coord_t rank = black_king_location_data & 0x0F;
+        const ChessSquare result = {file, rank};
+        assert(result.in_bounds());
+        return result;
     }
 
 #else
@@ -137,26 +143,29 @@ public: // =========================================================== ACCESSORS
     }
 
     [[nodiscard]] constexpr ChessSquare get_king_location() const noexcept {
-        return get_king_location(to_move);
+        return get_king_location(get_color_to_move());
     }
 
     [[nodiscard]] constexpr ChessSquare
     get_enemy_king_location() const noexcept {
-        return get_enemy_king_location(to_move);
+        return get_enemy_king_location(get_color_to_move());
     }
 
 public: // ========================================================== COMPARISON
 
-    constexpr bool operator==(const ChessPosition &other) const noexcept {
-        return (board == other.board) && (to_move == other.to_move) &&
-               (en_passant_file == other.en_passant_file) &&
-               (castling_rights == other.castling_rights);
-    }
+    constexpr bool operator==(const ChessPosition &other
+    ) const noexcept = default;
 
 private: // ===================================================== PAWN UTILITIES
 
+    [[nodiscard]] constexpr bool is_en_passant_available() const noexcept {
+        return ((move_data & 0x08) != 0);
+    }
+
     [[nodiscard]] constexpr ChessSquare en_passant_square() const noexcept {
-        switch (to_move) {
+        assert(is_en_passant_available());
+        const coord_t en_passant_file = move_data & 0x07;
+        switch (get_color_to_move()) {
             case PieceColor::NONE: __builtin_unreachable();
             case PieceColor::WHITE: return {en_passant_file, NUM_RANKS - 3};
             case PieceColor::BLACK: return {en_passant_file, 2};
@@ -248,8 +257,9 @@ private: // ============================================ MOVE VALIDATION HELPERS
         ensure(target == EMPTY_SQUARE);
 
         // En passant may only be performed by the player who holds the right
-        // to move.
-        ensure(color == to_move);
+        // to move, when available.
+        ensure(color == get_color_to_move());
+        ensure(is_en_passant_available());
 
         // En passant may only occur on a specific square.
         ensure(move.get_dst() == en_passant_square());
@@ -473,23 +483,31 @@ public: // ====================================================== MOVE EXECUTION
 #ifdef SUCKER_CHESS_TRACK_KING_LOCATIONS
         // update king location
         if (piece == WHITE_KING) {
-            white_king_location = move.get_dst();
+            white_king_location_data = static_cast<std::uint8_t>(
+                (move.get_dst_file() << 4) | move.get_dst_rank()
+            );
         } else if (piece == BLACK_KING) {
-            black_king_location = move.get_dst();
+            black_king_location_data = static_cast<std::uint8_t>(
+                (move.get_dst_file() << 4) | move.get_dst_rank()
+            );
         }
 #endif
 
-        // record en passant file
+        // update player to move and clear previous en passant data
+        switch (color) {
+            case PieceColor::NONE: __builtin_unreachable();
+            case PieceColor::WHITE: move_data = 0x10; break;
+            case PieceColor::BLACK: move_data = 0x00; break;
+        }
+
+        // if applicable, update en passant data
         const coord_t delta_rank = move.get_dst_rank() - move.get_src_rank();
         if ((piece.get_type() == PieceType::PAWN) &&
             ((delta_rank == 2) || (delta_rank == -2))) {
-            en_passant_file = move.get_src_file();
-        } else {
-            en_passant_file = NUM_FILES;
+            assert(move.get_src_file() == move.get_dst_file());
+            move_data |= 0x08;
+            move_data |= move.get_src_file();
         }
-
-        // update player to move
-        to_move = !color;
     }
 
 public: // ======================================================= CHECK TESTING
@@ -511,7 +529,7 @@ public: // ======================================================= CHECK TESTING
     }
 
     [[nodiscard]] constexpr bool in_check() const noexcept {
-        return in_check(to_move);
+        return in_check(get_color_to_move());
     }
 
     [[nodiscard]] constexpr PieceColor get_moving_color(ChessMove move
@@ -594,10 +612,10 @@ private: // ============================================ MOVE GENERATION HELPERS
         if (board.in_bounds_and_is_valid_cap(moving_color, dst_capture_r)) {
             visit_promotion_moves(moving_color, src, dst_capture_r, f);
         }
-        if (moving_color == to_move) {
+        if (is_en_passant_available() &&
+            (moving_color == get_color_to_move())) {
             const ChessSquare dst_ep = en_passant_square();
-            if (dst_ep.in_bounds() &&
-                (dst_capture_l == dst_ep || dst_capture_r == dst_ep)) {
+            if ((dst_capture_l == dst_ep) || (dst_capture_r == dst_ep)) {
                 // no promotion possible on en passant
                 f(ChessMove{src, dst_ep});
             }
@@ -746,7 +764,7 @@ public: // ===================================================== MOVE GENERATION
 
     template <typename F>
     constexpr void visit_valid_moves(const F &f) const {
-        visit_valid_moves(to_move, f);
+        visit_valid_moves(get_color_to_move(), f);
     }
 
     [[nodiscard]] std::vector<ChessMove> get_legal_moves(PieceColor moving_color
@@ -763,7 +781,7 @@ public: // ===================================================== MOVE GENERATION
     }
 
     [[nodiscard]] std::vector<ChessMove> get_legal_moves() const noexcept {
-        return get_legal_moves(to_move);
+        return get_legal_moves(get_color_to_move());
     }
 
     [[nodiscard]] bool check_consistency() const noexcept;
@@ -774,13 +792,17 @@ public: // ======================================================== MATE TESTING
         return in_check(color) && get_legal_moves(color).empty();
     }
 
-    [[nodiscard]] bool checkmated() const { return checkmated(to_move); }
+    [[nodiscard]] bool checkmated() const {
+        return checkmated(get_color_to_move());
+    }
 
     [[nodiscard]] bool stalemated(PieceColor color) const {
         return !in_check(color) && get_legal_moves(color).empty();
     }
 
-    [[nodiscard]] bool stalemated() const { return stalemated(to_move); }
+    [[nodiscard]] bool stalemated() const {
+        return stalemated(get_color_to_move());
+    }
 
 public: // ============================================================ PRINTING
 
