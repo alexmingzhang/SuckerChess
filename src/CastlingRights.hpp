@@ -41,19 +41,19 @@ public: // ========================================================== COMPARISON
 public: // =========================================================== ACCESSORS
 
     [[nodiscard]] constexpr bool white_can_short_castle() const noexcept {
-        return (data & WHITE_SHORT) != 0;
+        return data & WHITE_SHORT;
     }
 
     [[nodiscard]] constexpr bool white_can_long_castle() const noexcept {
-        return (data & WHITE_LONG) != 0;
+        return data & WHITE_LONG;
     }
 
     [[nodiscard]] constexpr bool black_can_short_castle() const noexcept {
-        return (data & BLACK_SHORT) != 0;
+        return data & BLACK_SHORT;
     }
 
     [[nodiscard]] constexpr bool black_can_long_castle() const noexcept {
-        return (data & BLACK_LONG) != 0;
+        return data & BLACK_LONG;
     }
 
 public: // ============================================================ MUTATORS

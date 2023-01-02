@@ -144,6 +144,41 @@ public:
         const std::vector<ChessMove> &move_history
     ) override;
 
+    [[nodiscard]] static constexpr int unsigned_material_value(ChessPiece piece
+    ) noexcept {
+        switch (piece.get_type()) {
+            case PieceType::NONE: return 0;
+            case PieceType::KING: return 0;
+            case PieceType::QUEEN: return 9;
+            case PieceType::ROOK: return 5;
+            case PieceType::BISHOP: return 3;
+            case PieceType::KNIGHT: return 3;
+            case PieceType::PAWN: return 1;
+        }
+        __builtin_unreachable();
+    }
+
+    [[nodiscard]] static constexpr int material_value(ChessPiece piece
+    ) noexcept {
+        switch (piece.get_color()) {
+            case PieceColor::NONE: return 0;
+            case PieceColor::WHITE: return +unsigned_material_value(piece);
+            case PieceColor::BLACK: return -unsigned_material_value(piece);
+        }
+        __builtin_unreachable();
+    }
+    
+    [[nodiscard]] static constexpr int
+    material_advantage(const ChessPosition &pos) noexcept {
+        int result = 0;
+        for (coord_t file = 0; file < NUM_FILES; ++file) {
+            for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
+                result += material_value(pos.get_board().get_piece(file, rank));
+            }
+        }
+        return result;
+    }
+
 }; // class CCCP
 
 

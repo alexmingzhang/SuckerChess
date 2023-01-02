@@ -28,7 +28,7 @@ struct ChessSquare final {
 
     constexpr auto operator<=>(const ChessSquare &) const noexcept = default;
 
-    constexpr ChessSquare
+    [[nodiscard]] constexpr ChessSquare
     shift(coord_t file_offset, coord_t rank_offset) const noexcept {
         return {file + file_offset, rank + rank_offset};
     }
