@@ -8,10 +8,12 @@
 
 #include "ChessGame.hpp"
 #include "ChessPlayer.hpp"
+#include "Utilities.hpp"
 
 
 class ChessTournament final {
 
+    std::mt19937 rng;
     std::string name;
     std::vector<std::unique_ptr<ChessPlayer>> players;
     std::vector<ChessGame> game_history;
@@ -21,14 +23,16 @@ class ChessTournament final {
 public: // ======================================================== CONSTRUCTORS
 
     explicit ChessTournament()
-        : name("SuckerChess Tournament")
+        : rng(properly_seeded_random_engine())
+        , name("SuckerChess Tournament")
         , players()
         , game_history()
         , current_round(0)
         , elo_k_factor(40.0) {}
 
     explicit ChessTournament(std::string n)
-        : name(std::move(n))
+        : rng(properly_seeded_random_engine())
+        , name(std::move(n))
         , players()
         , game_history()
         , current_round(0)
@@ -52,6 +56,11 @@ public: // =========================================================== ACCESSORS
 
 public: // ============================================================ MUTATORS
 
+    /**
+     * @brief Add player to tournament
+     *
+     * @param player unique_ptr of ChessPlayer
+     */
     void add_player(std::unique_ptr<ChessPlayer> &&player) noexcept {
         players.push_back(std::move(player));
     }
@@ -60,8 +69,21 @@ public: // ============================================================ MUTATORS
 
 public: // =====================================================================
 
-    void run(long long num_rounds, long long print_frequency);
+    /**
+     * @brief Run a randomized tournament where each round every player meets
+     * every other player once as white and once as black.
+     *
+     * @param num_rounds Number of rounds
+     * @param print_frequency Print info about tournament every print_frequency
+     * rounds
+     * @param store_games Store games in game_history
+     */
+    void
+    run(long long num_rounds,
+        long long print_frequency = 1,
+        bool store_games = false);
 
+    /// @brief Print info about a tournament and its players
     void print_info() const;
 
 }; // class ChessTournament
