@@ -10,14 +10,14 @@
 #include "ChessPlayer.hpp"
 #include "Utilities.hpp"
 
-
 class ChessTournament final {
 
     std::mt19937 rng;
     std::string name;
     std::vector<std::unique_ptr<ChessPlayer>> players;
     std::vector<ChessGame> game_history;
-    long long current_round;
+    std::size_t current_round;
+    std::size_t num_matchups_per_round;
     double elo_k_factor;
 
 public: // ======================================================== CONSTRUCTORS
@@ -28,6 +28,7 @@ public: // ======================================================== CONSTRUCTORS
         , players()
         , game_history()
         , current_round(0)
+        , num_matchups_per_round(0)
         , elo_k_factor(40.0) {}
 
     explicit ChessTournament(std::string n)
@@ -36,6 +37,7 @@ public: // ======================================================== CONSTRUCTORS
         , players()
         , game_history()
         , current_round(0)
+        , num_matchups_per_round(0)
         , elo_k_factor(40.0) {}
 
 public: // =========================================================== ACCESSORS
@@ -61,9 +63,7 @@ public: // ============================================================ MUTATORS
      *
      * @param player unique_ptr of ChessPlayer
      */
-    void add_player(std::unique_ptr<ChessPlayer> &&player) noexcept {
-        players.push_back(std::move(player));
-    }
+    void add_player(std::unique_ptr<ChessPlayer> &&player) noexcept;
 
     void sort_players_by_elo();
 

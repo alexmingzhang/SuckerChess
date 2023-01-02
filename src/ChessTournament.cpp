@@ -12,6 +12,12 @@
 #include <iostream> // for std::cout, std::endl, std::flush
 #include <utility>  // for std::make_pair
 
+void ChessTournament::add_player(std::unique_ptr<ChessPlayer> &&player
+) noexcept {
+    players.push_back(std::move(player));
+    const std::size_t num_players = players.size();
+    num_matchups_per_round = (num_players * (num_players - 1));
+}
 
 void ChessTournament::sort_players_by_elo() {
     std::sort(
@@ -32,19 +38,13 @@ void ChessTournament::run(
     const bool verbose = (print_frequency == 0);
 
     while (infinite_rounds || (this->current_round < num_rounds)) {
-
-        if (enable_printing && (current_round % print_frequency == 0)) {
-            sort_players_by_elo();
-            print_info();
+        if (verbose) {
+            std::cout << name << ", round " << current_round << std::endl;
         }
-
-        if (verbose) { std::cout << "ROUND " << current_round << std::endl; }
 
         // Pairs of player indices; 1st player is white, 2nd player is black
         std::vector<std::pair<std::size_t, std::size_t>> matchups;
-
-        const std::size_t num_players = players.size();
-        matchups.reserve(num_players * (num_players - 1));
+        matchups.reserve(num_matchups_per_round);
 
         for (std::size_t i = 0; i < players.size(); ++i) {
             for (std::size_t j = i + 1; j < players.size(); ++j) {
@@ -72,6 +72,11 @@ void ChessTournament::run(
             elo_k_factor -= 40.0 / static_cast<double>(num_rounds);
         }
 
+        if (verbose ||
+            (enable_printing && (current_round % print_frequency == 0))) {
+            sort_players_by_elo();
+            print_info();
+        }
         ++current_round;
     }
 
@@ -81,8 +86,9 @@ void ChessTournament::run(
 
 
 void ChessTournament::print_info() const {
-    std::cout << name << " (round " << current_round << ", game "
-              << game_history.size() << ", K-factor " << elo_k_factor << ") \n";
+    std::cout << name << " Results (" << current_round + 1 << " rounds, "
+              << current_round * num_matchups_per_round
+              << " games, K-factor = " << elo_k_factor << ") \n";
     std::cout
         << "      Engine       :   ELO   :   W (w/b)   :   D   :   L (w/b)  \n";
     for (std::size_t i = 0; i < players.size(); ++i) {

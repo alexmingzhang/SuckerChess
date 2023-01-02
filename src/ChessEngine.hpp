@@ -34,12 +34,12 @@ public:
     MACRO(Check,            CHECK,               "Chk", "always check opponent if possible") \
     MACRO(Capture,          CAPTURE,             "Cap", "always capture any piece if possible") \
     MACRO(CaptureHanging,   CAPTURE_HANGING,     "CHa", "always capture hanging pieces if possible") \
-    MACRO(SmartCapture,     SMART_CAPTURE,       "SCp", "") \
+    MACRO(SmartCapture,     SMART_CAPTURE,       "SCp", "always capture pieces that have less defenders than attackers") \
     MACRO(Castle,           CASTLE,              "Cst", "always castle if possible and avoid giving up castling rights") \
     MACRO(First,            FIRST,               "Fst", "always make first available move") \
     MACRO(Last,             LAST,                "Lst", "always make last available move") \
     MACRO(Reduce,           REDUCE,              "Red", "make moves that minimize opponent's number of legal responses") \
-    MACRO(Greedy,           GREEDY,              "Grd", "") \
+    MACRO(Greedy,           GREEDY,              "Grd", "make moves that maximize own material advantage") \
     MACRO(Swarm,            SWARM,               "Swm", "move pieces toward enemy king") \
     MACRO(Huddle,           HUDDLE,              "Hud", "move pieces toward own king") \
     MACRO(Sniper,           SNIPER,              "Sni", "make moves that maximize distance travelled") \
