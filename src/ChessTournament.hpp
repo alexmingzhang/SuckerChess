@@ -1,6 +1,7 @@
 #ifndef SUCKER_CHESS_CHESS_TOURNAMENT_HPP
 #define SUCKER_CHESS_CHESS_TOURNAMENT_HPP
 
+#include <cstddef> // for std::size_t
 #include <memory>  // for std::unique_ptr
 #include <random>  // for std::mt19937
 #include <string>  // for std::string
@@ -10,6 +11,7 @@
 #include "ChessGame.hpp"
 #include "ChessPlayer.hpp"
 #include "Utilities.hpp"
+
 
 class ChessTournament final {
 
