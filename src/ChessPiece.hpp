@@ -16,9 +16,9 @@ enum class PieceColor : std::uint8_t {
 
 [[nodiscard]] constexpr PieceColor operator!(PieceColor color) noexcept {
     switch (color) {
-        case PieceColor::NONE: __builtin_unreachable();
         case PieceColor::WHITE: return PieceColor::BLACK;
         case PieceColor::BLACK: return PieceColor::WHITE;
+        case PieceColor::NONE: return PieceColor::NONE;
     }
     __builtin_unreachable();
 }
