@@ -143,8 +143,8 @@ DEFINE_PREFERENCE(Greedy) {
         ChessPosition copy = current_pos;
         copy.make_move(move);
         return (current_pos.get_color_to_move() == PieceColor::WHITE)
-                   ? copy.get_material_advantage()
-                   : -copy.get_material_advantage();
+                   ? Engine::CCCP::material_advantage(copy)
+                   : -Engine::CCCP::material_advantage(copy);
     });
 }
 
@@ -328,8 +328,7 @@ ChessMove CCCP::pick_move(
             check_move = move;
         } else if (check_move == NULL_MOVE && current_pos.get_board().get_piece(move.get_dst()) != EMPTY_SQUARE) {
             int capture_move_material_advantage = std::abs(
-                copy.get_material_advantage() -
-                current_pos.get_material_advantage()
+                material_advantage(copy) - material_advantage(current_pos)
             );
 
             if (capture_move_material_advantage >

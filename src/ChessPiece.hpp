@@ -115,30 +115,6 @@ public: // =========================================================== PROMOTION
         return {get_color(), promotion_type};
     }
 
-public: // ========================================================== EVALUATION
-
-    [[nodiscard]] constexpr int unsigned_material_value() const noexcept {
-        switch (get_type()) {
-            case PieceType::NONE: return 0;
-            case PieceType::KING: return 0;
-            case PieceType::QUEEN: return 9;
-            case PieceType::ROOK: return 5;
-            case PieceType::BISHOP: return 3;
-            case PieceType::KNIGHT: return 3;
-            case PieceType::PAWN: return 1;
-        }
-        __builtin_unreachable();
-    }
-
-    [[nodiscard]] constexpr int material_value() const noexcept {
-        switch (get_color()) {
-            case PieceColor::NONE: return 0;
-            case PieceColor::WHITE: return +unsigned_material_value();
-            case PieceColor::BLACK: return -unsigned_material_value();
-        }
-        __builtin_unreachable();
-    }
-
 }; // class ChessPiece
 
 

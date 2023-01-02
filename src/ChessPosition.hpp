@@ -767,16 +767,33 @@ public: // ===================================================== MOVE GENERATION
         visit_valid_moves(get_color_to_move(), f);
     }
 
-    [[nodiscard]] std::vector<ChessMove> get_legal_moves(PieceColor moving_color
-    ) const noexcept {
-        std::vector<ChessMove> result;
+    template <typename F>
+    constexpr void
+    visit_legal_moves(PieceColor moving_color, const F &f) const {
         visit_valid_moves(moving_color, [&](ChessMove move) {
             assert(is_valid(move));
             assert(get_moving_color(move) == moving_color);
             ChessPosition next = *this;
             next.make_move(move);
-            if (!next.in_check(moving_color)) { result.push_back(move); }
+            if (!next.in_check(moving_color)) { f(move, next); }
         });
+    }
+
+    template <typename F>
+    constexpr void
+    visit_legal_moves(const F &f) const {
+        visit_legal_moves(get_color_to_move(), f);
+    }
+
+    [[nodiscard]] std::vector<ChessMove> get_legal_moves(PieceColor moving_color
+    ) const noexcept {
+        std::vector<ChessMove> result;
+        visit_legal_moves(
+            moving_color,
+            [&](ChessMove move, const ChessPosition &) {
+                result.push_back(move);
+            }
+        );
         return result;
     }
 
@@ -819,18 +836,6 @@ public: // ============================================================= FEN I/O
     void load_fen(const std::string &);
 
     [[nodiscard]] std::string get_fen() const noexcept;
-
-public: // ========================================================== EVALUATION
-
-    [[nodiscard]] constexpr int get_material_advantage() const noexcept {
-        int result = 0;
-        for (coord_t file = 0; file < NUM_FILES; ++file) {
-            for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
-                result += board.get_piece(file, rank).material_value();
-            }
-        }
-        return result;
-    }
 
 }; // class ChessPosition
 
