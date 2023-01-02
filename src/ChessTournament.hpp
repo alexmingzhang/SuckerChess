@@ -75,7 +75,8 @@ public: // =====================================================================
      *
      * @param num_rounds Number of rounds
      * @param print_frequency Print info about tournament every print_frequency
-     * rounds
+     * rounds (-1 disables printing, 0 prints each round and gives info about
+     * each matchup)
      * @param store_games Store games in game_history
      */
     void

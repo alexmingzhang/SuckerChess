@@ -7,8 +7,6 @@
 #include "Utilities.hpp"
 
 #include <algorithm> // for std::sort
-#include <array>     // for std::array
-#include <cmath>     // for std::tgamma
 #include <cstddef>   // for std::size_t
 #include <iomanip> // for std::setw, std::left, std::right, std::fixed, std::setprecision
 #include <iostream> // for std::cout, std::endl, std::flush
@@ -29,7 +27,6 @@ void ChessTournament::sort_players_by_elo() {
 void ChessTournament::run(
     long long num_rounds, long long print_frequency, bool store_games
 ) {
-
     const bool infinite_rounds = (num_rounds == -1);
     const bool enable_printing = (print_frequency != -1);
     const bool verbose = (print_frequency == 0);
@@ -43,26 +40,27 @@ void ChessTournament::run(
 
         if (verbose) { std::cout << "ROUND " << current_round << std::endl; }
 
-        // First player is white, second player is black
-        std::vector<std::pair<ChessPlayer *, ChessPlayer *>> matchups;
+        // Pairs of player indices; 1st player is white, 2nd player is black
+        std::vector<std::pair<std::size_t, std::size_t>> matchups;
 
-        std::size_t num_players = players.size();
+        const std::size_t num_players = players.size();
         matchups.reserve(num_players * (num_players - 1));
 
         for (std::size_t i = 0; i < players.size(); ++i) {
-            ChessPlayer *p1 = players[i].get();
             for (std::size_t j = i + 1; j < players.size(); ++j) {
-                ChessPlayer *p2 = players[j].get();
-                matchups.emplace_back(p1, p2);
-                matchups.emplace_back(p2, p1);
+                matchups.emplace_back(i, j);
+                matchups.emplace_back(j, i);
             }
         }
 
+        // Randomize all matchups
         std::shuffle(matchups.begin(), matchups.end(), rng);
 
+        // Run each matchup
         for (auto &matchup : matchups) {
             ChessGame game =
-                (matchup.first)->versus(*matchup.second, elo_k_factor, verbose);
+                (players[matchup.first])
+                    ->versus(*players[matchup.second], elo_k_factor, verbose);
 
             if (store_games) { game_history.push_back(game); }
         }
