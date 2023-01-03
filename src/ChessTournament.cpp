@@ -44,7 +44,8 @@ void ChessTournament::run(
     std::vector<std::pair<std::size_t, std::size_t>> matchups;
     matchups.resize(num_games_per_round);
 
-    while (infinite_rounds || (this->current_round < num_rounds)) {
+    while (infinite_rounds ||
+           (current_round < static_cast<std::size_t>(num_rounds))) {
         if (verbose) {
             std::cout << name << ", round " << current_round << std::endl;
         }
@@ -74,7 +75,9 @@ void ChessTournament::run(
         for (auto &player : players) { player->update_elo(elo_k_factor); }
 
         if (verbose ||
-            (enable_printing && (current_round % print_frequency == 0))) {
+            (enable_printing &&
+             (current_round % static_cast<std::size_t>(print_frequency) == 0)
+            )) {
             sort_players_by_elo();
             print_info();
         }

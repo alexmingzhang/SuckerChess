@@ -31,9 +31,9 @@ public: // ========================================================= CONSTRUCTOR
     ) noexcept
         : name(std::move(player_name))
         , engine(std::move(player_engine))
-        , elo(1000)
         , accum_actual_score(0)
         , accum_expected_score(0)
+        , elo(1000)
         , num_wins_as_white(0)
         , num_wins_as_black(0)
         , num_draws(0)
@@ -45,9 +45,9 @@ public: // ========================================================= CONSTRUCTOR
     ) noexcept
         : name(std::move(player_name))
         , engine()
-        , elo(1000)
         , accum_actual_score(0)
         , accum_expected_score(0)
+        , elo(1000)
         , num_wins_as_white(0)
         , num_wins_as_black(0)
         , num_draws(0)
