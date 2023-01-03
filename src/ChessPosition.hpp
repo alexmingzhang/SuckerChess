@@ -780,8 +780,7 @@ public: // ===================================================== MOVE GENERATION
     }
 
     template <typename F>
-    constexpr void
-    visit_legal_moves(const F &f) const {
+    constexpr void visit_legal_moves(const F &f) const {
         visit_legal_moves(get_color_to_move(), f);
     }
 
