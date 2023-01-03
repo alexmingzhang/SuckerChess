@@ -53,7 +53,7 @@ public: // ======================================================== CONSTRUCTORS
 
     constexpr ChessPiece(PieceColor color, PieceType type) noexcept
         : data(static_cast<std::uint8_t>(
-              (static_cast<std::uint8_t>(color) << 4) |
+              (static_cast<std::uint8_t>(color) << 3) |
               static_cast<std::uint8_t>(type)
           )) {
         assert((color == PieceColor::NONE) == (type == PieceType::NONE));
@@ -78,15 +78,19 @@ public: // =========================================================== ACCESSORS
 #ifdef SUCKER_CHESS_USE_COMPRESSED_CHESS_PIECE
 
     [[nodiscard]] constexpr PieceColor get_color() const noexcept {
-        const std::uint8_t value = data >> 4;
+        const std::uint8_t value = data >> 3;
         assert(value <= 2);
         return static_cast<PieceColor>(value);
     }
 
     [[nodiscard]] constexpr PieceType get_type() const noexcept {
-        const std::uint8_t value = data & 0x0F;
+        const std::uint8_t value = data & 0x07;
         assert(value <= 6);
         return static_cast<PieceType>(value);
+    }
+
+    [[nodiscard]] constexpr std::uint8_t get_id() const noexcept {
+        return data;
     }
 
 #else
@@ -97,6 +101,13 @@ public: // =========================================================== ACCESSORS
 
     [[nodiscard]] constexpr PieceType get_type() const noexcept {
         return m_type;
+    }
+
+    [[nodiscard]] constexpr std::uint8_t get_id() const noexcept {
+        return static_cast<std::uint8_t>(
+            (static_cast<std::uint8_t>(m_color) << 3) |
+            static_cast<std::uint8_t>(m_type)
+        );
     }
 
 #endif
