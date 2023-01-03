@@ -4,9 +4,11 @@
 // ChessTournamentGame class which adds the necessary data)
 
 #include "ChessTournament.hpp"
+#include "ChessEngine.hpp"
 #include "Utilities.hpp"
 
 #include <algorithm> // for std::sort, std::shuffle
+#include <array>     // for std::array
 #include <cstddef>   // for std::size_t
 #include <iomanip> // for std::setw, std::left, std::right, std::fixed, std::setprecision
 #include <iostream> // for std::cout, std::endl, std::flush
@@ -16,7 +18,7 @@
 void ChessTournament::add_player(std::unique_ptr<ChessPlayer> &&player
 ) noexcept {
     players.push_back(std::move(player));
-    const std::size_t num_players = players.size();
+    const long long num_players = static_cast<long long>(players.size());
     num_games_per_round = (num_players * (num_players - 1));
 }
 
@@ -32,6 +34,16 @@ void ChessTournament::sort_players_by_elo() {
     );
 }
 
+void ChessTournament::sort_players_by_wins() {
+    std::sort(
+        players.begin(),
+        players.end(),
+        [&](const std::unique_ptr<ChessPlayer> &a,
+            const std::unique_ptr<ChessPlayer> &b) {
+            return a->get_num_wins() > b->get_num_wins();
+        }
+    );
+}
 
 void ChessTournament::run(
     long long num_rounds,
@@ -45,10 +57,11 @@ void ChessTournament::run(
 
     // Pairs of player indices; 1st player is white, 2nd player is black
     std::vector<std::pair<std::size_t, std::size_t>> matchups;
-    matchups.resize(num_games_per_round);
+    matchups.resize(static_cast<unsigned long long>(num_games_per_round));
 
-    while (infinite_rounds ||
-           (current_round < static_cast<std::size_t>(num_rounds))) {
+    long long num_final_round = current_round + num_rounds;
+
+    while (infinite_rounds || (current_round < num_final_round)) {
         if (verbose) {
             std::cout << name << ", round " << current_round << std::endl;
         }
@@ -78,9 +91,7 @@ void ChessTournament::run(
         for (auto &player : players) { player->update_elo(elo_k_factor); }
 
         if (verbose ||
-            (enable_printing &&
-             (current_round % static_cast<std::size_t>(print_frequency) == 0)
-            )) {
+            (enable_printing && (current_round % print_frequency == 0))) {
             sort_players_by_elo();
             print_info();
         }
@@ -88,11 +99,61 @@ void ChessTournament::run(
         elo_k_factor *= elo_k_factor_decay;
         ++current_round;
     }
-
-    sort_players_by_elo();
-    print_info();
 }
 
+void ChessTournament::evolve() {
+
+    using enum PreferenceToken;
+    constexpr std::array<PreferenceToken, 21> token_pool = {
+        CHECK,      CAPTURE, CAPTURE_HANGING, SMART_CAPTURE, CASTLE,
+        FIRST,      LAST,    REDUCE,          GREEDY,        SWARM,
+        HUDDLE,     SNIPER,  SLOTH,           CONQUEROR,     CONSTRICTOR,
+        REINFORCED, OUTPOST, GAMBIT,          EXPLORE,       COWARD,
+        HERO};
+
+    sort_players_by_elo();
+    players.erase(players.begin() + players.size() / 2, players.end());
+
+    for (std::unique_ptr<ChessPlayer> &player : players) {
+        std::vector<PreferenceToken> mutated_tokens =
+            player->get_preference_tokens();
+
+        std::uniform_int_distribution<int> mutate_dist(0, 2);
+        std::uniform_int_distribution<
+            typename std::vector<PreferenceToken>::size_type>
+            token_pool_dist(0, token_pool.size() - 1);
+        std::uniform_int_distribution<
+            typename std::vector<PreferenceToken>::size_type>
+            genome_dist(0, mutated_tokens.size() - 1);
+
+        switch (mutate_dist(rng)) {
+            case 0: // Add random token
+                mutated_tokens.insert(
+                    mutated_tokens.begin() + genome_dist(rng),
+                    token_pool[token_pool_dist(rng)]
+                );
+                break;
+            case 1: // Remove random token
+                if (mutated_tokens.size() > 1) {
+                    mutated_tokens.erase(
+                        mutated_tokens.begin() + genome_dist(rng)
+                    );
+                }
+                break;
+            case 2: // Swap random tokens
+                std::swap(
+                    mutated_tokens[genome_dist(rng)],
+                    mutated_tokens[genome_dist(rng)]
+                );
+                break;
+            default: __builtin_unreachable();
+        }
+
+        std::unique_ptr<ChessPlayer> child =
+            std::make_unique<ChessPlayer>(mutated_tokens);
+        add_player(std::move(child));
+    }
+}
 
 void ChessTournament::print_info() const {
     std::cout << name << " Results (" << current_round + 1 << " rounds, "

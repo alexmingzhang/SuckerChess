@@ -19,29 +19,23 @@ class ChessTournament final {
     std::string name;
     std::vector<std::unique_ptr<ChessPlayer>> players;
     std::vector<ChessGame> game_history;
-    std::size_t current_round;
-    std::size_t num_games_per_round;
+    long long current_round;
+    long long num_games_per_round;
     double elo_k_factor;
 
 public: // ======================================================== CONSTRUCTORS
 
-    explicit ChessTournament()
-        : rng(properly_seeded_random_engine())
-        , name("SuckerChess Tournament")
-        , players()
-        , game_history()
-        , current_round(0)
-        , num_games_per_round(0)
-        , elo_k_factor(40.0) {}
-
-    explicit ChessTournament(std::string n)
+    explicit ChessTournament(
+        std::string n = "SuckerChess Tournament",
+        double init_elo_k_factor = 40.0
+    )
         : rng(properly_seeded_random_engine())
         , name(std::move(n))
         , players()
         , game_history()
         , current_round(0)
         , num_games_per_round(0)
-        , elo_k_factor(40.0) {}
+        , elo_k_factor(init_elo_k_factor) {}
 
 public: // =========================================================== ACCESSORS
 
@@ -70,13 +64,16 @@ public: // ============================================================ MUTATORS
 
     void sort_players_by_elo();
 
+    void sort_players_by_wins();
+
+
 public: // =====================================================================
 
     /**
      * @brief Run a randomized tournament where each round every player meets
      * every other player once as white and once as black.
      *
-     * @param num_rounds Number of rounds
+     * @param num_rounds Number of rounds (-1 for infinite rounds)
      * @param elo_k_factor_decay Each round, decrease elo_k_factor by a factor
      * of elo_k_factor_decay
      * @param print_frequency Print info about tournament every print_frequency
@@ -89,6 +86,8 @@ public: // =====================================================================
         double elo_k_factor_decay = 0.99,
         long long print_frequency = 1,
         bool store_games = false);
+
+    void evolve();
 
     /// @brief Print info about a tournament and its players
     void print_info() const;

@@ -14,6 +14,7 @@
 class ChessPlayer final {
 
     std::string name;
+    std::vector<PreferenceToken> preference_tokens;
     std::unique_ptr<ChessEngine> engine;
     double accum_actual_score;
     double accum_expected_score;
@@ -44,6 +45,7 @@ public: // ========================================================= CONSTRUCTOR
         const std::vector<PreferenceToken> &tokens, std::string player_name = ""
     ) noexcept
         : name(std::move(player_name))
+        , preference_tokens(tokens)
         , engine()
         , accum_actual_score(0)
         , accum_expected_score(0)
@@ -79,7 +81,20 @@ public: // =========================================================== ACCESSORS
         return name;
     }
 
+    [[nodiscard]] constexpr const std::vector<PreferenceToken> &
+    get_preference_tokens() const noexcept {
+        return preference_tokens;
+    }
+
     [[nodiscard]] constexpr double get_elo() const noexcept { return elo; }
+
+    [[nodiscard]] constexpr unsigned long long get_num_wins() const noexcept {
+        return num_wins_as_white + num_wins_as_black;
+    }
+
+    [[nodiscard]] constexpr unsigned long long get_num_losses() const noexcept {
+        return num_losses_as_white + num_losses_as_black;
+    }
 
     [[nodiscard]] constexpr unsigned long long
     get_num_wins_as_white() const noexcept {
