@@ -72,7 +72,6 @@ void ChessTournament::run(
 
         // Update ELO
         for (auto &player : players) { player->update_elo(elo_k_factor); }
-        elo_k_factor *= elo_k_factor_decay;
 
         if (verbose ||
             (enable_printing && (current_round % print_frequency == 0))) {
@@ -80,6 +79,7 @@ void ChessTournament::run(
             print_info();
         }
 
+        elo_k_factor *= elo_k_factor_decay;
         ++current_round;
     }
 

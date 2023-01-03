@@ -49,7 +49,10 @@ public:
     MACRO(Reinforced,       REINFORCED,          "Rei", "always move to defended squares if possible") \
     MACRO(Outpost,          OUTPOST,             "Out", "always move to squares that are not attacked by enemy if possible") \
     MACRO(Gambit,           GAMBIT,              "Gam", "always move to squares that are attacked by both self and enemy if possible") \
-    MACRO(Explore,          EXPLORE,             "Exp", "always move to squares that are attacked by neither self nor enemy if possible")
+    MACRO(Explore,          EXPLORE,             "Exp", "always move to squares that are attacked by neither self nor enemy if possible") \
+    MACRO(Coward,           COWARD,              "Cow", "move pieces that are attacked") \
+    MACRO(Hero,             HERO,                "Hro", "move pieces that are unattacked")
+
 // clang-format on
 
 
@@ -167,7 +170,7 @@ public:
         }
         __builtin_unreachable();
     }
-    
+
     [[nodiscard]] static constexpr int
     material_advantage(const ChessPosition &pos) noexcept {
         int result = 0;

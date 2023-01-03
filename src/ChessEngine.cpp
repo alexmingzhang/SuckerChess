@@ -247,6 +247,22 @@ DEFINE_PREFERENCE(Explore) {
     });
 }
 
+DEFINE_PREFERENCE(Coward) {
+    return maximal_elements(allowed_moves, [&](ChessMove move) {
+        const PieceColor self = current_pos.get_color_to_move();
+        const PieceColor enemy = !self;
+        return current_pos.get_board().is_attacked_by(enemy, move.get_src());
+    });
+}
+
+DEFINE_PREFERENCE(Hero) {
+    return maximal_elements(allowed_moves, [&](ChessMove move) {
+        const PieceColor self = current_pos.get_color_to_move();
+        const PieceColor enemy = !self;
+        return !current_pos.get_board().is_attacked_by(enemy, move.get_src());
+    });
+}
+
 } // namespace Preference
 
 
