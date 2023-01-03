@@ -20,7 +20,7 @@ class ChessTournament final {
     std::vector<std::unique_ptr<ChessPlayer>> players;
     std::vector<ChessGame> game_history;
     std::size_t current_round;
-    std::size_t num_matchups_per_round;
+    std::size_t num_games_per_round;
     double elo_k_factor;
 
 public: // ======================================================== CONSTRUCTORS
@@ -31,7 +31,7 @@ public: // ======================================================== CONSTRUCTORS
         , players()
         , game_history()
         , current_round(0)
-        , num_matchups_per_round(0)
+        , num_games_per_round(0)
         , elo_k_factor(40.0) {}
 
     explicit ChessTournament(std::string n)
@@ -40,7 +40,7 @@ public: // ======================================================== CONSTRUCTORS
         , players()
         , game_history()
         , current_round(0)
-        , num_matchups_per_round(0)
+        , num_games_per_round(0)
         , elo_k_factor(40.0) {}
 
 public: // =========================================================== ACCESSORS
@@ -77,6 +77,8 @@ public: // =====================================================================
      * every other player once as white and once as black.
      *
      * @param num_rounds Number of rounds
+     * @param elo_k_factor_decay Each round, decrease elo_k_factor by a factor
+     * of elo_k_factor_decay
      * @param print_frequency Print info about tournament every print_frequency
      * rounds (-1 disables printing, 0 prints each round and gives info about
      * each matchup)
@@ -84,6 +86,7 @@ public: // =====================================================================
      */
     void
     run(long long num_rounds,
+        double elo_k_factor_decay = 0.99,
         long long print_frequency = 1,
         bool store_games = false);
 

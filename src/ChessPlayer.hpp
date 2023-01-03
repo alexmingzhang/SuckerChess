@@ -15,6 +15,8 @@ class ChessPlayer final {
 
     std::string name;
     std::unique_ptr<ChessEngine> engine;
+    double accum_actual_score;
+    double accum_expected_score;
     double elo;
     unsigned long long num_wins_as_white;
     unsigned long long num_wins_as_black;
@@ -30,6 +32,8 @@ public: // ========================================================= CONSTRUCTOR
         : name(std::move(player_name))
         , engine(std::move(player_engine))
         , elo(1000)
+        , accum_actual_score(0)
+        , accum_expected_score(0)
         , num_wins_as_white(0)
         , num_wins_as_black(0)
         , num_draws(0)
@@ -42,6 +46,8 @@ public: // ========================================================= CONSTRUCTOR
         : name(std::move(player_name))
         , engine()
         , elo(1000)
+        , accum_actual_score(0)
+        , accum_expected_score(0)
         , num_wins_as_white(0)
         , num_wins_as_black(0)
         , num_draws(0)
@@ -106,13 +112,13 @@ public: // =====================================================================
      * wins, losses, and ELO
      *
      * @param black Other ChessPlayer
-     * @param elo_k_factor K-factor used in Elo rating calculation
      * @param verbose_level 0: nothing, 1: print result,
      *                      2: print board after every move
      * @return ChessGame
      */
-    ChessGame
-    versus(ChessPlayer &black, double elo_k_factor, int verbose_level = 1);
+    ChessGame versus(ChessPlayer &black, int verbose_level = 1);
+
+    void update_elo(double elo_k_factor);
 
     [[nodiscard]] std::string get_name_with_elo(int precision) const;
 

@@ -16,7 +16,7 @@ void ChessTournament::add_player(std::unique_ptr<ChessPlayer> &&player
 ) noexcept {
     players.push_back(std::move(player));
     const std::size_t num_players = players.size();
-    num_matchups_per_round = (num_players * (num_players - 1));
+    num_games_per_round = (num_players * (num_players - 1));
 }
 
 void ChessTournament::sort_players_by_elo() {
@@ -31,52 +31,55 @@ void ChessTournament::sort_players_by_elo() {
 }
 
 void ChessTournament::run(
-    long long num_rounds, long long print_frequency, bool store_games
+    long long num_rounds,
+    double elo_k_factor_decay,
+    long long print_frequency,
+    bool store_games
 ) {
     const bool infinite_rounds = (num_rounds == -1);
     const bool enable_printing = (print_frequency != -1);
     const bool verbose = (print_frequency == 0);
+
+    // Pairs of player indices; 1st player is white, 2nd player is black
+    std::vector<std::pair<std::size_t, std::size_t>> matchups;
+    matchups.resize(num_games_per_round);
 
     while (infinite_rounds || (this->current_round < num_rounds)) {
         if (verbose) {
             std::cout << name << ", round " << current_round << std::endl;
         }
 
-        // Pairs of player indices; 1st player is white, 2nd player is black
-        std::vector<std::pair<std::size_t, std::size_t>> matchups;
-        matchups.reserve(num_matchups_per_round);
-
+        // Generate each distinct matchup
+        std::size_t count = 0;
         for (std::size_t i = 0; i < players.size(); ++i) {
             for (std::size_t j = i + 1; j < players.size(); ++j) {
-                matchups.emplace_back(i, j);
-                matchups.emplace_back(j, i);
+                matchups[count++] = std::make_pair(i, j);
+                matchups[count++] = std::make_pair(j, i);
             }
         }
 
         // Randomize all matchups
         std::shuffle(matchups.begin(), matchups.end(), rng);
 
-        // Run each matchup
+        // Play each matchup
+
         for (auto &matchup : matchups) {
-            ChessGame game =
-                (players[matchup.first])
-                    ->versus(*players[matchup.second], elo_k_factor, verbose);
+            ChessGame game = (players[matchup.first])
+                                 ->versus(*players[matchup.second], verbose);
 
             if (store_games) { game_history.push_back(game); }
         }
 
-        // ELO K-Factor decay
-        if (infinite_rounds) {
-            elo_k_factor *= 0.99;
-        } else {
-            elo_k_factor -= 40.0 / static_cast<double>(num_rounds);
-        }
+        // Update ELO
+        for (auto &player : players) { player->update_elo(elo_k_factor); }
+        elo_k_factor *= elo_k_factor_decay;
 
         if (verbose ||
             (enable_printing && (current_round % print_frequency == 0))) {
             sort_players_by_elo();
             print_info();
         }
+
         ++current_round;
     }
 
@@ -87,7 +90,7 @@ void ChessTournament::run(
 
 void ChessTournament::print_info() const {
     std::cout << name << " Results (" << current_round + 1 << " rounds, "
-              << current_round * num_matchups_per_round
+              << current_round * num_games_per_round
               << " games, K-factor = " << elo_k_factor << ") \n";
     std::cout
         << "      Engine       :   ELO   :   W (w/b)   :   D   :   L (w/b)  \n";

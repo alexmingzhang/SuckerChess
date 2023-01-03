@@ -121,11 +121,11 @@ int main() {
     // ChessGame one_v_one = smartie_1->versus(*smartie_2, 0.0, 2);
     // std::cout << one_v_one.get_pgn() << std::endl;
 
-    // Round-Robin Chess Tournament
+    // Chess Tournament
     ChessTournament tourney;
     tourney.add_player(std::move(smartie_1));
     tourney.add_player(std::move(smartie_2));
     tourney.add_player(std::move(CCCP_Player));
     tourney.add_player(std::move(dumbie));
-    tourney.run(100, 1, false);
+    tourney.run(-1, 0.995, 1, false);
 }
