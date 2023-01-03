@@ -12,12 +12,14 @@
 #include <iostream> // for std::cout, std::endl, std::flush
 #include <utility>  // for std::pair, std::make_pair
 
+
 void ChessTournament::add_player(std::unique_ptr<ChessPlayer> &&player
 ) noexcept {
     players.push_back(std::move(player));
     const std::size_t num_players = players.size();
     num_games_per_round = (num_players * (num_players - 1));
 }
+
 
 void ChessTournament::sort_players_by_elo() {
     std::sort(
@@ -29,6 +31,7 @@ void ChessTournament::sort_players_by_elo() {
         }
     );
 }
+
 
 void ChessTournament::run(
     long long num_rounds,

@@ -58,6 +58,7 @@ ChessGame ChessPlayer::versus(ChessPlayer &black, int verbose_level) {
     return game;
 }
 
+
 void ChessPlayer::update_elo(double elo_k_factor) {
     elo += elo_k_factor * (accum_actual_score - accum_expected_score);
     accum_actual_score = 0;
