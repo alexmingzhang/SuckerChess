@@ -1,6 +1,7 @@
 #include "ChessPosition.hpp"
 
 #include <algorithm> // for std::sort
+#include <cstdint>   // for std::uint64_t
 #include <sstream>   // for std::istringstream, std::ostringstream
 #include <stdexcept> // for std::invalid_argument
 
@@ -301,4 +302,18 @@ std::string ChessPosition::get_fen() const noexcept {
         fen << '-';
     }
     return fen.str();
+}
+
+
+std::size_t std::hash<ChessPosition>::operator()(const ChessPosition &pos
+) const noexcept {
+    // FNV-1a hash algorithm from:
+    // https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function#FNV-1a_hash
+    std::uint64_t result = UINT64_C(0xcbf29ce484222325);
+    const char *ptr = reinterpret_cast<const char *>(&pos);
+    for (std::size_t i = 0; i < sizeof(ChessPosition); ++i) {
+        result ^= static_cast<std::uint64_t>(ptr[i]);
+        result *= UINT64_C(0x00000100000001b3);
+    }
+    return static_cast<std::size_t>(result);
 }

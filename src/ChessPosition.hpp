@@ -1,11 +1,13 @@
 #ifndef SUCKER_CHESS_CHESS_POSITION_HPP
 #define SUCKER_CHESS_CHESS_POSITION_HPP
 
-#include <cassert> // for assert
-#include <cstdint> // for std::uint8_t
-#include <ostream> // for std::ostream
-#include <string>  // for std::string
-#include <vector>  // for std::vector
+#include <cassert>    // for assert
+#include <cstddef>    // for std::size_t
+#include <cstdint>    // for std::uint8_t
+#include <functional> // for std::hash
+#include <ostream>    // for std::ostream
+#include <string>     // for std::string
+#include <vector>     // for std::vector
 
 #include "CastlingRights.hpp"
 #include "ChessBoard.hpp"
@@ -828,7 +830,7 @@ public: // ============================================================ PRINTING
         bool suffix = true
     ) const;
 
-    friend std::ostream &operator<<(std::ostream &os, const ChessPosition &b);
+    friend std::ostream &operator<<(std::ostream &, const ChessPosition &);
 
 public: // ============================================================= FEN I/O
 
@@ -837,6 +839,18 @@ public: // ============================================================= FEN I/O
     [[nodiscard]] std::string get_fen() const noexcept;
 
 }; // class ChessPosition
+
+
+namespace std { // create template specialization for std::hash
+
+template <>
+struct hash<ChessPosition> {
+
+    std::size_t operator()(const ChessPosition &pos) const noexcept;
+
+}; // struct hash<ChessPosition>
+
+} // namespace std
 
 
 #endif // SUCKER_CHESS_CHESS_POSITION_HPP
