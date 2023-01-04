@@ -61,11 +61,6 @@ public: // =========================================================== ACCESSORS
         return (move_data & 0x10) ? PieceColor::BLACK : PieceColor::WHITE;
     }
 
-    [[nodiscard]] constexpr CastlingRights
-    get_castling_rights() const noexcept {
-        return castling_rights;
-    }
-
     [[nodiscard]] constexpr bool can_short_castle(PieceColor color
     ) const noexcept {
         switch (color) {
@@ -786,41 +781,7 @@ public: // ===================================================== MOVE GENERATION
         visit_legal_moves(get_color_to_move(), f);
     }
 
-    [[nodiscard]] std::vector<ChessMove> get_legal_moves(PieceColor moving_color
-    ) const noexcept {
-        std::vector<ChessMove> result;
-        visit_legal_moves(
-            moving_color,
-            [&](ChessMove move, const ChessPosition &) {
-                result.push_back(move);
-            }
-        );
-        return result;
-    }
-
-    [[nodiscard]] std::vector<ChessMove> get_legal_moves() const noexcept {
-        return get_legal_moves(get_color_to_move());
-    }
-
     [[nodiscard]] bool check_consistency() const noexcept;
-
-public: // ======================================================== MATE TESTING
-
-    [[nodiscard]] bool checkmated(PieceColor color) const {
-        return in_check(color) && get_legal_moves(color).empty();
-    }
-
-    [[nodiscard]] bool checkmated() const {
-        return checkmated(get_color_to_move());
-    }
-
-    [[nodiscard]] bool stalemated(PieceColor color) const {
-        return !in_check(color) && get_legal_moves(color).empty();
-    }
-
-    [[nodiscard]] bool stalemated() const {
-        return stalemated(get_color_to_move());
-    }
 
 public: // ============================================================ PRINTING
 

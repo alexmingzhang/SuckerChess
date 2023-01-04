@@ -1,30 +1,32 @@
 #include "UCI.hpp"
 
-#include <algorithm> // for std::find
 #include <cassert>   // for assert
 #include <cctype>    // for std::isspace
 #include <cstring>   // for std::strncmp
 #include <sstream>   // for std::ostringstream
 #include <stdexcept> // for std::runtime_error
+#include <utility>   // for std::move
 
 // use C version of stdio to access non-standard popen() function
 #include <stdio.h> // NOLINT(modernize-deprecated-headers)
 
+#include "../Utilities.hpp"
 
-namespace Engine {
 
-
-UCI::UCI(
-    const std::string &program, Mode engine_mode, unsigned long long engine_n
+Engine::UCI::UCI(
+    const std::string &engine_command,
+    Engine::UCI::Mode engine_mode,
+    unsigned long long int engine_n,
+    std::string engine_name
 )
-    : pipe(nullptr)
+    : pipe(::popen(engine_command.c_str(), "r+"))
     , mode(engine_mode)
-    , n(engine_n) {
+    , n(engine_n)
+    , name(std::move(engine_name)) {
 
-    pipe = ::popen(program.c_str(), "r+");
     if (pipe == nullptr) {
         throw std::runtime_error(
-            "could not find chess engine program: " + program
+            "could not find chess engine program: " + engine_command
         );
     }
 
@@ -39,6 +41,8 @@ UCI::UCI(
         }
     }
 
+    // TODO: set engine options
+
     ::fputs("isready\n", pipe);
     ::fflush(pipe);
 
@@ -52,7 +56,7 @@ UCI::UCI(
 }
 
 
-UCI::~UCI() { ::pclose(pipe); }
+Engine::UCI::~UCI() { ::pclose(pipe); }
 
 
 static ChessMove read_best_move(std::FILE *pipe) {
@@ -118,15 +122,15 @@ static ChessMove read_best_move(std::FILE *pipe) {
 }
 
 
-ChessMove UCI::pick_move(
-    const ChessPosition &current_pos,
-    [[maybe_unused]] const std::vector<ChessMove> &legal_moves,
+ChessMove Engine::UCI::pick_move(
+    ChessEngineInterface &interface,
     [[maybe_unused]] const std::vector<ChessPosition> &pos_history,
     [[maybe_unused]] const std::vector<ChessMove> &move_history
 ) {
     // send current position to engine
     std::ostringstream position_builder;
-    position_builder << "position fen " << current_pos.get_fen() << '\n';
+    position_builder << "position fen " << interface.get_current_pos().get_fen()
+                     << '\n';
     const std::string position_command = position_builder.str();
     ::fputs(position_command.c_str(), pipe);
 
@@ -142,12 +146,9 @@ ChessMove UCI::pick_move(
 
     // read best move from engine output
     const ChessMove result = read_best_move(pipe);
-    assert(
-        std::find(legal_moves.begin(), legal_moves.end(), result) !=
-        legal_moves.end()
-    );
+    assert(contains(interface.get_legal_moves(), result));
     return result;
 }
 
 
-} // namespace Engine
+const std::string &Engine::UCI::get_name() noexcept { return name; }

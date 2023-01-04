@@ -5,12 +5,38 @@ import os
 import shutil
 import subprocess
 
+
+def build_and_run(compiler, flags, source_files, program_name):
+    print("Building", program_name)
+    command = [compiler, "-std=c++20"]
+    command.extend(flags)
+    command.extend(source_files)
+    command.extend(["-o", program_name])
+    subprocess.run(command)
+    print("Running", program_name)
+    subprocess.run([program_name])
+
+
 PERFT_SOURCE_FILES = [
     "src/ChessPiece.cpp",
     "src/ChessMove.cpp",
     "src/ChessBoard.cpp",
     "src/CastlingRights.cpp",
     "src/ChessPosition.cpp",
+    "perft.cpp",
+]
+
+BENCHMARK_SOURCE_FILES = [
+    "src/ChessPiece.cpp",
+    "src/ChessMove.cpp",
+    "src/ChessBoard.cpp",
+    "src/CastlingRights.cpp",
+    "src/ChessPosition.cpp",
+    "src/ChessEngine.cpp",
+    "src/ChessGame.cpp",
+    "src/Utilities.cpp",
+    "src/Engine/Random.cpp",
+    "benchmark.cpp",
 ]
 
 COMPILERS = [
@@ -44,25 +70,30 @@ FLAGS = [
     ("-DSUCKER_CHESS_TRACK_KING_LOCATIONS", 'K'),
 ]
 
-if os.path.isdir("bin"):
-    shutil.rmtree("bin")
 
-os.mkdir("bin")
+def main():
+    if os.path.isdir("bin"):
+        shutil.rmtree("bin")
 
-for compiler_name, program, warning_flags, optimization_flags in COMPILERS:
-    for i in range(len(FLAGS)):
-        for selected in itertools.combinations(FLAGS, i):
-            variant_name = compiler_name + "".join(
-                suffix for flag, suffix in selected
-            )
-            program_name = "bin/SuckerChessPerft" + variant_name
-            print("Building", program_name)
-            command = [program, "-std=c++20"]
-            command += warning_flags
-            command += optimization_flags
-            command += [flag for flag, suffix in selected]
-            command += PERFT_SOURCE_FILES
-            command += ["perft.cpp", "-o", program_name]
-            subprocess.run(command)
-            print("Running", program_name)
-            subprocess.run([program_name])
+    os.mkdir("bin")
+
+    for compiler_name, program, warn_flags, opt_flags in COMPILERS:
+        for i in range(len(FLAGS)):
+            for selected in itertools.combinations(FLAGS, i):
+
+                variant_name = compiler_name + "".join(
+                    suffix for flag, suffix in selected
+                )
+                flags = ["-std=c++20"] + warn_flags + opt_flags
+                flags.extend(flag for flag, suffix in selected)
+
+                build_and_run(program, flags, PERFT_SOURCE_FILES,
+                              "bin/SuckerChessPerft" + variant_name)
+
+                if ("-DSUCKER_CHESS_USE_DETERMINISTIC_SEED", 'D') in selected:
+                    build_and_run(program, flags, BENCHMARK_SOURCE_FILES,
+                                  "bin/SuckerChessBenchmark" + variant_name)
+
+
+if __name__ == "__main__":
+    main()

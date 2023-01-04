@@ -5,7 +5,7 @@
 #include <string> // for std::string
 #include <vector> // for std::vector
 
-#include "ChessEngine.hpp"
+#include "../ChessEngine.hpp"
 
 
 namespace Engine {
@@ -22,13 +22,15 @@ private:
     std::FILE *pipe;
     Mode mode;
     unsigned long long n;
+    std::string name;
 
 public:
 
     explicit UCI(
-        const std::string &program,
+        const std::string &engine_command,
         Mode engine_mode,
-        unsigned long long engine_n
+        unsigned long long engine_n,
+        std::string engine_name
     );
 
     ~UCI() override;
@@ -38,11 +40,12 @@ public:
     UCI &operator=(const UCI &) = delete;
 
     ChessMove pick_move(
-        const ChessPosition &current_pos,
-        const std::vector<ChessMove> &legal_moves,
+        ChessEngineInterface &interface,
         const std::vector<ChessPosition> &pos_history,
         const std::vector<ChessMove> &move_history
     ) override;
+
+    const std::string &get_name() noexcept override;
 
 }; // class UCI
 

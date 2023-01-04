@@ -1,41 +1,53 @@
 #ifndef SUCKER_CHESS_CHESS_TOURNAMENT_HPP
 #define SUCKER_CHESS_CHESS_TOURNAMENT_HPP
 
-#include <cstddef> // for std::size_t
 #include <memory>  // for std::unique_ptr
 #include <random>  // for std::mt19937
 #include <string>  // for std::string
-#include <utility> // for std::move
+#include <utility> // for std::move, std::pair
 #include <vector>  // for std::vector
 
+#include "ChessEngine.hpp"
 #include "ChessGame.hpp"
-#include "ChessPlayer.hpp"
 #include "Utilities.hpp"
+
+
+struct PerformanceInfo {
+
+    unsigned long long num_wins_as_white;
+    unsigned long long num_wins_as_black;
+    unsigned long long num_draws;
+    unsigned long long num_losses_as_white;
+    unsigned long long num_losses_as_black;
+
+    [[nodiscard]] constexpr unsigned long long total_wins() const noexcept {
+        return num_wins_as_white + num_wins_as_black;
+    }
+
+    [[nodiscard]] constexpr unsigned long long total_losses() const noexcept {
+        return num_losses_as_white + num_losses_as_black;
+    }
+
+}; // struct PerformanceInfo
 
 
 class ChessTournament final {
 
     std::mt19937 rng;
     std::string name;
-    std::vector<std::unique_ptr<ChessPlayer>> players;
-    std::vector<ChessGame> game_history;
+    std::vector<std::pair<std::unique_ptr<ChessEngine>, PerformanceInfo>>
+        engines;
+    int name_width;
     long long current_round;
-    long long num_games_per_round;
-    double elo_k_factor;
 
 public: // ======================================================== CONSTRUCTORS
 
-    explicit ChessTournament(
-        std::string n = "SuckerChess Tournament",
-        double init_elo_k_factor = 40.0
-    )
+    explicit ChessTournament(std::string n = "SuckerChess Tournament")
         : rng(properly_seeded_random_engine())
         , name(std::move(n))
-        , players()
-        , game_history()
-        , current_round(0)
-        , num_games_per_round(0)
-        , elo_k_factor(init_elo_k_factor) {}
+        , engines()
+        , name_width(6)
+        , current_round(0) {}
 
 public: // =========================================================== ACCESSORS
 
@@ -43,50 +55,24 @@ public: // =========================================================== ACCESSORS
         return name;
     }
 
-    [[nodiscard]] constexpr const std::vector<std::unique_ptr<ChessPlayer>> &
-    get_players() const noexcept {
-        return players;
-    }
-
-    [[nodiscard]] constexpr const std::vector<ChessGame> &
-    get_game_history() const noexcept {
-        return game_history;
-    }
-
 public: // ============================================================ MUTATORS
 
-    /**
-     * @brief Add player to tournament
-     *
-     * @param player unique_ptr of ChessPlayer
-     */
-    void add_player(std::unique_ptr<ChessPlayer> &&player) noexcept;
-
-    void sort_players_by_elo();
-
-    void sort_players_by_wins();
+    void add_engine(std::unique_ptr<ChessEngine> &&) noexcept;
 
     void sort_players_by_win_ratio();
 
-public: // =====================================================================
+public: // =========================================================== EXECUTION
 
     /**
-     * @brief Run a randomized tournament where each round every player meets
-     * every other player once as white and once as black.
+     * @brief Run a randomized tournament where each round every engine meets
+     * every other engine once as white and once as black.
      *
      * @param num_rounds Number of rounds (-1 for infinite rounds)
-     * @param elo_k_factor_decay Each round, decrease elo_k_factor by a factor
-     * of elo_k_factor_decay
      * @param print_frequency Print info about tournament every print_frequency
      * rounds (-1 disables printing, 0 prints each round and gives info about
      * each matchup)
-     * @param store_games Store games in game_history
      */
-    void
-    run(long long num_rounds,
-        double elo_k_factor_decay = 0.99,
-        long long print_frequency = 1,
-        bool store_games = false);
+    void run(long long num_rounds, long long print_frequency = 1);
 
     /**
      * @brief Replaces weaker players with mutated versions of stronger players
@@ -94,7 +80,7 @@ public: // =====================================================================
      * @param num_replace Number of weak players to replace
      * @param verbose Print info about replaced players
      */
-    void evolve(int num_replace, bool verbose = false);
+    // void evolve(int num_replace, bool verbose = false);
 
     /// @brief Print info about a tournament and its players
     void print_info() const;

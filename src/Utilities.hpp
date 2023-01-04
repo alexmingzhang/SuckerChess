@@ -1,23 +1,22 @@
 #ifndef SUCKER_CHESS_UTILITIES_HPP
 #define SUCKER_CHESS_UTILITIES_HPP
 
-#include <cassert>  // for assert
-#include <iostream> // for std::cout, std::endl
-#include <ostream>  // for std::ostream
-#include <random>   // for std::mt19937, std::uniform_int_distribution
-#include <string>   // for std::string
-#include <vector>   // for std::vector
+#include <array>   // for std::array
+#include <cassert> // for assert
+#include <cstddef> // for std::size_t
+#include <ostream> // for std::ostream
+#include <random>  // for std::mt19937, std::uniform_int_distribution
+#include <string>  // for std::string
+#include <utility> // for std::swap
+#include <vector>  // for std::vector
 
 
 template <typename T>
-void print(bool verbose, const T &obj) {
-    if (verbose) { std::cout << obj; }
-}
-
-
-template <typename T>
-void println(bool verbose, const T &obj) {
-    if (verbose) { std::cout << obj << std::endl; }
+constexpr bool contains(const std::vector<T> &vec, const T &x) {
+    for (const T &y : vec) {
+        if (x == y) { return true; }
+    }
+    return false;
 }
 
 
@@ -38,13 +37,81 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec) {
 }
 
 
+template <typename T, std::size_t N>
+const T &random_choice(std::mt19937 &rng, const std::array<T, N> &arr) {
+    static_assert(N > 0);
+    std::uniform_int_distribution<std::size_t> index_dist(0, N - 1);
+    return arr[index_dist(rng)];
+}
+
+
 template <typename T>
 const T &random_choice(std::mt19937 &rng, const std::vector<T> &vec) {
     assert(!vec.empty());
-    std::uniform_int_distribution<typename std::vector<T>::size_type> dist(
-        0, vec.size() - 1
+    std::uniform_int_distribution<typename std::vector<T>::size_type>
+        index_dist(0, vec.size() - 1);
+    return vec[index_dist(rng)];
+}
+
+
+template <typename T>
+std::vector<T>
+random_insert(std::mt19937 &rng, const std::vector<T> &vec, const T &x) {
+    std::vector<T> copy = vec;
+    std::uniform_int_distribution<typename std::vector<T>::size_type>
+        index_dist(0, vec.size());
+    copy.insert(
+        copy.begin() +
+            static_cast<typename std::vector<T>::iterator::difference_type>(
+                index_dist(rng)
+            ),
+        x
     );
-    return vec[dist(rng)];
+    return copy;
+}
+
+
+template <typename T>
+std::vector<T> random_delete(std::mt19937 &rng, const std::vector<T> &vec) {
+    if (vec.empty()) { return vec; }
+    std::vector<T> copy = vec;
+    std::uniform_int_distribution<typename std::vector<T>::size_type>
+        index_dist(0, vec.size() - 1);
+    copy.erase(
+        copy.begin() +
+        static_cast<typename std::vector<T>::iterator::difference_type>(
+            index_dist(rng)
+        )
+    );
+    return copy;
+}
+
+
+template <typename T>
+std::vector<T>
+random_replace(std::mt19937 &rng, const std::vector<T> &vec, const T &x) {
+    std::vector<T> copy = vec;
+    std::uniform_int_distribution<typename std::vector<T>::size_type>
+        index_dist(0, vec.size() - 1);
+    copy[index_dist(rng)] = x;
+    return copy;
+}
+
+
+template <typename T>
+std::vector<T> random_swap(std::mt19937 &rng, const std::vector<T> &vec) {
+    if (vec.size() <= 1) { return vec; }
+    std::vector<T> copy = vec;
+    std::uniform_int_distribution<typename std::vector<T>::size_type>
+        index_dist(0, copy.size() - 1);
+    while (true) {
+        const typename std::vector<T>::size_type i = index_dist(rng);
+        const typename std::vector<T>::size_type j = index_dist(rng);
+        if (i != j) {
+            std::swap(copy[i], copy[j]);
+            return copy;
+        }
+    }
 }
 
 
