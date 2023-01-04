@@ -1,5 +1,7 @@
 #include "ChessEngine.hpp"
 
+#include <utility> // for std::move
+
 
 const PositionInfo &ChessEngineInterface::lookup(const ChessPosition &pos
 ) noexcept {

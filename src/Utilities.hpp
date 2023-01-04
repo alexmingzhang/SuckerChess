@@ -1,12 +1,11 @@
 #ifndef SUCKER_CHESS_UTILITIES_HPP
 #define SUCKER_CHESS_UTILITIES_HPP
 
-#include <cassert>  // for assert
-#include <iostream> // for std::cout, std::endl
-#include <ostream>  // for std::ostream
-#include <random>   // for std::mt19937, std::uniform_int_distribution
-#include <string>   // for std::string
-#include <vector>   // for std::vector
+#include <cassert> // for assert
+#include <ostream> // for std::ostream
+#include <random>  // for std::mt19937, std::uniform_int_distribution
+#include <string>  // for std::string
+#include <vector>  // for std::vector
 
 
 template <typename T>

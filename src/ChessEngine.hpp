@@ -2,7 +2,6 @@
 #define SUCKER_CHESS_CHESS_ENGINE_HPP
 
 #include <unordered_map> // for std::unordered_map
-#include <utility>       // for std::move
 #include <vector>        // for std::vector
 
 #include "ChessMove.hpp"
