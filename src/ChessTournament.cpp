@@ -38,6 +38,40 @@ void ChessTournament::sort_players_by_win_ratio() {
     );
 }
 
+void ChessTournament::sort_players_by_wins() {
+    std::sort(
+        players.begin(),
+        players.end(),
+        [&](const std::unique_ptr<ChessPlayer> &a,
+            const std::unique_ptr<ChessPlayer> &b) {
+            return a->get_num_wins() > b->get_num_wins();
+        }
+    );
+}
+
+void ChessTournament::sort_players_by_win_ratio() {
+    std::sort(
+        players.begin(),
+        players.end(),
+        [&](const std::unique_ptr<ChessPlayer> &a,
+            const std::unique_ptr<ChessPlayer> &b) {
+            double a_wlr = static_cast<double>(a->get_num_wins()) /
+                           static_cast<double>(a->get_num_losses());
+            double b_wlr = static_cast<double>(b->get_num_wins()) /
+                           static_cast<double>(b->get_num_losses());
+
+            if (a_wlr == b_wlr) {
+                if (a->get_num_wins() == b->get_num_wins()) {
+                    return a->get_num_losses() < b->get_num_losses();
+                }
+
+                return a->get_num_wins() > b->get_num_wins();
+            }
+
+            return a_wlr > b_wlr;
+        }
+    );
+}
 
 void ChessTournament::run(long long num_rounds, long long print_frequency) {
 
@@ -99,6 +133,161 @@ void ChessTournament::run(long long num_rounds, long long print_frequency) {
     }
 }
 
+enum class MutationToken : std::uint8_t {
+    INSERT, // insert distinct random preference
+    DELETE, // delete random preference
+    SWAP,   // swap two random preferences
+    REPLACE // replace random preference with a new distinct random preference
+};
+
+void ChessTournament::evolve(int num_replace, bool verbose) {
+    using enum PreferenceToken;
+
+    constexpr std::array<PreferenceToken, 26> token_pool = {
+        MATE_IN_ONE,   PREVENT_MATE_IN_ONE,
+        PREVENT_DRAW,  CHECK,
+        CAPTURE,       CAPTURE_HANGING,
+        SMART_CAPTURE, CASTLE,
+        FIRST,         LAST,
+        EXTEND,        REDUCE,
+        GREEDY,        GENEROUS,
+        SWARM,         HUDDLE,
+        SNIPER,        SLOTH,
+        CONQUEROR,     CONSTRICTOR,
+        REINFORCED,    OUTPOST,
+        GAMBIT,        EXPLORE,
+        COWARD,        HERO};
+
+    std::size_t original_num_players = players.size();
+
+    // Kill off players
+    sort_players_by_win_ratio();
+
+    if (verbose) {
+        std::cout << "Killing off " << num_replace << " players: ";
+        for (auto it = players.end() - num_replace; it != players.end(); ++it) {
+            std::cout << (*it)->get_name() << ' ';
+        }
+        std::cout << '\n';
+    }
+
+    players.erase(players.end() - num_replace, players.end());
+
+    // Create children from the top players
+    for (std::size_t i = 0; i < num_replace; ++i) {
+        std::unique_ptr<ChessPlayer> &player =
+            players[i % (original_num_players - num_replace)];
+        if (verbose) { std::cout << player->get_name() << "'s child has "; }
+
+        std::vector<PreferenceToken> mutated_tokens =
+            player->get_preference_tokens();
+
+        // Create distribution of possible mutations
+        std::discrete_distribution<MutationToken> mutate_dist{
+            static_cast<double>(mutated_tokens.size() < token_pool.size()),
+            static_cast<double>(mutated_tokens.size() > 0),
+            static_cast<double>(mutated_tokens.size() > 1),
+            static_cast<double>(
+                mutated_tokens.size() > 0 &&
+                mutated_tokens.size() < token_pool.size()
+            )};
+
+        MutationToken mutate_choice = mutate_dist(rng);
+        switch (mutate_choice) {
+            case MutationToken::INSERT:
+                {
+                    if (verbose) {
+                        std::cout << "added a token to become " << std::flush;
+                    }
+
+                    PreferenceToken new_token;
+                    std::uniform_int_distribution<
+                        typename std::vector<PreferenceToken>::size_type>
+                        token_pool_dist(0, token_pool.size());
+                    do {
+                        new_token = token_pool[token_pool_dist(rng)];
+                    } while (std::find(
+                                 mutated_tokens.begin(),
+                                 mutated_tokens.end(),
+                                 new_token
+                             ) != mutated_tokens.end());
+
+                    std::uniform_int_distribution<
+                        typename std::vector<PreferenceToken>::size_type>
+                        current_token_dist(0, mutated_tokens.size());
+                    mutated_tokens.insert(
+                        mutated_tokens.begin() + current_token_dist(rng),
+                        new_token
+                    );
+                    break;
+                }
+            case MutationToken::DELETE:
+                {
+                    if (verbose) {
+                        std::cout << "deleted a token to become " << std::flush;
+                    }
+
+                    std::uniform_int_distribution<
+                        typename std::vector<PreferenceToken>::size_type>
+                        current_token_dist(0, mutated_tokens.size() - 1);
+
+                    mutated_tokens.erase(
+                        mutated_tokens.begin() + current_token_dist(rng)
+                    );
+                    break;
+                }
+            case MutationToken::SWAP:
+                {
+                    if (verbose) {
+                        std::cout << "swapped two tokens to become "
+                                  << std::flush;
+                    }
+
+                    std::uniform_int_distribution<
+                        typename std::vector<PreferenceToken>::size_type>
+                        current_token_dist(0, mutated_tokens.size() - 1);
+                    std::swap(
+                        mutated_tokens[current_token_dist(rng)],
+                        mutated_tokens[current_token_dist(rng)]
+                    );
+                    break;
+                }
+            case MutationToken::REPLACE:
+                {
+                    if (verbose) {
+                        std::cout << "replaced a token to become "
+                                  << std::flush;
+                    }
+
+                    PreferenceToken new_token;
+                    std::uniform_int_distribution<
+                        typename std::vector<PreferenceToken>::size_type>
+                        token_pool_dist(0, token_pool.size());
+                    do {
+                        new_token = token_pool[token_pool_dist(rng)];
+                    } while (std::find(
+                                 mutated_tokens.begin(),
+                                 mutated_tokens.end(),
+                                 new_token
+                             ) != mutated_tokens.end());
+
+                    std::uniform_int_distribution<
+                        typename std::vector<PreferenceToken>::size_type>
+                        current_token_dist(0, mutated_tokens.size() - 1);
+                    mutated_tokens[current_token_dist(rng)] = new_token;
+                    break;
+                }
+            default: __builtin_unreachable();
+        }
+
+        std::unique_ptr<ChessPlayer> child =
+            std::make_unique<ChessPlayer>(mutated_tokens);
+
+        if (verbose) { std::cout << child->get_name() << std::endl; }
+
+        add_player(std::move(child));
+    }
+}
 
 void ChessTournament::print_info() const {
 
