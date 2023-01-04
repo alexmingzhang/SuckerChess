@@ -9,6 +9,15 @@
 
 
 template <typename T>
+constexpr bool contains(const std::vector<T> &v, const T &x) noexcept {
+    for (const T &y : v) {
+        if (x == y) { return true; }
+    }
+    return false;
+}
+
+
+template <typename T>
 std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec) {
     os << '[';
     bool first = true;

@@ -3,6 +3,12 @@
 #include <utility> // for std::move
 
 
+ChessEngineInterface::ChessEngineInterface() noexcept
+    : cache()
+    , current_pos()
+    , current_info(&lookup(current_pos)) {}
+
+
 const PositionInfo &ChessEngineInterface::lookup(const ChessPosition &pos
 ) noexcept {
     if (!cache.contains(pos)) {
@@ -26,7 +32,7 @@ ChessEngineInterface::get_legal_moves(const ChessPosition &pos) noexcept {
 
 
 const std::vector<ChessMove> &ChessEngineInterface::get_legal_moves() noexcept {
-    return get_legal_moves(current_pos);
+    return current_info->legal_moves;
 }
 
 
@@ -37,7 +43,7 @@ bool ChessEngineInterface::checkmated(const ChessPosition &pos) noexcept {
 
 
 bool ChessEngineInterface::checkmated() noexcept {
-    return checkmated(current_pos);
+    return current_info->in_check && current_info->legal_moves.empty();
 }
 
 
@@ -48,12 +54,13 @@ bool ChessEngineInterface::stalemated(const ChessPosition &pos) noexcept {
 
 
 bool ChessEngineInterface::stalemated() noexcept {
-    return stalemated(current_pos);
+    return (!current_info->in_check) && current_info->legal_moves.empty();
 }
 
 
 void ChessEngineInterface::make_move(ChessMove move) noexcept {
     current_pos.make_move(move);
+    current_info = &lookup(current_pos);
 }
 
 

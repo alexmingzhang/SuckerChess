@@ -19,14 +19,13 @@ struct PositionInfo {
 
 class ChessEngineInterface {
 
-    ChessPosition current_pos;
     std::unordered_map<ChessPosition, PositionInfo> cache;
+    ChessPosition current_pos;
+    const PositionInfo *current_info;
 
 public: // ========================================================= CONSTRUCTOR
 
-    explicit ChessEngineInterface() noexcept
-        : current_pos()
-        , cache() {}
+    explicit ChessEngineInterface() noexcept;
 
 public: // =========================================================== ACCESSORS
 
