@@ -51,10 +51,20 @@ void ChessTournament::sort_players_by_win_ratio() {
         players.end(),
         [&](const std::unique_ptr<ChessPlayer> &a,
             const std::unique_ptr<ChessPlayer> &b) {
-            return static_cast<double>(a->get_num_wins()) /
-                       static_cast<double>(a->get_num_losses()) >
-                   static_cast<double>(b->get_num_wins()) /
-                       static_cast<double>(b->get_num_losses());
+            double a_wlr = static_cast<double>(a->get_num_wins()) /
+                           static_cast<double>(a->get_num_losses());
+            double b_wlr = static_cast<double>(b->get_num_wins()) /
+                           static_cast<double>(b->get_num_losses());
+
+            if (a_wlr == b_wlr) {
+                if (a->get_num_wins() == b->get_num_wins()) {
+                    return a->get_num_losses() < b->get_num_losses();
+                }
+
+                return a->get_num_wins() > b->get_num_wins();
+            }
+
+            return a_wlr > b_wlr;
         }
     );
 }
@@ -106,7 +116,7 @@ void ChessTournament::run(
 
         if (verbose ||
             (enable_printing && (current_round % print_frequency == 0))) {
-            sort_players_by_elo();
+            sort_players_by_win_ratio();
             print_info();
         }
 
@@ -115,9 +125,9 @@ void ChessTournament::run(
     }
 }
 
-void ChessTournament::evolve() {
-
+void ChessTournament::evolve(bool verbose) {
     using enum PreferenceToken;
+
     constexpr std::array<PreferenceToken, 24> token_pool = {
         MATE_IN_ONE,   PREVENT_MATE_IN_ONE,
         PREVENT_DRAW,  CHECK,
@@ -132,29 +142,42 @@ void ChessTournament::evolve() {
         GAMBIT,        EXPLORE,
         COWARD,        HERO};
 
-    sort_players_by_elo();
+    // Kill off the lower half of players
+    sort_players_by_win_ratio();
+
+    if (verbose) {
+        for (auto it = players.begin() + players.size() / 2;
+             it != players.end();
+             ++it) {
+            std::cout << "Killing off " << (*it)->get_name() << '\n';
+        }
+    }
+
     players.erase(players.begin() + players.size() / 2, players.end());
 
+    // Create children from the top half of players
     for (std::unique_ptr<ChessPlayer> &player : players) {
+        if (verbose) { std::cout << player->get_name() << "'s child has "; }
+
         std::vector<PreferenceToken> mutated_tokens =
             player->get_preference_tokens();
 
         std::uniform_int_distribution<int> mutate_dist(0, 2);
-        std::uniform_int_distribution<
-            typename std::vector<PreferenceToken>::size_type>
-            token_pool_dist(0, token_pool.size() - 1);
-        std::uniform_int_distribution<
-            typename std::vector<PreferenceToken>::size_type>
-            genome_dist(0, mutated_tokens.size() - 1);
 
+        // Introduce "mutations"
         switch (mutate_dist(rng)) {
             case 0:
-                { // Add random token
+                { // Add random non-duplicate token
                     if (mutated_tokens.size() == token_pool.size()) {
                         goto case1;
                     }
 
+                    if (verbose) { std::cout << "added a token to become "; }
+
                     PreferenceToken token;
+                    std::uniform_int_distribution<
+                        typename std::vector<PreferenceToken>::size_type>
+                        token_pool_dist(0, token_pool.size());
                     do {
                         token = token_pool[token_pool_dist(rng)];
                     } while (
@@ -163,29 +186,52 @@ void ChessTournament::evolve() {
                         ) != mutated_tokens.end()
                     );
 
+                    std::uniform_int_distribution<
+                        typename std::vector<PreferenceToken>::size_type>
+                        current_token_dist(0, mutated_tokens.size());
                     mutated_tokens.insert(
-                        mutated_tokens.begin() + genome_dist(rng), token
+                        mutated_tokens.begin() + current_token_dist(rng), token
                     );
                     break;
                 }
             case1:
-            case 1: // Remove random token
-                if (mutated_tokens.size() <= 1) { goto case2; }
-                mutated_tokens.erase(mutated_tokens.begin() + genome_dist(rng));
+            case 1:
+                { // Remove random token
+                    if (mutated_tokens.size() <= 1) { goto case2; }
 
-                break;
+                    if (verbose) { std::cout << "removed a token to become"; }
+
+                    std::uniform_int_distribution<
+                        typename std::vector<PreferenceToken>::size_type>
+                        current_token_dist(0, mutated_tokens.size() - 1);
+
+                    mutated_tokens.erase(
+                        mutated_tokens.begin() + current_token_dist(rng)
+                    );
+
+                    break;
+                }
             case2:
-            case 2: // Swap random tokens
-                std::swap(
-                    mutated_tokens[genome_dist(rng)],
-                    mutated_tokens[genome_dist(rng)]
-                );
-                break;
+            case 2:
+                { // Swap random tokens
+                    std::cout << "swapped two tokens to become ";
+                    std::uniform_int_distribution<
+                        typename std::vector<PreferenceToken>::size_type>
+                        current_token_dist(0, mutated_tokens.size() - 1);
+                    std::swap(
+                        mutated_tokens[current_token_dist(rng)],
+                        mutated_tokens[current_token_dist(rng)]
+                    );
+                    break;
+                }
             default: __builtin_unreachable();
         }
 
         std::unique_ptr<ChessPlayer> child =
             std::make_unique<ChessPlayer>(mutated_tokens);
+
+        if (verbose) { std::cout << child->get_name() << '\n'; }
+
         add_player(std::move(child));
     }
 }

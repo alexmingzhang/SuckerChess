@@ -88,7 +88,8 @@ public: // =====================================================================
         long long print_frequency = 1,
         bool store_games = false);
 
-    void evolve();
+
+    void evolve(bool verbose = false);
 
     /// @brief Print info about a tournament and its players
     void print_info() const;
