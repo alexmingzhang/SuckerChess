@@ -37,7 +37,9 @@ void ChessTournament::sort_players_by_win_ratio() {
                 static_cast<double>(b_wins) / static_cast<double>(b_losses);
 
             if (a_ratio == b_ratio) {
-                if (a_wins == b_wins) { return a_losses < b_losses; }
+                if (a_wins == b_wins) {
+                    return a.second.num_draws < b.second.num_draws;
+                }
                 return a_wins > b_wins;
             }
             return a_ratio > b_ratio;

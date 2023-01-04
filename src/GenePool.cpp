@@ -99,19 +99,15 @@ void GenePool::sort_by_fitness() noexcept {
         organisms.begin(),
         organisms.end(),
         [&](const auto &a, const auto &b) {
-            const unsigned long long a_wins = a.num_wins;
-            const unsigned long long a_losses = a.num_losses;
-            const unsigned long long b_wins = b.num_wins;
-            const unsigned long long b_losses = b.num_losses;
-
-            const double a_ratio =
-                static_cast<double>(a_wins) / static_cast<double>(a_losses);
-            const double b_ratio =
-                static_cast<double>(b_wins) / static_cast<double>(b_losses);
-
+            const double a_ratio = static_cast<double>(a.num_wins) /
+                                   static_cast<double>(a.num_losses);
+            const double b_ratio = static_cast<double>(b.num_wins) /
+                                   static_cast<double>(b.num_losses);
             if (a_ratio == b_ratio) {
-                if (a_wins == b_wins) { return a_losses < b_losses; }
-                return a_wins > b_wins;
+                if (a.num_wins == b.num_wins) {
+                    return a.num_draws < b.num_draws;
+                }
+                return a.num_wins > b.num_wins;
             }
             return a_ratio > b_ratio;
         }
