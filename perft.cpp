@@ -1,4 +1,5 @@
 #include <chrono>   // for std::chrono
+#include <cstdlib>  // for EXIT_SUCCESS, EXIT_FAILURE
 #include <iostream> // for std::cout, std::cerr, std::endl
 #include <string>   // for std::string
 
@@ -123,5 +124,8 @@ int main() {
             1'000'000'000.0;
         std::cout << "All tests passed in " << duration << " seconds."
                   << std::endl;
+        return EXIT_SUCCESS;
+    } else {
+        return EXIT_FAILURE;
     }
 }

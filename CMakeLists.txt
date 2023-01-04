@@ -32,6 +32,10 @@ add_executable(SuckerChessPerft ${SuckerChessSourcesList} "perft.cpp")
 
 add_executable(SuckerChessPerftOptimized ${SuckerChessSourcesList} "perft.cpp")
 
+add_executable(SuckerChessBenchmark ${SuckerChessSourcesList} "benchmark.cpp")
+
+add_executable(SuckerChessBenchmarkOptimized ${SuckerChessSourcesList} "benchmark.cpp")
+
 target_compile_definitions(SuckerChessMainOptimized PRIVATE
         SUCKER_CHESS_USE_COMPRESSED_CHESS_PIECE
         SUCKER_CHESS_USE_COMPRESSED_CHESS_MOVE
@@ -39,6 +43,12 @@ target_compile_definitions(SuckerChessMainOptimized PRIVATE
         SUCKER_CHESS_USE_ZOBRIST_HASH)
 
 target_compile_definitions(SuckerChessPerftOptimized PRIVATE
+        SUCKER_CHESS_USE_COMPRESSED_CHESS_PIECE
+        SUCKER_CHESS_USE_COMPRESSED_CHESS_MOVE
+        SUCKER_CHESS_TRACK_KING_LOCATIONS
+        SUCKER_CHESS_USE_ZOBRIST_HASH)
+
+target_compile_definitions(SuckerChessBenchmarkOptimized PRIVATE
         SUCKER_CHESS_USE_COMPRESSED_CHESS_PIECE
         SUCKER_CHESS_USE_COMPRESSED_CHESS_MOVE
         SUCKER_CHESS_TRACK_KING_LOCATIONS
