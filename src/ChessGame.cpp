@@ -3,6 +3,8 @@
 #include <cassert>  // for assert
 #include <iostream> // for std::cout, std::endl
 
+#include "Utilities.hpp"
+
 
 ChessGame::ChessGame() noexcept
     : m_interface()
