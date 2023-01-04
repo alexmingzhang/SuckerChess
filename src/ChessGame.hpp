@@ -192,8 +192,7 @@ public: // =====================================================================
 
         if (verbose) {
             std::cout << m_interface.get_current_pos()
-                      << m_interface.get_current_pos().get_fen()
-                      << std::endl;
+                      << m_interface.get_current_pos().get_fen() << std::endl;
         }
 
         switch (get_current_status()) {
