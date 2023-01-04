@@ -7,7 +7,7 @@
 #include "ChessEngine.hpp"
 #include "Utilities.hpp"
 
-#include <algorithm> // for std::sort, std::shuffle
+#include <algorithm> // for std::find, std::sort, std::shuffle
 #include <array>     // for std::array
 #include <cstddef>   // for std::size_t
 #include <iomanip> // for std::setw, std::left, std::right, std::fixed, std::setprecision
@@ -41,6 +41,20 @@ void ChessTournament::sort_players_by_wins() {
         [&](const std::unique_ptr<ChessPlayer> &a,
             const std::unique_ptr<ChessPlayer> &b) {
             return a->get_num_wins() > b->get_num_wins();
+        }
+    );
+}
+
+void ChessTournament::sort_players_by_win_ratio() {
+    std::sort(
+        players.begin(),
+        players.end(),
+        [&](const std::unique_ptr<ChessPlayer> &a,
+            const std::unique_ptr<ChessPlayer> &b) {
+            return static_cast<double>(a->get_num_wins()) /
+                       static_cast<double>(a->get_num_losses()) >
+                   static_cast<double>(b->get_num_wins()) /
+                       static_cast<double>(b->get_num_losses());
         }
     );
 }
@@ -104,12 +118,19 @@ void ChessTournament::run(
 void ChessTournament::evolve() {
 
     using enum PreferenceToken;
-    constexpr std::array<PreferenceToken, 21> token_pool = {
-        CHECK,      CAPTURE, CAPTURE_HANGING, SMART_CAPTURE, CASTLE,
-        FIRST,      LAST,    REDUCE,          GREEDY,        SWARM,
-        HUDDLE,     SNIPER,  SLOTH,           CONQUEROR,     CONSTRICTOR,
-        REINFORCED, OUTPOST, GAMBIT,          EXPLORE,       COWARD,
-        HERO};
+    constexpr std::array<PreferenceToken, 24> token_pool = {
+        MATE_IN_ONE,   PREVENT_MATE_IN_ONE,
+        PREVENT_DRAW,  CHECK,
+        CAPTURE,       CAPTURE_HANGING,
+        SMART_CAPTURE, CASTLE,
+        FIRST,         LAST,
+        REDUCE,        GREEDY,
+        SWARM,         HUDDLE,
+        SNIPER,        SLOTH,
+        CONQUEROR,     CONSTRICTOR,
+        REINFORCED,    OUTPOST,
+        GAMBIT,        EXPLORE,
+        COWARD,        HERO};
 
     sort_players_by_elo();
     players.erase(players.begin() + players.size() / 2, players.end());
@@ -127,19 +148,33 @@ void ChessTournament::evolve() {
             genome_dist(0, mutated_tokens.size() - 1);
 
         switch (mutate_dist(rng)) {
-            case 0: // Add random token
-                mutated_tokens.insert(
-                    mutated_tokens.begin() + genome_dist(rng),
-                    token_pool[token_pool_dist(rng)]
-                );
-                break;
-            case 1: // Remove random token
-                if (mutated_tokens.size() > 1) {
-                    mutated_tokens.erase(
-                        mutated_tokens.begin() + genome_dist(rng)
+            case 0:
+                { // Add random token
+                    if (mutated_tokens.size() == token_pool.size()) {
+                        goto case1;
+                    }
+
+                    PreferenceToken token;
+                    do {
+                        token = token_pool[token_pool_dist(rng)];
+                    } while (
+                        std::find(
+                            mutated_tokens.begin(), mutated_tokens.end(), token
+                        ) != mutated_tokens.end()
                     );
+
+                    mutated_tokens.insert(
+                        mutated_tokens.begin() + genome_dist(rng), token
+                    );
+                    break;
                 }
+            case1:
+            case 1: // Remove random token
+                if (mutated_tokens.size() <= 1) { goto case2; }
+                mutated_tokens.erase(mutated_tokens.begin() + genome_dist(rng));
+
                 break;
+            case2:
             case 2: // Swap random tokens
                 std::swap(
                     mutated_tokens[genome_dist(rng)],
