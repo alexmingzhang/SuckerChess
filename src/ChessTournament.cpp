@@ -128,13 +128,14 @@ void ChessTournament::run(
 void ChessTournament::evolve(bool verbose) {
     using enum PreferenceToken;
 
-    constexpr std::array<PreferenceToken, 24> token_pool = {
+    constexpr std::array<PreferenceToken, 26> token_pool = {
         MATE_IN_ONE,   PREVENT_MATE_IN_ONE,
         PREVENT_DRAW,  CHECK,
         CAPTURE,       CAPTURE_HANGING,
         SMART_CAPTURE, CASTLE,
         FIRST,         LAST,
-        REDUCE,        GREEDY,
+        EXTEND,        REDUCE,
+        GREEDY,        GENEROUS,
         SWARM,         HUDDLE,
         SNIPER,        SLOTH,
         CONQUEROR,     CONSTRICTOR,
@@ -166,8 +167,9 @@ void ChessTournament::evolve(bool verbose) {
 
         // Introduce "mutations"
         switch (mutate_dist(rng)) {
+            // Add random non-duplicate token
             case 0:
-                { // Add random non-duplicate token
+                {
                     if (mutated_tokens.size() == token_pool.size()) {
                         goto case1;
                     }
@@ -194,12 +196,13 @@ void ChessTournament::evolve(bool verbose) {
                     );
                     break;
                 }
+            // Remove random token
             case1:
             case 1:
-                { // Remove random token
+                {
                     if (mutated_tokens.size() <= 1) { goto case2; }
 
-                    if (verbose) { std::cout << "removed a token to become"; }
+                    if (verbose) { std::cout << "removed a token to become "; }
 
                     std::uniform_int_distribution<
                         typename std::vector<PreferenceToken>::size_type>
@@ -211,10 +214,14 @@ void ChessTournament::evolve(bool verbose) {
 
                     break;
                 }
+            // Swap random tokens
             case2:
             case 2:
-                { // Swap random tokens
-                    std::cout << "swapped two tokens to become ";
+                {
+                    if (verbose) {
+                        std::cout << "swapped two tokens to become ";
+                    }
+
                     std::uniform_int_distribution<
                         typename std::vector<PreferenceToken>::size_type>
                         current_token_dist(0, mutated_tokens.size() - 1);

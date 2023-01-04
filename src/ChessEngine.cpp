@@ -130,6 +130,14 @@ DEFINE_PREFERENCE(First) { return {*allowed_moves.begin()}; }
 
 DEFINE_PREFERENCE(Last) { return {*allowed_moves.rbegin()}; }
 
+DEFINE_PREFERENCE(Extend) {
+    return maximal_elements(allowed_moves, [&](ChessMove move) {
+        ChessPosition copy = current_pos;
+        copy.make_move(move);
+        return copy.get_legal_moves().size();
+    });
+}
+
 DEFINE_PREFERENCE(Reduce) {
     return minimal_elements(allowed_moves, [&](ChessMove move) {
         ChessPosition copy = current_pos;
@@ -140,6 +148,16 @@ DEFINE_PREFERENCE(Reduce) {
 
 DEFINE_PREFERENCE(Greedy) {
     return maximal_elements(allowed_moves, [&](ChessMove move) {
+        ChessPosition copy = current_pos;
+        copy.make_move(move);
+        return (current_pos.get_color_to_move() == PieceColor::WHITE)
+                   ? Engine::CCCP::material_advantage(copy)
+                   : -Engine::CCCP::material_advantage(copy);
+    });
+}
+
+DEFINE_PREFERENCE(Generous) {
+    return minimal_elements(allowed_moves, [&](ChessMove move) {
         ChessPosition copy = current_pos;
         copy.make_move(move);
         return (current_pos.get_color_to_move() == PieceColor::WHITE)
