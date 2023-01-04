@@ -783,15 +783,13 @@ public: // ===================================================== MOVE GENERATION
 
     [[nodiscard]] bool check_consistency() const noexcept;
 
-public: // ============================================================ PRINTING
+public: // ========================================================= MOVE NAMING
 
     [[nodiscard]] std::string get_move_name(
         const std::vector<ChessMove> &legal_moves,
         ChessMove move,
         bool suffix = true
     ) const;
-
-    friend std::ostream &operator<<(std::ostream &, const ChessPosition &);
 
 public: // ============================================================= FEN I/O
 
@@ -800,6 +798,9 @@ public: // ============================================================= FEN I/O
     [[nodiscard]] std::string get_fen() const noexcept;
 
 }; // class ChessPosition
+
+
+std::ostream &operator<<(std::ostream &, const ChessPosition &);
 
 
 namespace std { // create template specialization for std::hash

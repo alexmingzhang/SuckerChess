@@ -2,6 +2,7 @@
 #define SUCKER_CHESS_CHESS_GAME_HPP
 
 #include <cstdint> // for std::uint8_t
+#include <string>  // for std::string
 #include <vector>  // for std::vector
 
 #include "ChessEngine.hpp"
@@ -40,21 +41,46 @@ public: // =========================================================== ACCESSORS
         return m_status;
     }
 
+    [[nodiscard]] constexpr const std::vector<ChessPosition> &
+    get_pos_history() const noexcept {
+        return m_pos_history;
+    }
+
+    [[nodiscard]] constexpr const std::vector<ChessMove> &
+    get_move_history() const noexcept {
+        return m_move_history;
+    }
+
     [[nodiscard]] constexpr int get_half_move_clock() const noexcept {
         return m_half_move_clock;
     }
 
-private: // ====================================================================
+    [[nodiscard]] constexpr int get_full_move_count() const noexcept {
+        return m_full_move_count;
+    }
+
+private: // ================================================== EXECUTION HELPERS
 
     GameStatus compute_current_status() noexcept;
 
-public: // =====================================================================
+    ChessMove get_console_move();
+
+public: // =========================================================== EXECUTION
 
     void make_move(ChessMove move) noexcept;
 
-public: // =====================================================================
-
     PieceColor run(ChessEngine *white, ChessEngine *black, bool verbose = true);
+
+public: // ====================================================== FEN/PGN EXPORT
+
+    std::string get_fen();
+
+    std::string get_pgn(
+        const std::string &event_name = "",
+        long long num_round = -1,
+        const std::string &white_name = "",
+        const std::string &black_name = ""
+    );
 
 }; // class ChessGame
 
