@@ -804,24 +804,6 @@ public: // ===================================================== MOVE GENERATION
 
     [[nodiscard]] bool check_consistency() const noexcept;
 
-public: // ======================================================== MATE TESTING
-
-    [[nodiscard]] bool checkmated(PieceColor color) const {
-        return in_check(color) && get_legal_moves(color).empty();
-    }
-
-    [[nodiscard]] bool checkmated() const {
-        return checkmated(get_color_to_move());
-    }
-
-    [[nodiscard]] bool stalemated(PieceColor color) const {
-        return !in_check(color) && get_legal_moves(color).empty();
-    }
-
-    [[nodiscard]] bool stalemated() const {
-        return stalemated(get_color_to_move());
-    }
-
 public: // ============================================================ PRINTING
 
     [[nodiscard]] std::string get_move_name(

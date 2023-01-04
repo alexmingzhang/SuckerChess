@@ -1,92 +1,15 @@
 #ifndef SUCKER_CHESS_CHESS_GAME_HPP
 #define SUCKER_CHESS_CHESS_GAME_HPP
 
+#include <cassert>  // for assert
 #include <cstdint>  // for std::uint8_t
-#include <optional> // for std::optional, std::nullopt
-#include <string>   // for std::string
+#include <iostream> // for std::cout, std::endl
 #include <vector>   // for std::vector
 
 #include "ChessEngine.hpp"
 #include "ChessMove.hpp"
 #include "ChessPiece.hpp"
 #include "ChessPosition.hpp"
-
-
-class ChessPositionWrapper final {
-
-    ChessPosition position;
-    mutable std::optional<std::vector<ChessMove>> cached_legal_moves;
-
-public: // ========================================================= CONSTRUCTOR
-
-    explicit constexpr ChessPositionWrapper() noexcept
-        : position()
-        , cached_legal_moves(std::nullopt) {}
-
-public: // =========================================================== ACCESSORS
-
-    constexpr const ChessPosition &get() const noexcept { return position; }
-
-    [[nodiscard]] constexpr PieceColor get_color_to_move() const noexcept {
-        return position.get_color_to_move();
-    }
-
-    const std::vector<ChessMove> &get_legal_moves() const noexcept {
-        if (!cached_legal_moves.has_value()) {
-            cached_legal_moves.emplace(position.get_legal_moves());
-        }
-        return *cached_legal_moves;
-    }
-
-public: // ========================================================== COMPARISON
-
-    constexpr bool operator==(const ChessPosition &other) const noexcept {
-        return (position == other);
-    }
-
-public: // ======================================================== MOVE TESTING
-
-    constexpr bool is_capture_or_pawn_move(ChessMove move) const noexcept {
-        return position.is_capture_or_pawn_move(move);
-    }
-
-public: // ====================================================== MOVE EXECUTION
-
-    void make_move(ChessMove move) noexcept {
-        position.make_move(move);
-        cached_legal_moves.reset();
-    }
-
-public: // ======================================================== MATE TESTING
-
-    bool checkmated() const noexcept {
-        return get_legal_moves().empty() && position.in_check();
-    }
-
-    bool stalemated() const noexcept {
-        return get_legal_moves().empty() && !position.in_check();
-    }
-
-    bool has_insufficient_material() const noexcept {
-        return position.get_board().has_insufficient_material();
-    }
-
-public: // ========================================================= MOVE NAMING
-
-    std::string get_move_name(ChessMove move, bool suffix) {
-        return position.get_move_name(get_legal_moves(), move, suffix);
-    }
-
-public: // ============================================================= FEN I/O
-
-    std::string get_fen() { return position.get_fen(); }
-
-    void load_fen(const std::string &fen) {
-        position.load_fen(fen);
-        cached_legal_moves.reset();
-    }
-
-}; // class ChessPositionWrapper
 
 
 enum class GameStatus : std::uint8_t {
@@ -102,37 +25,200 @@ enum class GameStatus : std::uint8_t {
 
 class ChessGame final {
 
-public:
+    ChessEngineInterface m_interface;
+    GameStatus m_status;
+    std::vector<ChessPosition> m_pos_history;
+    std::vector<ChessMove> m_move_history;
+    int m_half_move_clock;
+    int m_full_move_count;
 
-    ChessPositionWrapper current_pos;
-    GameStatus current_status;
-    std::vector<ChessPosition> pos_history;
-    std::vector<ChessMove> move_history;
-    int half_move_clock;
-    int full_move_count;
+public: // ========================================================= CONSTRUCTOR
 
     explicit ChessGame() noexcept
-        : current_pos()
-        , current_status(GameStatus::IN_PROGRESS)
-        , pos_history()
-        , move_history()
-        , half_move_clock(0)
-        , full_move_count(1) {}
+        : m_interface()
+        , m_status(GameStatus::IN_PROGRESS)
+        , m_pos_history()
+        , m_move_history()
+        , m_half_move_clock(0)
+        , m_full_move_count(1) {}
 
-    [[nodiscard]] GameStatus get_status() const;
+public: // =========================================================== ACCESSORS
 
-    void make_move(const ChessMove &move);
+    [[nodiscard]] constexpr GameStatus get_current_status() const noexcept {
+        return m_status;
+    }
 
-    ChessMove get_console_move();
+    [[nodiscard]] constexpr int get_half_move_clock() const noexcept {
+        return m_half_move_clock;
+    }
 
-    PieceColor run(ChessEngine *white, ChessEngine *black, bool verbose = true);
+    [[nodiscard]] constexpr int get_full_move_count() const noexcept {
+        return m_full_move_count;
+    }
 
-    [[nodiscard]] std::string get_pgn(
-        const std::string &event_name = "",
-        long long num_round = -1,
-        const std::string &white_name = "",
-        const std::string &black_name = ""
-    ) const;
+private: // ====================================================================
+
+    GameStatus compute_current_status() noexcept {
+
+        using enum PieceColor;
+        using enum GameStatus;
+
+        // before anything else, check for threefold repetition
+        int count = 0;
+        const ChessPosition &cur = m_interface.get_current_pos();
+        for (const ChessPosition &pos : m_pos_history) {
+            if (cur == pos) {
+                ++count;
+                if (count >= 2) { return DRAWN_BY_REPETITION; }
+            }
+        }
+
+        // check for game-end conditions
+        if (m_interface.checkmated()) {
+            switch (m_interface.get_color_to_move()) {
+                case NONE: __builtin_unreachable();
+                case WHITE: return BLACK_WON_BY_CHECKMATE;
+                case BLACK: return WHITE_WON_BY_CHECKMATE;
+            }
+            __builtin_unreachable();
+        } else if (m_interface.stalemated()) {
+            return DRAWN_BY_STALEMATE;
+        } else if (m_interface.get_current_pos()
+                       .get_board()
+                       .has_insufficient_material()) {
+            return DRAWN_BY_INSUFFICIENT_MATERIAL;
+        } else if (get_half_move_clock() >= 100) {
+            return DRAWN_BY_50_MOVE_RULE;
+        }
+
+        return IN_PROGRESS;
+    }
+
+public: // =====================================================================
+
+    void make_move(ChessMove move) noexcept {
+
+        assert(get_current_status() == GameStatus::IN_PROGRESS);
+
+        // save current state in history vectors
+        m_pos_history.push_back(m_interface.get_current_pos());
+        m_move_history.push_back(move);
+
+        // reset half-move clock on captures and pawn moves
+        if (m_interface.get_current_pos().is_capture_or_pawn_move(move)) {
+            m_half_move_clock = 0;
+        } else {
+            ++m_half_move_clock;
+        }
+
+        // make move
+        m_interface.make_move(move);
+
+        // update full-move count after black's move
+        if (m_interface.get_color_to_move() == PieceColor::WHITE) {
+            ++m_full_move_count;
+        }
+
+        // update status
+        m_status = compute_current_status();
+    }
+
+private: // ====================================================================
+
+    static void println(bool verbose, const char *str) noexcept {
+        if (verbose) { std::cout << str << std::endl; }
+    }
+
+    template <typename T>
+    static constexpr bool
+    contains(const std::vector<T> &v, const T &x) noexcept {
+        for (const T &y : v) {
+            if (x == y) { return true; }
+        }
+        return false;
+    }
+
+public: // =====================================================================
+
+    PieceColor
+    run(ChessEngine *white, ChessEngine *black, bool verbose = true) {
+
+        using enum GameStatus;
+
+        while (get_current_status() == IN_PROGRESS) {
+
+            if (verbose) {
+                std::cout << m_interface.get_current_pos()
+                          << m_interface.get_current_pos().get_fen()
+                          << std::endl;
+            }
+
+            assert(m_interface.get_current_pos().check_consistency());
+
+            if (verbose) {
+                switch (m_interface.get_color_to_move()) {
+                    case PieceColor::NONE: __builtin_unreachable();
+                    case PieceColor::WHITE:
+                        println(verbose, "White to move.");
+                        break;
+                    case PieceColor::BLACK:
+                        println(verbose, "Black to move.");
+                        break;
+                }
+            }
+
+            ChessEngine *const player =
+                (m_interface.get_color_to_move() == PieceColor::BLACK) ? black
+                                                                       : white;
+            if (player == nullptr) {
+                // TODO: re-implement command-line player
+                assert(false);
+            } else {
+                const ChessMove move = player->pick_move(
+                    m_interface, m_pos_history, m_move_history
+                );
+                if (verbose) {
+                    std::cout << "Chosen move: "
+                              << m_interface.get_current_pos().get_move_name(
+                                     m_interface.get_legal_moves(), move, true
+                                 )
+                              << std::endl;
+                }
+                assert(m_interface.get_current_pos().is_valid(move));
+                assert(contains(m_interface.get_legal_moves(), move));
+                make_move(move);
+            }
+        }
+
+        if (verbose) {
+            std::cout << m_interface.get_current_pos()
+                      << m_interface.get_current_pos().get_fen()
+                      << std::endl;
+        }
+
+        switch (get_current_status()) {
+            case IN_PROGRESS: __builtin_unreachable();
+            case WHITE_WON_BY_CHECKMATE:
+                println(verbose, "White wins by checkmate! Game over.");
+                return PieceColor::WHITE;
+            case BLACK_WON_BY_CHECKMATE:
+                println(verbose, "Black wins by checkmate! Game over.");
+                return PieceColor::BLACK;
+            case DRAWN_BY_STALEMATE:
+                println(verbose, "Draw by stalemate. Game over.");
+                return PieceColor::NONE;
+            case DRAWN_BY_INSUFFICIENT_MATERIAL:
+                println(verbose, "Draw by insufficient material. Game over.");
+                return PieceColor::NONE;
+            case DRAWN_BY_REPETITION:
+                println(verbose, "Draw by threefold repetition. Game over.");
+                return PieceColor::NONE;
+            case DRAWN_BY_50_MOVE_RULE:
+                println(verbose, "Draw by 50 move rule. Game over.");
+                return PieceColor::NONE;
+        }
+        __builtin_unreachable();
+    }
 
 }; // class ChessGame
 
