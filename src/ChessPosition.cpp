@@ -18,11 +18,22 @@ bool ChessPosition::check_consistency() const noexcept {
         generated_valid_black_moves.push_back(move);
     });
 
-    std::vector<ChessMove> generated_legal_white_moves =
-        get_legal_moves(PieceColor::WHITE);
-    std::vector<ChessMove> generated_legal_black_moves =
-        get_legal_moves(PieceColor::BLACK);
+    std::vector<ChessMove> generated_legal_white_moves;
+    visit_legal_moves(
+        PieceColor::WHITE,
+        [&](ChessMove move, const ChessPosition &) {
+            generated_legal_white_moves.push_back(move);
+        }
+    );
 
+    std::vector<ChessMove> generated_legal_black_moves;
+    visit_legal_moves(
+        PieceColor::BLACK,
+        [&](ChessMove move, const ChessPosition &) {
+            generated_legal_black_moves.push_back(move);
+        }
+    );
+    
     std::vector<ChessMove> filtered_valid_white_moves;
     std::vector<ChessMove> filtered_valid_black_moves;
     std::vector<ChessMove> filtered_legal_white_moves;
@@ -195,7 +206,11 @@ std::string ChessPosition::get_move_name(
         ChessPosition copy = *this;
         copy.make_move(move);
         if (copy.in_check()) {
-            result << (copy.get_legal_moves().empty() ? '#' : '+');
+            bool has_legal_moves = false;
+            copy.visit_legal_moves([&](ChessMove, const ChessPosition &) {
+                has_legal_moves = true;
+            });
+            result << (has_legal_moves ? '#' : '+');
         }
     }
     return result.str();

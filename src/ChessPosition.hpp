@@ -786,22 +786,6 @@ public: // ===================================================== MOVE GENERATION
         visit_legal_moves(get_color_to_move(), f);
     }
 
-    [[nodiscard]] std::vector<ChessMove> get_legal_moves(PieceColor moving_color
-    ) const noexcept {
-        std::vector<ChessMove> result;
-        visit_legal_moves(
-            moving_color,
-            [&](ChessMove move, const ChessPosition &) {
-                result.push_back(move);
-            }
-        );
-        return result;
-    }
-
-    [[nodiscard]] std::vector<ChessMove> get_legal_moves() const noexcept {
-        return get_legal_moves(get_color_to_move());
-    }
-
     [[nodiscard]] bool check_consistency() const noexcept;
 
 public: // ============================================================ PRINTING
