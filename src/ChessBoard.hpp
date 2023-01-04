@@ -75,7 +75,9 @@ public: // ========================================================= CONSTRUCTOR
 
     explicit ChessBoard(const std::string &fen_board_str);
 
-public: // =========================================================== ACCESSORS
+private: // ================================================ COMPRESSION HELPERS
+
+#ifdef SUCKER_CHESS_USE_COMPRESSED_CHESS_BOARD
 
     static constexpr ChessPiece piece_from_cell_value(std::uint8_t value
     ) noexcept {
@@ -96,6 +98,10 @@ public: // =========================================================== ACCESSORS
         result |= static_cast<std::uint8_t>(piece.get_type());
         return result;
     }
+
+#endif
+
+public: // =========================================================== ACCESSORS
 
     [[nodiscard]] constexpr ChessPiece get_piece(ChessSquare square
     ) const noexcept {

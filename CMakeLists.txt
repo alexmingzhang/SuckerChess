@@ -7,8 +7,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 if ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
     add_compile_options(-Weverything
             -Wno-c++98-compat -Wno-c++98-compat-pedantic
-            -Wno-zero-as-null-pointer-constant
-            -Wno-weak-vtables -Wno-padded)
+            -Wno-zero-as-null-pointer-constant -Wno-weak-vtables
+            -Wno-range-loop-construct -Wno-float-equal -Wno-padded)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wall -Wextra -pedantic)
 endif ()
@@ -21,9 +21,10 @@ set(SuckerChessSourcesList
         "src/ChessPosition.cpp"
         "src/Utilities.cpp"
         "src/ChessEngine.cpp"
+        "src/ChessGame.cpp"
+        "src/ChessTournament.cpp"
         "src/Engine/PreferenceChain.cpp"
-        "src/Engine/Random.cpp"
-        "src/ChessGame.cpp")
+        "src/Engine/Random.cpp")
 
 add_executable(SuckerChessMain ${SuckerChessSourcesList} "main.cpp")
 
