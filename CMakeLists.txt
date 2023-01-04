@@ -21,10 +21,9 @@ set(SuckerChessSourcesList
         "src/ChessPosition.cpp"
         "src/Utilities.cpp"
         "src/ChessEngine.cpp"
-        "src/UCI.cpp"
         "src/ChessGame.cpp"
         "src/ChessPlayer.cpp"
-        "src/ChessTournament.cpp")
+        )
 
 add_executable(SuckerChessMain ${SuckerChessSourcesList} "main.cpp")
 
