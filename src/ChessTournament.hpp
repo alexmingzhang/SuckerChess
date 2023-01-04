@@ -21,15 +21,15 @@ struct PerformanceInfo {
     unsigned long long num_losses_as_white;
     unsigned long long num_losses_as_black;
 
-    constexpr unsigned long long total_wins() const noexcept {
+    [[nodiscard]] constexpr unsigned long long total_wins() const noexcept {
         return num_wins_as_white + num_wins_as_black;
     }
 
-    constexpr unsigned long long total_losses() const noexcept {
+    [[nodiscard]] constexpr unsigned long long total_losses() const noexcept {
         return num_losses_as_white + num_losses_as_black;
     }
 
-};
+}; // struct PerformanceInfo
 
 
 class ChessTournament final {
@@ -57,8 +57,6 @@ public: // =========================================================== ACCESSORS
 public: // ============================================================ MUTATORS
 
     void add_engine(std::unique_ptr<ChessEngine> &&) noexcept;
-
-    void sort_players_by_wins();
 
     void sort_players_by_win_ratio();
 

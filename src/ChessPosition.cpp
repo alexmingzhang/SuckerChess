@@ -33,7 +33,7 @@ bool ChessPosition::check_consistency() const noexcept {
             generated_legal_black_moves.push_back(move);
         }
     );
-    
+
     std::vector<ChessMove> filtered_valid_white_moves;
     std::vector<ChessMove> filtered_valid_black_moves;
     std::vector<ChessMove> filtered_legal_white_moves;

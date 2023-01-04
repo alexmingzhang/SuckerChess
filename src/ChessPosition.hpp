@@ -61,11 +61,6 @@ public: // =========================================================== ACCESSORS
         return (move_data & 0x10) ? PieceColor::BLACK : PieceColor::WHITE;
     }
 
-    [[nodiscard]] constexpr CastlingRights
-    get_castling_rights() const noexcept {
-        return castling_rights;
-    }
-
     [[nodiscard]] constexpr bool can_short_castle(PieceColor color
     ) const noexcept {
         switch (color) {

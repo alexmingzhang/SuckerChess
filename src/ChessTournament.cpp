@@ -17,17 +17,6 @@ void ChessTournament::add_engine(std::unique_ptr<ChessEngine> &&engine
 }
 
 
-void ChessTournament::sort_players_by_wins() {
-    std::sort(
-        engines.begin(),
-        engines.end(),
-        [&](const auto &a, const auto &b) {
-            return a.second.total_wins() > b.second.total_wins();
-        }
-    );
-}
-
-
 void ChessTournament::sort_players_by_win_ratio() {
     std::sort(
         engines.begin(),
@@ -71,7 +60,7 @@ void ChessTournament::run(long long num_rounds, long long print_frequency) {
     while (infinite_rounds || (current_round < final_round)) {
 
         if (verbose) {
-            std::cout << name << ", round " << current_round << std::endl;
+            std::cout << get_name() << ", round " << current_round << std::endl;
         }
 
         // Randomize all matchups
@@ -125,7 +114,7 @@ void ChessTournament::print_info() const {
     const std::size_t num_games = static_cast<std::size_t>(current_round) *
                                   engines.size() * (engines.size() - 1);
 
-    std::cout << name << " Results (" << current_round + 1 << " rounds, "
+    std::cout << get_name() << " Results (" << current_round << " rounds, "
               << num_games << " games) \n";
     std::cout << "      " << std::setw(max_name_width) << "Engine"
               << " :   W (w/b)   :   D   :   L (w/b)   : "

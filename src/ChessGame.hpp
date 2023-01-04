@@ -44,10 +44,6 @@ public: // =========================================================== ACCESSORS
         return m_half_move_clock;
     }
 
-    [[nodiscard]] constexpr int get_full_move_count() const noexcept {
-        return m_full_move_count;
-    }
-
 private: // ====================================================================
 
     GameStatus compute_current_status() noexcept;
