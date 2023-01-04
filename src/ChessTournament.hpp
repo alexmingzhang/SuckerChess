@@ -80,14 +80,6 @@ public: // =========================================================== EXECUTION
      */
     // void evolve(int num_replace, bool verbose = false);
 
-    /**
-     * @brief Replaces weaker players with mutated versions of stronger players
-     *
-     * @param num_replace Number of weak players to replace
-     * @param verbose Print info about replaced players
-     */
-    void evolve(int num_replace, bool verbose = false);
-
     /// @brief Print info about a tournament and its players
     void print_info() const;
 
