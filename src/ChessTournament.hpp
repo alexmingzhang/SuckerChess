@@ -37,6 +37,7 @@ class ChessTournament final {
     std::string name;
     std::vector<std::pair<std::unique_ptr<ChessEngine>, PerformanceInfo>>
         engines;
+    int name_width;
     long long current_round;
 
 public: // ======================================================== CONSTRUCTORS
@@ -45,6 +46,7 @@ public: // ======================================================== CONSTRUCTORS
         : rng(properly_seeded_random_engine())
         , name(std::move(n))
         , engines()
+        , name_width(6)
         , current_round(0) {}
 
 public: // =========================================================== ACCESSORS

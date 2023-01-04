@@ -3,6 +3,7 @@
 #include "Utilities.hpp"
 
 #include <algorithm> // for std::shuffle, std::sort
+#include <climits>   // for INT_MAX
 #include <cstddef>   // for std::size_t
 #include <iomanip>   // for std::left, std::right, std::setw
 #include <iostream>  // for std::cout, std::endl, std::flush
@@ -10,6 +11,12 @@
 
 void ChessTournament::add_engine(std::unique_ptr<ChessEngine> &&engine
 ) noexcept {
+    const std::size_t w = engine->get_name().size();
+    if (w >= static_cast<std::size_t>(INT_MAX)) {
+        name_width = INT_MAX;
+    } else if (static_cast<int>(w) > name_width) {
+        name_width = static_cast<int>(w);
+    }
     engines.emplace_back(std::move(engine), PerformanceInfo{0, 0, 0, 0, 0});
 }
 
@@ -56,8 +63,10 @@ void ChessTournament::run(long long num_rounds, long long print_frequency) {
     const long long final_round = current_round + num_rounds;
     while (infinite_rounds || (current_round < final_round)) {
 
+        ++current_round;
         if (verbose) {
-            std::cout << get_name() << ", round " << current_round << std::endl;
+            std::cout << get_name() << ": Running round " << current_round
+                      << "..." << std::endl;
         }
 
         // Randomize all matchups
@@ -67,19 +76,34 @@ void ChessTournament::run(long long num_rounds, long long print_frequency) {
         for (const auto [i, j] : matchups) {
             auto &[white_engine, white_info] = engines[i];
             auto &[black_engine, black_info] = engines[j];
+            if (verbose) {
+                std::cout << std::right << std::setw(name_width)
+                          << white_engine->get_name() << " vs. " << std::left
+                          << std::setw(name_width) << black_engine->get_name()
+                          << ": ";
+            }
             ChessGame game;
             PieceColor winner =
                 game.run(white_engine.get(), black_engine.get(), false);
             switch (winner) {
                 case PieceColor::NONE:
+                    if (verbose) { std::cout << "Draw." << std::endl; }
                     ++white_info.num_draws;
                     ++black_info.num_draws;
                     break;
                 case PieceColor::WHITE:
+                    if (verbose) {
+                        std::cout << white_engine->get_name() << " won!"
+                                  << std::endl;
+                    }
                     ++white_info.num_wins_as_white;
                     ++black_info.num_losses_as_black;
                     break;
                 case PieceColor::BLACK:
+                    if (verbose) {
+                        std::cout << black_engine->get_name() << " won!"
+                                  << std::endl;
+                    }
                     ++white_info.num_losses_as_white;
                     ++black_info.num_wins_as_black;
                     break;
@@ -94,41 +118,27 @@ void ChessTournament::run(long long num_rounds, long long print_frequency) {
             sort_players_by_win_ratio();
             print_info();
         }
-
-        ++current_round;
     }
 }
-
-enum class MutationToken : std::uint8_t {
-    INSERT, // insert distinct random preference
-    DELETE, // delete random preference
-    SWAP,   // swap two random preferences
-    REPLACE // replace random preference with a new distinct random preference
-};
 
 
 void ChessTournament::print_info() const {
 
-    int max_name_width = 6;
-    for (const auto &[engine, info] : engines) {
-        const int name_width = static_cast<int>(engine->get_name().size());
-        if (name_width > max_name_width) { max_name_width = name_width; }
-    }
-
     const std::size_t num_games = static_cast<std::size_t>(current_round) *
                                   engines.size() * (engines.size() - 1);
 
-    std::cout << get_name() << " Results (" << current_round << " rounds, "
-              << num_games << " games) \n";
-    std::cout << "      " << std::setw(max_name_width) << "Engine"
+    std::cout << "Results after " << current_round
+              << ((current_round == 1) ? " round (" : " rounds (") << num_games
+              << " games):\n";
+    std::cout << "      " << std::setw(name_width) << "Engine"
               << " :   W (w/b)   :   D   :   L (w/b)   : "
                  "  WLR   \n";
 
     for (std::size_t i = 0; i < engines.size(); ++i) {
         const auto &[engine, info] = engines[i];
         std::cout << std::right << std::setw(4) << (i + 1) << ". ";
-        std::cout << std::left << std::setw(max_name_width)
-                  << engine->get_name() << " : ";
+        std::cout << std::left << std::setw(name_width) << engine->get_name()
+                  << " : ";
         std::cout << std::right << std::setw(5) << info.num_wins_as_white << '/'
                   << std::left << std::setw(5) << info.num_wins_as_black
                   << " : ";
@@ -138,8 +148,8 @@ void ChessTournament::print_info() const {
                   << info.num_losses_as_black << " : ";
         std::cout << std::setw(5)
                   << (static_cast<double>(info.total_wins()) /
-                      static_cast<double>(info.total_losses()))
-                  << '\n';
+                      static_cast<double>(info.total_losses()));
+        std::cout << '\n';
     }
     std::cout << std::flush;
 }
