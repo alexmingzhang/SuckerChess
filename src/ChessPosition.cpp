@@ -1,7 +1,7 @@
 #include "ChessPosition.hpp"
 
 #include <algorithm> // for std::sort
-#include <cstdint>   // for std::uint64_t
+#include <cstdint>   // for std::uint64_t, UINT64_C
 #include <sstream>   // for std::istringstream, std::ostringstream
 #include <stdexcept> // for std::invalid_argument
 

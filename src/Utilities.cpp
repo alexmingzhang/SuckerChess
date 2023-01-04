@@ -2,7 +2,6 @@
 
 #include <algorithm>  // for std::find_if, std::generate
 #include <cctype>     // for std::isspace
-#include <cstddef>    // for std::size_t
 #include <ctime>      // for std::time, std::time_t, std::tm, std::localtime
 #include <functional> // for std::ref
 #include <iterator>   // for std::begin, std::end

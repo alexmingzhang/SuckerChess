@@ -25,7 +25,8 @@ set(SuckerChessSourcesList
         "src/ChessTournament.cpp"
         "src/Engine/PreferenceChain.cpp"
         "src/Engine/Random.cpp"
-        "src/Engine/UCI.cpp")
+        "src/Engine/UCI.cpp"
+        "src/GenePool.cpp")
 
 add_executable(SuckerChessMain ${SuckerChessSourcesList} "main.cpp")
 
