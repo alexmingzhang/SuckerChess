@@ -37,15 +37,17 @@ public:
     MACRO(Castle,           CASTLE,              "Cst", "always castle if possible and avoid giving up castling rights") \
     MACRO(First,            FIRST,               "Fst", "always make first available move") \
     MACRO(Last,             LAST,                "Lst", "always make last available move") \
+    MACRO(Extend,           EXTEND,              "Ext", "make moves that maximize opponent's number of legal responses") \
     MACRO(Reduce,           REDUCE,              "Red", "make moves that minimize opponent's number of legal responses") \
     MACRO(Greedy,           GREEDY,              "Grd", "make moves that maximize own material advantage") \
+    MACRO(Generous,         GENEROUS,            "Gen", "make moves that minimize own material advantage") \
     MACRO(Swarm,            SWARM,               "Swm", "move pieces toward enemy king") \
     MACRO(Huddle,           HUDDLE,              "Hud", "move pieces toward own king") \
     MACRO(Sniper,           SNIPER,              "Sni", "make moves that maximize distance travelled") \
     MACRO(Sloth,            SLOTH,               "Slo", "make moves that minimize distance travelled") \
     MACRO(Conqueror,        CONQUEROR,           "Cnq", "make moves that maximize number of squares own pieces can see") \
     MACRO(Constrictor,      CONSTRICTOR,         "Cns", "make moves that minimize number of squares enemy pieces can see") \
-    MACRO(Reinforced,       REINFORCED,          "Rei", "always move to defended squares if possible") \
+    MACRO(Reinforced,       REINFORCED,          "Rei", "always move to squares that are attacked by self if possible") \
     MACRO(Outpost,          OUTPOST,             "Out", "always move to squares that are not attacked by enemy if possible") \
     MACRO(Gambit,           GAMBIT,              "Gam", "always move to squares that are attacked by both self and enemy if possible") \
     MACRO(Explore,          EXPLORE,             "Exp", "always move to squares that are attacked by neither self nor enemy if possible") \

@@ -121,6 +121,14 @@ DEFINE_PREFERENCE(First) { return {*allowed_moves.begin()}; }
 
 DEFINE_PREFERENCE(Last) { return {*allowed_moves.rbegin()}; }
 
+DEFINE_PREFERENCE(Extend) {
+    return maximal_elements(allowed_moves, [&](ChessMove move) {
+        ChessPosition copy = interface.get_current_pos();
+        copy.make_move(move);
+        return interface.get_legal_moves(copy).size();
+    });
+}
+
 DEFINE_PREFERENCE(Reduce) {
     return minimal_elements(allowed_moves, [&](ChessMove move) {
         ChessPosition copy = interface.get_current_pos();
@@ -132,6 +140,18 @@ DEFINE_PREFERENCE(Reduce) {
 DEFINE_PREFERENCE(Greedy) {
     const ChessBoard &board = interface.get_current_pos().get_board();
     return minimal_elements(allowed_moves, [&](ChessMove move) {
+        const ChessPiece target = board.get_piece(move.get_dst());
+        if (target == EMPTY_SQUARE) {
+            return 7;
+        } else {
+            return static_cast<int>(target.get_type());
+        }
+    });
+}
+
+DEFINE_PREFERENCE(Generous) {
+    const ChessBoard &board = interface.get_current_pos().get_board();
+    return maximal_elements(allowed_moves, [&](ChessMove move) {
         const ChessPiece target = board.get_piece(move.get_dst());
         if (target == EMPTY_SQUARE) {
             return 7;
