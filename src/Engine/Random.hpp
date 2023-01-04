@@ -2,6 +2,7 @@
 #define SUCKER_CHESS_ENGINE_RANDOM_HPP
 
 #include <random> // for std::mt19937
+#include <string> // for std::string
 #include <vector> // for std::vector
 
 #include "../ChessEngine.hpp"

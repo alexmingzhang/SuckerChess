@@ -1,11 +1,10 @@
 #ifndef SUCKER_CHESS_CHESS_TOURNAMENT_HPP
 #define SUCKER_CHESS_CHESS_TOURNAMENT_HPP
 
-#include <cstddef> // for std::size_t
 #include <memory>  // for std::unique_ptr
 #include <random>  // for std::mt19937
 #include <string>  // for std::string
-#include <utility> // for std::move
+#include <utility> // for std::move, std::pair
 #include <vector>  // for std::vector
 
 #include "ChessEngine.hpp"

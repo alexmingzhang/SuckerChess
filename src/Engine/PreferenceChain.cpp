@@ -1,8 +1,9 @@
 #include "PreferenceChain.hpp"
 
 #include <cassert> // for assert
+#include <memory>  // for std::make_unique
 #include <sstream> // for std::ostringstream
-#include <utility> // for std::move
+
 
 #include "../Utilities.hpp"
 

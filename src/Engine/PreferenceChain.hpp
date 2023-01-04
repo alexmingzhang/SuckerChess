@@ -3,6 +3,7 @@
 
 #include <memory> // for std::unique_ptr
 #include <random> // for std::mt19937
+#include <string> // for std::string
 #include <vector> // for std::vector
 
 #include "../ChessEngine.hpp"
