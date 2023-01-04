@@ -156,7 +156,7 @@ void ChessTournament::evolve(bool verbose) {
     players.erase(players.begin() + players.size() / 2, players.end());
 
     // Create children from the top half of players
-    for (std::unique_ptr<ChessPlayer> &player : players) {
+    for (const std::unique_ptr<ChessPlayer> &player : players) {
         if (verbose) { std::cout << player->get_name() << "'s child has "; }
 
         std::vector<PreferenceToken> mutated_tokens =
@@ -237,15 +237,22 @@ void ChessTournament::evolve(bool verbose) {
 }
 
 void ChessTournament::print_info() const {
+    std::size_t max_name_width = 6;
+    for (const std::unique_ptr<ChessPlayer> &player : players) {
+        std::size_t name_width = player->get_name().size();
+        if (name_width > max_name_width) { max_name_width = name_width; }
+    }
+
     std::cout << name << " Results (" << current_round + 1 << " rounds, "
               << current_round * num_games_per_round
               << " games, K-factor = " << elo_k_factor << ") \n";
-    std::cout
-        << "      Engine       :   ELO   :   W (w/b)   :   D   :   L (w/b)  \n";
+    std::cout << "      " << std::setw(max_name_width) << "Engine"
+              << " :   ELO   :   W (w/b)   :   D   :   L (w/b)  \n";
     for (std::size_t i = 0; i < players.size(); ++i) {
         const ChessPlayer &p = *players[i];
         std::cout << std::right << std::setw(4) << i + 1 << ". ";
-        std::cout << std::left << std::setw(12) << p.get_name() << " : ";
+        std::cout << std::left << std::setw(max_name_width) << p.get_name()
+                  << " : ";
         std::cout << std::right << std::setw(7) << std::fixed
                   << std::setprecision(2) << p.get_elo() << " : ";
         std::cout << std::right << std::setw(5) << p.get_num_wins_as_white()
