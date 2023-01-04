@@ -13,6 +13,7 @@ namespace Engine {
 class Random final : public ChessEngine {
 
     std::mt19937 rng;
+    std::string name;
 
 public:
 
@@ -23,6 +24,8 @@ public:
         const std::vector<ChessPosition> &pos_history,
         const std::vector<ChessMove> &move_history
     ) override;
+
+    const std::string &get_name() noexcept override;
 
 }; // class Random
 

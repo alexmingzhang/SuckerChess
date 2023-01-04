@@ -1,10 +1,9 @@
 #ifndef SUCKER_CHESS_ENGINE_PREFERENCE_HPP
 #define SUCKER_CHESS_ENGINE_PREFERENCE_HPP
 
-#include <memory>  // for std::unique_ptr, std::make_unique
-#include <random>  // for std::mt19937
-#include <utility> // for std::forward
-#include <vector>  // for std::vector
+#include <memory> // for std::unique_ptr
+#include <random> // for std::mt19937
+#include <vector> // for std::vector
 
 #include "../ChessEngine.hpp"
 #include "../ChessMove.hpp"
@@ -85,21 +84,15 @@ DECLARE_PREFERENCES(CREATE_PREFERENCE_CLASS)
 
 namespace Engine {
 
-class Preference final : public ChessEngine {
+class PreferenceChain final : public ChessEngine {
 
     std::mt19937 rng;
     std::vector<std::unique_ptr<ChessPreference>> preferences;
+    std::string name;
 
 public:
 
-    Preference();
-
-    void add_preference(std::unique_ptr<ChessPreference> &&pref);
-
-    template <typename T, typename... Args>
-    void add_preference(Args &&...args) {
-        add_preference(std::make_unique<T>(std::forward<Args>(args)...));
-    }
+    explicit PreferenceChain(const std::vector<PreferenceToken> &tokens);
 
     ChessMove pick_move(
         ChessEngineInterface &interface,
@@ -107,7 +100,9 @@ public:
         const std::vector<ChessMove> &move_history
     ) override;
 
-}; // class Preference
+    const std::string &get_name() noexcept override;
+
+}; // class PreferenceChain
 
 } // namespace Engine
 

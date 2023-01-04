@@ -1,6 +1,7 @@
 #ifndef SUCKER_CHESS_CHESS_ENGINE_HPP
 #define SUCKER_CHESS_CHESS_ENGINE_HPP
 
+#include <string>        // for std::string
 #include <unordered_map> // for std::unordered_map
 #include <vector>        // for std::vector
 
@@ -75,6 +76,8 @@ public:
         const std::vector<ChessPosition> &pos_history,
         const std::vector<ChessMove> &move_history
     ) = 0;
+
+    virtual const std::string &get_name() noexcept = 0;
 
 }; // class ChessEngine
 

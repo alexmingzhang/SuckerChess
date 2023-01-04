@@ -1,6 +1,7 @@
-#include "Preference.hpp"
+#include "PreferenceChain.hpp"
 
 #include <cassert> // for assert
+#include <sstream> // for std::ostringstream
 #include <utility> // for std::move
 
 #include "../Utilities.hpp"
@@ -268,12 +269,29 @@ DEFINE_PREFERENCE(Hero) {
 namespace Engine {
 
 
-Preference::Preference()
+PreferenceChain::PreferenceChain(const std::vector<PreferenceToken> &tokens)
     : rng(properly_seeded_random_engine())
-    , preferences() {}
+    , preferences() {
+    std::ostringstream name_builder;
+    for (PreferenceToken token : tokens) {
+        switch (token) {
+
+#define CREATE_PREFERENCE_CASE(CLASS_NAME, TOKEN_NAME, STRING_NAME, COMMENT)   \
+    case PreferenceToken::TOKEN_NAME:                                          \
+        preferences.push_back(std::make_unique<Preference::CLASS_NAME>());     \
+        name_builder << STRING_NAME;                                           \
+        break;
+
+            DECLARE_PREFERENCES(CREATE_PREFERENCE_CASE)
+
+#undef CREATE_PREFERENCE_CASE
+        }
+    }
+    name = name_builder.str();
+}
 
 
-ChessMove Preference::pick_move(
+ChessMove PreferenceChain::pick_move(
     ChessEngineInterface &interface,
     [[maybe_unused]] const std::vector<ChessPosition> &pos_history,
     [[maybe_unused]] const std::vector<ChessMove> &move_history
@@ -292,9 +310,7 @@ ChessMove Preference::pick_move(
 }
 
 
-void Preference::add_preference(std::unique_ptr<ChessPreference> &&pref) {
-    preferences.push_back(std::move(pref));
-}
+const std::string &PreferenceChain::get_name() noexcept { return name; }
 
 
 } // namespace Engine

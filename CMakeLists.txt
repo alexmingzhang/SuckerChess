@@ -21,7 +21,7 @@ set(SuckerChessSourcesList
         "src/ChessPosition.cpp"
         "src/Utilities.cpp"
         "src/ChessEngine.cpp"
-        "src/Engine/Preference.cpp"
+        "src/Engine/PreferenceChain.cpp"
         "src/Engine/Random.cpp"
         "src/ChessGame.cpp")
 
