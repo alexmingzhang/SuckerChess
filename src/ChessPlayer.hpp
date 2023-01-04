@@ -72,6 +72,7 @@ public: // ========================================================= CONSTRUCTOR
 #undef CREATE_PREFERENCE_CASE
 
         if (name.empty()) { name = name_builder.str(); }
+        if (name.empty()) { name = "Random"; }
         engine = std::move(preference_engine);
     }
 
