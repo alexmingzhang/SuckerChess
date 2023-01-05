@@ -25,6 +25,7 @@ set(SuckerChessSourcesList
         "src/ChessTournament.cpp"
         "src/Engine/PreferenceChain.cpp"
         "src/Engine/Random.cpp"
+        "src/Engine/TreeSearch.cpp"
         "src/Engine/UCI.cpp"
         "src/GenePool.cpp")
 

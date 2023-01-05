@@ -39,7 +39,7 @@ public: // =========================================================== ACCESSORS
         return current_pos.get_color_to_move();
     }
 
-private: // ======================================================= CACHE LOOKUP
+public: // ======================================================== CACHE LOOKUP
 
     const PositionInfo &lookup(const ChessPosition &pos) noexcept;
 
