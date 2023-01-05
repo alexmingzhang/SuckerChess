@@ -311,9 +311,6 @@ public: // ===================================================== MOVE VALIDATION
         const PieceColor target_color = target.get_color();
         ensure(color != target_color);
 
-        // Since chess ends at checkmate, kings are never actually captured;
-        ensure(target.get_type() != PieceType::KING);
-
         const bool is_cap =
             (target_color != PieceColor::NONE) || is_valid_en_passant(move);
 
@@ -770,9 +767,11 @@ public: // ===================================================== MOVE GENERATION
         visit_valid_moves(moving_color, [&](ChessMove move) {
             assert(is_valid(move));
             assert(get_moving_color(move) == moving_color);
-            ChessPosition next = *this;
-            next.make_move(move);
-            if (!next.in_check(moving_color)) { f(move, next); }
+            if (board.get_piece(move.get_dst()).get_type() != PieceType::KING) {
+                ChessPosition next = *this;
+                next.make_move(move);
+                if (!next.in_check(moving_color)) { f(move, next); }
+            }
         });
     }
 

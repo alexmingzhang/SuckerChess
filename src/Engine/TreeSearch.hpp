@@ -163,12 +163,12 @@ public: // =====================================================================
                     maximal_elements(
                         interface.get_legal_moves(),
                         [&](ChessMove move) {
-                            std::cout << "Considering move: " << move;
+                            // std::cout << "Considering move: " << move;
                             ChessPosition next = interface.get_current_pos();
                             next.make_move(move);
                             const T value =
-                                evaluate(interface, next, 4, MIN, MAX);
-                            std::cout << " : " << value << std::endl;
+                                evaluate(interface, next, 3, MIN, MAX);
+                            // std::cout << " : " << value << std::endl;
                             return value;
                         }
                     )
@@ -179,12 +179,12 @@ public: // =====================================================================
                     minimal_elements(
                         interface.get_legal_moves(),
                         [&](ChessMove move) {
-                            std::cout << "Considering move: " << move;
+                            // std::cout << "Considering move: " << move;
                             ChessPosition next = interface.get_current_pos();
                             next.make_move(move);
                             const T value =
-                                evaluate(interface, next, 4, MIN, MAX);
-                            std::cout << " : " << value << std::endl;
+                                evaluate(interface, next, 3, MIN, MAX);
+                            // std::cout << " : " << value << std::endl;
                             return value;
                         }
                     )

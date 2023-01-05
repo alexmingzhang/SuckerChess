@@ -52,21 +52,23 @@ bool ChessPosition::check_consistency() const noexcept {
                     break;
             }
 
-            ChessPosition next = *this;
-            next.make_move(move);
+            if (board.get_piece(move.get_dst()).get_type() != PieceType::KING) {
+                ChessPosition next = *this;
+                next.make_move(move);
 
-            switch (color) {
-                case PieceColor::NONE: __builtin_unreachable();
-                case PieceColor::WHITE:
-                    if (!next.in_check(color)) {
-                        filtered_legal_white_moves.push_back(move);
-                    }
-                    break;
-                case PieceColor::BLACK:
-                    if (!next.in_check(color)) {
-                        filtered_legal_black_moves.push_back(move);
-                    }
-                    break;
+                switch (color) {
+                    case PieceColor::NONE: __builtin_unreachable();
+                    case PieceColor::WHITE:
+                        if (!next.in_check(color)) {
+                            filtered_legal_white_moves.push_back(move);
+                        }
+                        break;
+                    case PieceColor::BLACK:
+                        if (!next.in_check(color)) {
+                            filtered_legal_black_moves.push_back(move);
+                        }
+                        break;
+                }
             }
         }
     };

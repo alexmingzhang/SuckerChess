@@ -176,8 +176,7 @@ public: // ======================================================= STATE TESTING
         assert(moving_color != PieceColor::NONE);
         if (!square.in_bounds()) { return false; }
         const ChessPiece target = get_piece(square);
-        return (target.get_color() != moving_color) &&
-               (target.get_type() != PieceType::KING);
+        return (target.get_color() != moving_color);
     }
 
     [[nodiscard]] constexpr bool in_bounds_and_is_valid_cap(
@@ -188,8 +187,7 @@ public: // ======================================================= STATE TESTING
         const ChessPiece target = get_piece(square);
         const PieceColor target_color = target.get_color();
         return (target_color != moving_color) &&
-               (target_color != PieceColor::NONE) &&
-               (target.get_type() != PieceType::KING);
+               (target_color != PieceColor::NONE);
     }
 
 public: // =========================================================== SEARCHING
