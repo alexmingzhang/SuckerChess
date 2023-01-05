@@ -1,5 +1,5 @@
-#ifndef SUCKER_CHESS_UCI_HPP
-#define SUCKER_CHESS_UCI_HPP
+#ifndef SUCKER_CHESS_ENGINE_UCI_HPP
+#define SUCKER_CHESS_ENGINE_UCI_HPP
 
 #include <cstdio> // for std::FILE
 #include <string> // for std::string
@@ -53,4 +53,4 @@ public:
 } // namespace Engine
 
 
-#endif // SUCKER_CHESS_UCI_HPP
+#endif // SUCKER_CHESS_ENGINE_UCI_HPP

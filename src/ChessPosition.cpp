@@ -210,7 +210,7 @@ std::string ChessPosition::get_move_name(
             copy.visit_legal_moves([&](ChessMove, const ChessPosition &) {
                 has_legal_moves = true;
             });
-            result << (has_legal_moves ? '#' : '+');
+            result << (has_legal_moves ? '+' : '#');
         }
     }
     return result.str();

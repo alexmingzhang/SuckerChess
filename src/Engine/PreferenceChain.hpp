@@ -1,5 +1,5 @@
-#ifndef SUCKER_CHESS_ENGINE_PREFERENCE_HPP
-#define SUCKER_CHESS_ENGINE_PREFERENCE_HPP
+#ifndef SUCKER_CHESS_ENGINE_PREFERENCE_CHAIN_HPP
+#define SUCKER_CHESS_ENGINE_PREFERENCE_CHAIN_HPP
 
 #include <memory> // for std::unique_ptr
 #include <random> // for std::mt19937
@@ -110,4 +110,4 @@ public:
 } // namespace Engine
 
 
-#endif // SUCKER_CHESS_ENGINE_PREFERENCE_HPP
+#endif // SUCKER_CHESS_ENGINE_PREFERENCE_CHAIN_HPP
