@@ -43,18 +43,9 @@ public: // =====================================================================
             case PieceType::KING: return 0;
             case PieceType::QUEEN: return 900;
             case PieceType::ROOK: return 500;
-            case PieceType::BISHOP: return 300;
+            case PieceType::BISHOP: return 325;
             case PieceType::KNIGHT: return 300;
             case PieceType::PAWN: return 100;
-        }
-        __builtin_unreachable();
-    }
-
-    static constexpr int material_value(ChessPiece piece) noexcept {
-        switch (piece.get_color()) {
-            case PieceColor::NONE: return 0;
-            case PieceColor::WHITE: return +unsigned_material_value(piece);
-            case PieceColor::BLACK: return -unsigned_material_value(piece);
         }
         __builtin_unreachable();
     }
@@ -62,9 +53,25 @@ public: // =====================================================================
     static constexpr int leaf_evaluation_function(const ChessPosition &pos
     ) noexcept {
         int result = 0;
+        constexpr int centerness[8] = {0, 3, 5, 10, 10, 5, 3, 0};
+
         for (coord_t file = 0; file < NUM_FILES; ++file) {
             for (coord_t rank = 0; rank < NUM_RANKS; ++rank) {
-                result += material_value(pos.get_board().get_piece(file, rank));
+                ChessPiece piece = pos.get_board().get_piece(file, rank);
+                if (piece.get_type() == PieceType::NONE) { continue; }
+
+                int piece_value = unsigned_material_value(piece);
+                if (piece.get_type() == PieceType::KING) {
+                    piece_value -= centerness[file] + centerness[rank];
+                } else {
+                    piece_value += centerness[file] + centerness[rank];
+                }
+
+                switch (piece.get_color()) {
+                    case PieceColor::WHITE: result += piece_value; break;
+                    case PieceColor::BLACK: result -= piece_value; break;
+                    case PieceColor::NONE: __builtin_unreachable();
+                }
             }
         }
         return result;
@@ -163,12 +170,12 @@ public: // =====================================================================
                     maximal_elements(
                         interface.get_legal_moves(),
                         [&](ChessMove move) {
-                            // std::cout << "Considering move: " << move;
+                            std::cout << "Considering move: " << move;
                             ChessPosition next = interface.get_current_pos();
                             next.make_move(move);
                             const T value =
                                 evaluate(interface, next, 3, MIN, MAX);
-                            // std::cout << " : " << value << std::endl;
+                            std::cout << " : " << value << std::endl;
                             return value;
                         }
                     )
@@ -179,12 +186,12 @@ public: // =====================================================================
                     minimal_elements(
                         interface.get_legal_moves(),
                         [&](ChessMove move) {
-                            // std::cout << "Considering move: " << move;
+                            std::cout << "Considering move: " << move;
                             ChessPosition next = interface.get_current_pos();
                             next.make_move(move);
                             const T value =
                                 evaluate(interface, next, 3, MIN, MAX);
-                            // std::cout << " : " << value << std::endl;
+                            std::cout << " : " << value << std::endl;
                             return value;
                         }
                     )
