@@ -16,7 +16,7 @@
 Engine::UCI::UCI(
     const std::string &engine_command,
     Engine::UCI::Mode engine_mode,
-    unsigned long long int engine_n,
+    std::size_t engine_n,
     std::string engine_name
 )
     : pipe(::popen(engine_command.c_str(), "r+"))

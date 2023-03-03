@@ -63,8 +63,8 @@ GenePool::mutate(const std::vector<PreferenceToken> &genome) noexcept {
 }
 
 
-void GenePool::evaluate_fitness(unsigned long long num_rounds) noexcept {
-    for (unsigned long long i = 0; i < num_rounds; ++i) {
+void GenePool::evaluate_fitness(std::size_t num_rounds) noexcept {
+    for (std::size_t i = 0; i < num_rounds; ++i) {
         for (Organism &white : organisms) {
             for (Organism &black : organisms) {
                 if (&white != &black) {
@@ -127,11 +127,11 @@ void GenePool::cull(std::size_t num_deaths) noexcept {
 }
 
 
-void GenePool::breed(unsigned long long num_children_per_organism) noexcept {
+void GenePool::breed(std::size_t num_children_per_organism) noexcept {
     const std::size_t original_size = organisms.size();
     for (std::size_t i = 0; i < original_size; ++i) {
         const Organism &parent = organisms[i];
-        for (unsigned long long j = 0; j < num_children_per_organism; ++j) {
+        for (std::size_t j = 0; j < num_children_per_organism; ++j) {
             organisms.push_back({mutate(parent.genome), 0, 0, 0});
         }
     }

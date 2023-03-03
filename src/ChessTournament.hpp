@@ -14,17 +14,17 @@
 
 struct PerformanceInfo {
 
-    unsigned long long num_wins_as_white;
-    unsigned long long num_wins_as_black;
-    unsigned long long num_draws;
-    unsigned long long num_losses_as_white;
-    unsigned long long num_losses_as_black;
+    std::size_t num_wins_as_white;
+    std::size_t num_wins_as_black;
+    std::size_t num_draws;
+    std::size_t num_losses_as_white;
+    std::size_t num_losses_as_black;
 
-    [[nodiscard]] constexpr unsigned long long total_wins() const noexcept {
+    [[nodiscard]] constexpr std::size_t total_wins() const noexcept {
         return num_wins_as_white + num_wins_as_black;
     }
 
-    [[nodiscard]] constexpr unsigned long long total_losses() const noexcept {
+    [[nodiscard]] constexpr std::size_t total_losses() const noexcept {
         return num_losses_as_white + num_losses_as_black;
     }
 

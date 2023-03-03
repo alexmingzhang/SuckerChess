@@ -12,15 +12,14 @@
 struct Organism {
 
     std::vector<PreferenceToken> genome;
-    unsigned long long num_wins;
-    unsigned long long num_draws;
-    unsigned long long num_losses;
+    std::size_t num_wins;
+    std::size_t num_draws;
+    std::size_t num_losses;
 
 }; // struct Organism
 
 
 class GenePool final {
-
 private:
 
     using enum PreferenceToken;
@@ -69,13 +68,13 @@ private: // =================================================== MUTATION HELPERS
 
 public: // =========================================================== EVOLUTION
 
-    void evaluate_fitness(unsigned long long num_rounds) noexcept;
+    void evaluate_fitness(std::size_t num_rounds) noexcept;
 
     void sort_by_fitness() noexcept;
 
     void cull(std::size_t num_deaths) noexcept;
 
-    void breed(unsigned long long num_children_per_organism) noexcept;
+    void breed(std::size_t num_children_per_organism) noexcept;
 
 }; // class GenePool
 

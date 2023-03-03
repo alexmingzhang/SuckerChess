@@ -21,7 +21,7 @@ private:
 
     std::FILE *pipe;
     Mode mode;
-    unsigned long long n;
+    std::size_t n;
     std::string name;
 
 public:
@@ -29,7 +29,7 @@ public:
     explicit UCI(
         const std::string &engine_command,
         Mode engine_mode,
-        unsigned long long engine_n,
+        std::size_t engine_n,
         std::string engine_name
     );
 

@@ -26,10 +26,10 @@ void ChessTournament::sort_players_by_win_ratio() {
         engines.begin(),
         engines.end(),
         [&](const auto &a, const auto &b) {
-            const unsigned long long a_wins = a.second.total_wins();
-            const unsigned long long a_losses = a.second.total_losses();
-            const unsigned long long b_wins = b.second.total_wins();
-            const unsigned long long b_losses = b.second.total_losses();
+            const std::size_t a_wins = a.second.total_wins();
+            const std::size_t a_losses = a.second.total_losses();
+            const std::size_t b_wins = b.second.total_wins();
+            const std::size_t b_losses = b.second.total_losses();
 
             const double a_ratio =
                 static_cast<double>(a_wins) / static_cast<double>(a_losses);
