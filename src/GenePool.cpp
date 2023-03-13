@@ -2,13 +2,47 @@
 
 #include <algorithm> // for std::sort
 #include <cstdint>   // for std::uint8_t
-#include <random>    // for std::discrete_distribution
-#include <utility>   // for std::move
+#include <iostream>
+#include <random>  // for std::discrete_distribution
+#include <utility> // for std::move
 
 #include "ChessGame.hpp"
 #include "ChessPiece.hpp"
 #include "Utilities.hpp"
 
+Organism::Organism() noexcept
+    : num_wins(0)
+    , num_draws(0)
+    , num_losses(0)
+    , genome({}){};
+
+Organism::Organism(std::vector<PreferenceToken> _genome) noexcept
+    : num_wins(0)
+    , num_draws(0)
+    , num_losses(0)
+    , genome(std::move(_genome)){};
+
+void Organism::versus(Organism &enemy) {
+    Organism &self = *this;
+    Engine::PreferenceChain white_engine(self.genome);
+    Engine::PreferenceChain black_engine(enemy.genome);
+    ChessGame game;
+
+    switch (game.run(&white_engine, &black_engine, false)) {
+        case PieceColor::NONE:
+            ++self.num_draws;
+            ++enemy.num_draws;
+            break;
+        case PieceColor::WHITE:
+            ++self.num_wins;
+            ++enemy.num_losses;
+            break;
+        case PieceColor::BLACK:
+            ++self.num_losses;
+            ++enemy.num_wins;
+            break;
+    }
+}
 
 GenePool::GenePool() noexcept
     : rng(properly_seeded_random_engine())
@@ -16,7 +50,7 @@ GenePool::GenePool() noexcept
 
 
 void GenePool::add_organism(std::vector<PreferenceToken> genome) noexcept {
-    organisms.push_back({std::move(genome), 0, 0, 0});
+    organisms.emplace_back(std::move(genome));
 }
 
 
@@ -37,9 +71,7 @@ enum class MutationToken : std::uint8_t {
 };
 
 
-std::vector<PreferenceToken>
-GenePool::mutate(const std::vector<PreferenceToken> &genome) noexcept {
-
+void GenePool::mutate(std::vector<PreferenceToken> &genome) noexcept {
     // Create distribution of possible mutations
     std::discrete_distribution<MutationToken> mutation_dist(
         {static_cast<double>(genome.size() < PREFERENCE_POOL.size()),
@@ -54,40 +86,23 @@ GenePool::mutate(const std::vector<PreferenceToken> &genome) noexcept {
     const MutationToken token = mutation_dist(rng);
     switch (token) {
         case MutationToken::INSERT:
-            return random_insert(rng, genome, find_new_gene(genome));
-        case MutationToken::DELETE: return random_delete(rng, genome);
-        case MutationToken::SWAP: return random_swap(rng, genome);
+            random_insert(rng, genome, find_new_gene(genome));
+            break;
+        case MutationToken::DELETE: random_delete(rng, genome); break;
+        case MutationToken::SWAP: random_swap(rng, genome); break;
         case MutationToken::REPLACE:
-            return random_replace(rng, genome, find_new_gene(genome));
+            random_replace(rng, genome, find_new_gene(genome));
+            break;
     }
 }
 
 
 void GenePool::evaluate_fitness(std::size_t num_rounds) noexcept {
     for (std::size_t i = 0; i < num_rounds; ++i) {
-        for (Organism &white : organisms) {
-            for (Organism &black : organisms) {
-                if (&white != &black) {
-                    Engine::PreferenceChain white_engine(white.genome);
-                    Engine::PreferenceChain black_engine(black.genome);
-                    ChessGame game;
-                    const PieceColor winner =
-                        game.run(&white_engine, &black_engine, false);
-                    switch (winner) {
-                        case PieceColor::NONE:
-                            ++white.num_draws;
-                            ++black.num_draws;
-                            break;
-                        case PieceColor::WHITE:
-                            ++white.num_wins;
-                            ++black.num_losses;
-                            break;
-                        case PieceColor::BLACK:
-                            ++white.num_losses;
-                            ++black.num_wins;
-                            break;
-                    }
-                }
+        for (auto it1 = organisms.begin(); it1 != organisms.end(); ++it1) {
+            for (auto it2 = it1 + 1; it2 != organisms.end(); ++it2) {
+                it1->versus(*it2);
+                it2->versus(*it1);
             }
         }
     }
@@ -132,7 +147,8 @@ void GenePool::breed(std::size_t num_children_per_organism) noexcept {
     for (std::size_t i = 0; i < original_size; ++i) {
         const Organism &parent = organisms[i];
         for (std::size_t j = 0; j < num_children_per_organism; ++j) {
-            organisms.push_back({mutate(parent.genome), 0, 0, 0});
+            organisms.emplace_back(parent.genome);
+            mutate(organisms.rbegin()->genome);
         }
     }
 }

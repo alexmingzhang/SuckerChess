@@ -9,14 +9,21 @@
 #include "Engine/PreferenceChain.hpp"
 
 
-struct Organism {
+class Organism {
+public:
 
-    std::vector<PreferenceToken> genome;
     std::size_t num_wins;
     std::size_t num_draws;
     std::size_t num_losses;
+    std::vector<PreferenceToken> genome;
 
-}; // struct Organism
+    explicit Organism() noexcept;
+    explicit Organism(std::vector<PreferenceToken>) noexcept;
+
+    const std::vector<PreferenceToken> &get_genome() const;
+    void versus(Organism &enemy);
+
+}; // class Organism
 
 
 class GenePool final {
@@ -60,20 +67,51 @@ public: // ============================================================ MUTATORS
 
 private: // =================================================== MUTATION HELPERS
 
+    /**
+     * @brief Returns a PreferenceToken that isn't in the specified genome
+     *
+     * @param genome
+     * @return PreferenceToken
+     */
     PreferenceToken find_new_gene(const std::vector<PreferenceToken> &genome
     ) noexcept;
 
-    std::vector<PreferenceToken>
-    mutate(const std::vector<PreferenceToken> &genome) noexcept;
+    /**
+     * @brief Mutates a genome by either inserting, deleting, swapping, or
+     * replacing a PreferenceToken
+     *
+     * @param genome
+     */
+    void mutate(std::vector<PreferenceToken> &genome) noexcept;
 
 public: // =========================================================== EVOLUTION
 
+    /**
+     * @brief Runs tournament where each round, every organism plays every other
+     * organism once as white and once as black
+     *
+     * @param num_rounds
+     */
     void evaluate_fitness(std::size_t num_rounds) noexcept;
 
+    /**
+     * @brief Sorts the organisms vector by win-loss-ratio
+     *
+     */
     void sort_by_fitness() noexcept;
 
+    /**
+     * @brief Removes the last num_deaths organisms
+     *
+     * @param num_deaths
+     */
     void cull(std::size_t num_deaths) noexcept;
 
+    /**
+     * @brief Creates new mutated offspring
+     *
+     * @param num_children_per_organism
+     */
     void breed(std::size_t num_children_per_organism) noexcept;
 
 }; // class GenePool

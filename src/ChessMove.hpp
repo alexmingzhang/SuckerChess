@@ -11,7 +11,7 @@
 #include "ChessPiece.hpp"
 
 
-using coord_t = int;
+using coord_t = long;
 constexpr coord_t NUM_FILES = 8;
 constexpr coord_t NUM_RANKS = 8;
 
@@ -30,7 +30,7 @@ struct ChessSquare final {
 
     [[nodiscard]] constexpr ChessSquare
     shift(coord_t file_offset, coord_t rank_offset) const noexcept {
-        return {file + file_offset, rank + rank_offset};
+        return {(file + file_offset), (rank + rank_offset)};
     }
 
     [[nodiscard]] constexpr coord_t distance(ChessSquare other) const noexcept {

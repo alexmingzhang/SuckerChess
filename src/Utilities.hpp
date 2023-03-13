@@ -55,61 +55,52 @@ const T &random_choice(std::mt19937 &rng, const std::vector<T> &vec) {
 
 
 template <typename T>
-std::vector<T>
-random_insert(std::mt19937 &rng, const std::vector<T> &vec, const T &x) {
-    std::vector<T> copy = vec;
+void random_insert(std::mt19937 &rng, std::vector<T> &vec, const T &val) {
     std::uniform_int_distribution<typename std::vector<T>::size_type>
         index_dist(0, vec.size());
-    copy.insert(
-        copy.begin() +
+    vec.insert(
+        vec.begin() +
             static_cast<typename std::vector<T>::iterator::difference_type>(
                 index_dist(rng)
             ),
-        x
+        val
     );
-    return copy;
 }
 
 
 template <typename T>
-std::vector<T> random_delete(std::mt19937 &rng, const std::vector<T> &vec) {
-    if (vec.empty()) { return vec; }
-    std::vector<T> copy = vec;
+void random_delete(std::mt19937 &rng, std::vector<T> &vec) {
+    if (vec.empty()) { return; }
     std::uniform_int_distribution<typename std::vector<T>::size_type>
         index_dist(0, vec.size() - 1);
-    copy.erase(
-        copy.begin() +
+    vec.erase(
+        vec.begin() +
         static_cast<typename std::vector<T>::iterator::difference_type>(
             index_dist(rng)
         )
     );
-    return copy;
 }
 
 
 template <typename T>
-std::vector<T>
-random_replace(std::mt19937 &rng, const std::vector<T> &vec, const T &x) {
-    std::vector<T> copy = vec;
+void random_replace(std::mt19937 &rng, std::vector<T> &vec, const T &val) {
     std::uniform_int_distribution<typename std::vector<T>::size_type>
         index_dist(0, vec.size() - 1);
-    copy[index_dist(rng)] = x;
-    return copy;
+    vec[index_dist(rng)] = val;
 }
 
 
 template <typename T>
-std::vector<T> random_swap(std::mt19937 &rng, const std::vector<T> &vec) {
-    if (vec.size() <= 1) { return vec; }
-    std::vector<T> copy = vec;
+void random_swap(std::mt19937 &rng, std::vector<T> &vec) {
+    if (vec.size() <= 1) { return; }
     std::uniform_int_distribution<typename std::vector<T>::size_type>
-        index_dist(0, copy.size() - 1);
+        index_dist(0, vec.size() - 1);
     while (true) {
         const typename std::vector<T>::size_type i = index_dist(rng);
         const typename std::vector<T>::size_type j = index_dist(rng);
         if (i != j) {
-            std::swap(copy[i], copy[j]);
-            return copy;
+            std::swap(vec[i], vec[j]);
+            return;
         }
     }
 }

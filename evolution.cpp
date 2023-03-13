@@ -19,8 +19,8 @@ int main() {
     while (true) {
         std::cout << "Round " << round_count++ << '\n';
 
-        // Let each engine play every other engine as black and white 5 times
-        evo_tourney.evaluate_fitness(5);
+        // Let each engine play every other engine as black and white 2 times
+        evo_tourney.evaluate_fitness(2);
         evo_tourney.sort_by_fitness();
 
         // Output round results
